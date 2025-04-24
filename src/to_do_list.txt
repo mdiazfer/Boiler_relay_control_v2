@@ -1,0 +1,25 @@
+To do list for boiler relay control
+-----------------------------------
+- firmware update from wifi
+- Led flashing to indicate situations: All good, no WiFi, WiFi connection, Gas detection
+- Save in EEPROM durations of boiler burnings: today, yesterday, month, year
+
+
+Done
+--------
+- detect thermostate on/off
+- relay controls Rl1 and Rl2
+- MQTT
+- Send notification if gas leaks detected
+- Update pandora with Thermostat activity
+- Prevent from activating Relays in gas leak situation
+- Error counters
+  + WiFi connections
+  + HTTP Cloud sample update
+  + NTP sync
+  + MQTT update
+  + Uncontrolled resets
+- MQTT Sensor
+  + Boot count since last firmware update
+  + Uncontrolled reset count
+  + Other error counters

@@ -1,0 +1,914 @@
+//the-iot-factory/co2-sensor-E02940/SENSOR
+{
+  "Time":"2025-04-17T07:48:03",
+  "SAMPLES":
+  {
+    "dateUpdate":"17/04/2025 - 07:48:03",
+    "version":"1.9.2",
+    "CO2":"520.00",
+    "temperature":"19.20",
+    "humidity":"37.83",
+    "tempUncalib":"21.65",
+    "humUncalib":"33.31",
+    "calibrationState":"15",
+    "tempSensor":"21.65",
+    "tempCO2Sensor":"21.35",
+    "voltage":"4.71",
+    "batCharge":"100.00"
+  }
+}
+
+//HA Discovery - homeassistant/sensor/co2-sensor-E02940/E02940_Temperature/config
+{
+  "name":"co2-sensor-E02940 Temperature",
+  "stat_t":"the-iot-factory/co2-sensor-E02940/SENSOR",
+  "avty_t":"the-iot-factory/co2-sensor-E02940/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"E02940_Temperature",
+  "dev":
+  {
+    "ids":["E02940"],
+    "configuration_url":"http://192.168.100.101",
+    "name":"co2-sensor-E02940",
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com/",
+    "model":"co2 sensor",
+    "sw_version":"1.9.2"
+  },
+  "unit_of_meas":"C",
+  "dev_cla":"temperature",
+  "frc_upd":true,
+  "val_tpl":"{{value_json['SAMPLES']['temperature']}}"
+}
+    
+//homeassistant/sensor/co2-sensor-E02940/E02940_CO2/config
+{
+  "name":"co2-sensor-E02940 CO2",
+  "stat_t":"the-iot-factory/co2-sensor-E02940/SENSOR",
+  "avty_t":"the-iot-factory/co2-sensor-E02940/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"E02940_CO2",
+  "dev":
+  {
+    "ids":["E02940"],
+    "configuration_url":"http://192.168.100.101",
+    "name":"co2-sensor-E02940",
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com/",
+    "model":"co2 sensor",
+    "sw_version":"1.9.2"
+  },
+  "unit_of_meas":"ppm",
+  "dev_cla":"carbon_dioxide",
+  "frc_upd":true,
+  "val_tpl":"{{value_json['SAMPLES']['CO2']}}"
+}
+
+//tele/tasmota_17B07E/SENSOR
+{
+  "Time":"2025-04-17T08:29:25",
+  "ENERGY":
+  {
+    "TotalStartTime":"2022-01-23T13:11:23",
+    "Total":132.159,
+    "Yesterday":0.000,
+    "Today":0.000,
+    "Period": 0,
+    "Power":52,
+    "ApparentPower":78,
+    "ReactivePower":58,
+    "Factor":0.67,
+    "Voltage":236,
+    "Current":0.329
+}
+}
+  
+//HA Discovery - homeassistant/sensor/17B07E_ENERGY_TotalStartTime/config
+{
+  "name":"smt-plg-17B07E-4222 ENERGY TotalStartTime",
+  "stat_t":"tele/tasmota_17B07E/SENSOR",
+  "avty_t":"tele/tasmota_17B07E/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"17B07E_ENERGY_TotalStartTime",
+  "dev":
+  {
+    "ids":["17B07E"]
+  },
+  "unit_of_meas":" ",
+  "ic":"mdi:progress-clock",
+  "frc_upd":true,
+  "val_tpl":"{{value_json['ENERGY']['TotalStartTime']}}"
+}
+
+//HA Discovery - homeassistant/sensor/17B07E_ENERGY_Total/config
+{
+  "name":"smt-plg-17B07E-4222 ENERGY Total",
+  "stat_t":"tele/tasmota_17B07E/SENSOR",
+  "avty_t":"tele/tasmota_17B07E/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"17B07E_ENERGY_Total",
+  "dev":
+  {
+    "ids":["17B07E"]
+  },
+  "unit_of_meas":"kWh",
+  "dev_cla":"energy",
+  "frc_upd":true,
+  "val_tpl":"{{value_json['ENERGY']['Total']}}"
+}
+
+
+//HA Discovery - homeassistant/sensor/17B07E_ENERGY_ApparentPower/config
+{
+  "name":"smt-plg-17B07E-4222 ENERGY ApparentPower",
+  "stat_t":"tele/tasmota_17B07E/SENSOR",
+  "avty_t":"tele/tasmota_17B07E/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"17B07E_ENERGY_ApparentPower",
+  "dev":
+  {
+    "ids":["17B07E"]
+  },
+  "unit_of_meas":"VA",
+  "dev_cla":"power",
+  "frc_upd":true,
+  "val_tpl":"{{value_json['ENERGY']['ApparentPower']}}"
+}
+
+//HA Discovery - homeassistant/sensor/17B07E_ENERGY_Factor/config
+{
+  "name":"smt-plg-17B07E-4222 ENERGY Factor",
+  "stat_t":"tele/tasmota_17B07E/SENSOR",
+  "avty_t":"tele/tasmota_17B07E/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"17B07E_ENERGY_Factor",
+  "dev":
+  {
+    "ids":["17B07E"]
+  },
+  "unit_of_meas":"Cos ",
+  "dev_cla":"power_factor",
+  "frc_upd":true,
+  "val_tpl":"{{value_json['ENERGY']['Factor']}}"
+  }
+
+//HA Discovery - homeassistant/sensor/17B07E_ENERGY_Voltage/config
+{
+  "name":"smt-plg-17B07E-4222 ENERGY Voltage",
+  "stat_t":"tele/tasmota_17B07E/SENSOR",
+  "avty_t":"tele/tasmota_17B07E/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"17B07E_ENERGY_Voltage",
+  "dev":
+  {
+    "ids":["17B07E"]
+  },
+  "unit_of_meas":"V",
+  "dev_cla":"voltage",
+  "frc_upd":true,
+  "val_tpl":"{{value_json['ENERGY']['Voltage']}}"
+}
+
+
+//tele/tasmota_17B07E/HASS_STATE
+{
+  "Version":"10.0.0.5(tasmota)",
+  "BuildDateTime":"2024-09-05T11:13:18",
+  "Module or Template":"NOUS A1 Smt Plug",
+  "RestartReason":"External System",
+  "Uptime":"0T01:00:10",
+  "Hostname":"tasmota-17B07E-4222",
+  "IPAddress":"192.168.100.200",
+  "RSSI":"58",
+  "Signal (dBm)":"-71",
+  "WiFi LinkCount":1,
+  "WiFi Downtime":"0T00:00:05",
+  "MqttCount":1,
+  "LoadAvg":19
+}
+
+
+//HA Discovery - homeassistant/sensor/17B07E_status/config
+{
+  "name":"smt-plg-17B07E-4222 status",
+  "stat_t":"tele/tasmota_17B07E/HASS_STATE",
+  "avty_t":"tele/tasmota_17B07E/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "json_attr_t":"tele/tasmota_17B07E/HASS_STATE",
+  "unit_of_meas":"%",
+  "val_tpl":"{{value_json['RSSI']}}",
+  "ic":"mdi:information-outline",
+  "uniq_id":"17B07E_status",
+  "dev":
+  {
+    "ids":["17B07E"],
+    "name":"smt-plg-17B07E-4222",
+    "mdl":"NOUS A1 Smt Plug",
+    "sw":"10.0.0.5(tasmota)",
+    "mf":"Tasmota"
+  }
+}
+
+
+//tele/tasmota_17B07E/STATE
+{
+  "Time":"2025-04-17T08:29:25",
+  "Uptime":"0T00:00:13",
+  "UptimeSec":13,
+  "Heap":28,
+  "SleepMode":"Dynamic",
+  "Sleep":50,
+  "LoadAvg":19,
+  "MqttCount":1,
+  "POWER":"ON",
+  "Wifi":
+  {
+    "AP":2,
+    "SSId":"madnetot",
+    "BSSId":"DC:08:56:00:0A:91",
+    "Channel":2,
+    "Mode":"11n",
+    "RSSI":60,
+    "Signal":-70,
+    "LinkCount":1,
+    "Downtime":"0T00:00:05"
+  }
+}
+
+//HA Discovery - homeassistant/light/17B07E_LI_1/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/light/17B07E_LI_2/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/light/17B07E_LI_3/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/light/17B07E_LI_4/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/light/17B07E_LI_5/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/light/17B07E_LI_6/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/light/17B07E_LI_7/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/light/17B07E_LI_8/config
+  //Empty payload to delete this entry in HA
+
+
+//HA Discovery - homeassistant/switch/17B07E_RL_1/config
+{
+  "name":"nous set plg Tasmota",
+  "stat_t":"tele/tasmota_17B07E/STATE",
+  "avty_t":"tele/tasmota_17B07E/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "cmd_t":"cmnd/tasmota_17B07E/POWER",
+  "pl_off":"OFF",
+  "pl_on":"ON",
+  "val_tpl":"{{value_json.POWER}}",
+  "uniq_id":"17B07E_RL_1",
+  "dev":
+  {
+    "ids":["17B07E"]
+  }
+}
+//HA Discovery - homeassistant/switch/17B07E_RL_2/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/switch/17B07E_RL_3/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/switch/17B07E_RL_4/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/switch/17B07E_RL_5/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/switch/17B07E_RL_6/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/switch/17B07E_RL_7/config
+  //Empty payload to delete this entry in HA
+//HA Discovery - homeassistant/switch/17B07E_RL_8/config
+  //Empty payload to delete this entry in HA
+
+
+//HA publishes command to Power On the Relay - /cmnd/tasmota_17B07E/POWER
+ON
+//HA publishes command to Power On the Relay - /cmnd/tasmota_17B07E/POWER
+OFF
+
+
+
+
+
+{
+  "name":device+" Relay1",
+  "stat_t":mqttTopicName+"/SENSOR",
+  "avty_t":mqttTopicName+"/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "cmd_t":mqttTopicName+"/cmnd/RELAY",
+  "pl_off":"R1_OFF",
+  "pl_on":"R1_ON",
+  "uniq_id":deviceSufix+"_Relay1",
+  "dev":
+  {
+    "ids":[deviceSufix],
+    "configuration_url":"http://"+ipAddress,
+    "name":device,
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com",
+    "model":DEVICE_NAME_PREFIX,
+    "sw_version":VERSION
+  },
+  "frc_upd":true,
+  "val_tpl":"{{value_json['SAMPLES']['Relay1']}}",
+}
+
+{
+  "name":"boiler-relay-controlv2-E02940 Relay1",
+  "stat_t":"the-iot-factory/boiler-relay-controlv2-E02940/SENSOR",
+  "avty_t":"the-iot-factory/boiler-relay-controlv2-E02940/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "cmd_t":"the-iot-factory/boiler-relay-controlv2-E02940/cmnd/RELAY",
+  "pl_off":"R1_OFF",
+  "pl_on":"R1_ON",
+  "uniq_id":"E02940_Relay1",
+  "dev":
+  {
+    "ids":[E02940],
+    "configuration_url":"http://192.168.100.197",
+    "name":"boiler-relay-controlv2-E02940",
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com",
+    "model":"boiler-relay-controlv2",
+    "sw_version":"0.2"
+  },
+  "frc_upd":true,
+  "val_tpl":"{{value_json['SAMPLES']['Relay1']}}"
+}
+
+
+//the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR
+{
+  "Time":"2025-04-17T12:48:42",
+  "SAMPLES":
+  {
+    "dateUpdate":"17/04/2025 - 12:48:41",
+    "device_name":"boiler-relay-controlv2-2254C4",
+    "version":"0.2",
+    "H2":"0.00",
+    "LPG":"0.00",
+    "CH4":"0.00",
+    "CO":"0.00",
+    "ALCOHOL":"0.00",
+    "Clean_air":"1",
+    "GAS_interrupt":"0",
+    "Thermostate_interrupt":"0",
+    "Thermostate_status":"0",
+    "RSSI":"-61",
+    "Relay1":"OFF",
+    "Relay2":"0",
+    "tempSensor":"-46.85",
+    "temperature":"-47.39",
+    "humidity":"0.00"
+  }
+}
+
+
+//homeassistant/switch/boiler-relay-controlv2-2254C4/2254C4_Relay1/config
+{
+  "name":"Ext. Thermostat",
+  "stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR",
+  "avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "cmd_t":"/cmnd/RELAY",
+  "pl_off":"R1_OFF",
+  "pl_on":"R1_ON",
+  "uniq_id":"2254C4_Relay1",
+  "dev":
+  {
+    "ids":["2254C4"],
+    "configuration_url":
+    "http://192.168.100.100",
+    "name":"boiler-relay-controlv2-2254C4",
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com",
+    "model":"boiler-relay-controlv2",
+    "sw_version":"0.2"
+  },
+  "frc_upd":true,
+  "val_tpl":"{{value_json['SAMPLES']['Relay1']}}"
+}
+
+//homeassistant/switch/boiler-relay-controlv2-2254C4/2254C4_Relay2/config
+{
+  "name":"Force Heater",
+  "stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR",
+  "avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "cmd_t":"the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY",
+  "pl_off":"R2_OFF",
+  "pl_on":"R2_ON",
+  "uniq_id":"2254C4_Relay2",
+  "dev":
+  {
+    "ids":["2254C4"],
+    "configuration_url":"http://192.168.100.100",
+    "name":"boiler-relay-controlv2-2254C4",
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com",
+    "model":"boiler-relay-controlv2",
+    "sw_version":"0.2"
+  },
+  "frc_upd":true,
+  "val_tpl":"{{value_json['SAMPLES']['Relay2']}}"
+}
+
+
+the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY
+
+
+
+Sequence of MQTT message at bootup - Tasmota relay - pandora_dump_mqtt_5.pcap
+
+63	11.033613	
+Publish Message [tele/tasmota_17B07E/LWT]
+  Online
+Publish Message [cmnd/tasmota_17B07E/POWER]
+Subscribe Request (id=2) [cmnd/tasmota_17B07E/#]
+Subscribe Request (id=3) [cmnd/tasmotas/#]
+Subscribe Request (id=4) [cmnd/DVES_17B07E_fb/#]
+Subscribe Request (id=5) [homeassistant/status]
+Publish Message [tele/tasmota_17B07E/INFO1]
+  {"Info1":{"Module":"NOUS A1 Smt Plug","Version":"10.0.0.5(tasmota)","FallbackTopic":"cmnd/DVES_17B07E_fb/","GroupTopic":"cmnd/tasmotas/"}}
+Publish Message [tele/tasmota_17B07E/INFO2]
+  {"Info2":{"WebServerMode":"Admin","Hostname":"tasmota-17B07E-4222","IPAddress":"192.168.100.200"}}
+Publish Message [tele/tasmota_17B07E/INFO3]
+  {"Info3":{"RestartReason":"External System"}}
+Publish Message [stat/tasmota_17B07E/RESULT]
+{"POWER":"ON"}
+Publish Message [stat/tasmota_17B07E/POWER]
+  ON
+
+
+94	15.633334	
+Publish Message [tele/tasmota_17B07E/STATE]
+  {"Time":"2025-04-17T16:27:35","Uptime":"0T00:00:13","UptimeSec":13,"Heap":28,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":1,"POWER":"ON","Wifi":{"AP":2,"SSId":"madnetot","BSSId":"DC:08:56:00:0A:91","Channel":2,"Mode":"11n","RSSI":60,"Signal":-70,"LinkCount":1,"Downtime":"0T00:00:05"}}
+Publish Message [tele/tasmota_17B07E/SENSOR]
+  {"Time":"2025-04-17T16:27:35","ENERGY":{"TotalStartTime":"2022-01-23T13:11:23","Total":132.159,"Yesterday":0.000,"Today":0.000,"Period": 0,"Power": 9,"ApparentPower":21,"ReactivePower":19,"Factor":0.41,"Voltage":236,"Current":0.089}}
+
+
+123	20.526830
+Publish Message [homeassistant/device_automation/17B07E_BTN_1_SINGLE/config]
+
+
+126	20.542140	
+Publish Message [homeassistant/device_automation/17B07E_BTN_1_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_1_TRIPLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_1_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_1_PENTA/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_1_HOLD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_2_SINGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_2_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_2_TRIPLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_2_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_2_PENTA/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_2_HOLD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_3_SINGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_3_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_3_TRIPLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_3_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_3_PENTA/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_3_HOLD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_4_SINGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_4_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_4_TRIPLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_4_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_4_PENTA/config]
+
+
+129	20.555857	
+Publish Message [homeassistant/device_automation/17B07E_BTN_4_HOLD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_5_SINGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_5_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_5_TRIPLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_5_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_5_PENTA/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_5_HOLD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_6_SINGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_6_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_6_TRIPLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_6_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_6_PENTA/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_6_HOLD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_7_SINGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_7_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_7_TRIPLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_7_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_7_PENTA/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_7_HOLD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_8_SINGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_8_DOUBLE/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_8_TRIPLE/config]
+
+
+131	20.555961
+Publish Message [homeassistant/device_automation/17B07E_BTN_8_QUAD/config]
+Publish Message [homeassistant/device_automation/17B07E_BTN_8_PENTA/config]
+
+134	20.571580
+Publish Message [homeassistant/device_automation/17B07E_BTN_8_HOLD/config]
+
+140	20.611413
+Publish Message [homeassistant/device_automation/17B07E_SW_1_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_1_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_1/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_2_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_2_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_2/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_3_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_3_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_3/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_4_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_4_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_4/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_5_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_5_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_5/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_6_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_6_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_6/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_7_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_7_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_7/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_8_TOGGLE/config]
+Publish Message [homeassistant/device_automation/17B07E_SW_8_HOLD/config]
+Publish Message [homeassistant/binary_sensor/17B07E_SW_8/config]
+
+
+147	20.680723
+Publish Message [homeassistant/sensor/17B07E_ENERGY_TotalStartTime/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY TotalStartTime","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_TotalStartTime","dev":{"ids":["17B07E"]},"unit_of_meas":" ","ic":"mdi:progress-clock","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['TotalStartTime']}}"}
+Publish Message [homeassistant/sensor/17B07E_ENERGY_Total/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY Total","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_Total","dev":{"ids":["17B07E"]},"unit_of_meas":"kWh","dev_cla":"energy","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['Total']}}"}
+Publish Message [homeassistant/sensor/17B07E_ENERGY_Yesterday/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY Yesterday","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_Yesterday","dev":{"ids":["17B07E"]},"unit_of_meas":"kWh","dev_cla":"energy","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['Yesterday']}}"}
+
+
+152	20.750135
+Publish Message [homeassistant/sensor/17B07E_ENERGY_Today/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY Today","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_Today","dev":{"ids":["17B07E"]},"unit_of_meas":"kWh","dev_cla":"energy","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['Today']}}"}
+Publish Message [homeassistant/sensor/17B07E_ENERGY_Power/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY Power","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_Power","dev":{"ids":["17B07E"]},"unit_of_meas":"W","dev_cla":"power","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['Power']}}"}
+
+
+157	20.825210	
+Publish Message [homeassistant/sensor/17B07E_ENERGY_ApparentPower/config]
+EKXd
+  {"name":"smt-plg-17B07E-4222 ENERGY ApparentPower","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_ApparentPower","dev":{"ids":["17B07E"]},"unit_of_meas":"VA","dev_cla":"power","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['ApparentPower']}}"}
+Publish Message [homeassistant/sensor/17B07E_ENERGY_ReactivePower/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY ReactivePower","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_ReactivePower","dev":{"ids":["17B07E"]},"unit_of_meas":"VAr","dev_cla":"power","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['ReactivePower']}}"}
+
+
+162	20.898445
+Publish Message [homeassistant/sensor/17B07E_ENERGY_Factor/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY Factor","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_Factor","dev":{"ids":["17B07E"]},"unit_of_meas":"Cos ","dev_cla":"power_factor","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['Factor']}}"}
+Publish Message [homeassistant/sensor/17B07E_ENERGY_Voltage/config]
+{"name":"smt-plg-17B07E-4222 ENERGY Voltage","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_Voltage","dev":{"ids":["17B07E"]},"unit_of_meas":"V","dev_cla":"voltage","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['Voltage']}}"}
+
+
+166	20.964010
+Publish Message [homeassistant/sensor/17B07E_ENERGY_Current/config]
+  {"name":"smt-plg-17B07E-4222 ENERGY Current","stat_t":"tele/tasmota_17B07E/SENSOR","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"17B07E_ENERGY_Current","dev":{"ids":["17B07E"]},"unit_of_meas":"A","dev_cla":"current","frc_upd":true,"val_tpl":"{{value_json['ENERGY']['Current']}}"}
+
+
+170	21.007733
+Publish Message [homeassistant/light/17B07E_LI_1/config]
+Publish Message [homeassistant/switch/17B07E_RL_1/config]
+  {"name":"nous set plg Tasmota","stat_t":"tele/tasmota_17B07E/STATE","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","cmd_t":"cmnd/tasmota_17B07E/POWER","pl_off":"OFF","pl_on":"ON","val_tpl":"{{value_json.POWER}}","uniq_id":"17B07E_RL_1","dev":{"ids":["17B07E"]}}
+Publish Message [homeassistant/light/17B07E_LI_2/config]
+Publish Message [homeassistant/switch/17B07E_RL_2/config]
+Publish Message [homeassistant/light/17B07E_LI_3/config]
+Publish Message [homeassistant/switch/17B07E_RL_3/config]
+Publish Message [homeassistant/light/17B07E_LI_4/config]
+Publish Message [homeassistant/switch/17B07E_RL_4/config]
+Publish Message [homeassistant/light/17B07E_LI_5/config]
+Publish Message [homeassistant/switch/17B07E_RL_5/config]
+Publish Message [homeassistant/light/17B07E_LI_6/config]
+Publish Message [homeassistant/switch/17B07E_RL_6/config]
+Publish Message [homeassistant/light/17B07E_LI_7/config]
+Publish Message [homeassistant/switch/17B07E_RL_7/config]
+Publish Message [homeassistant/light/17B07E_LI_8/config]
+Publish Message [homeassistant/switch/17B07E_RL_8/config]
+
+
+174	21.052815	192.168.100.200
+Publish Message [homeassistant/sensor/17B07E_status/config]
+  {"name":"smt-plg-17B07E-4222 status","stat_t":"tele/tasmota_17B07E/HASS_STATE","avty_t":"tele/tasmota_17B07E/LWT","pl_avail":"Online","pl_not_avail":"Offline","json_attr_t":"tele/tasmota_17B07E/HASS_STATE","unit_of_meas":"%","val_tpl":"{{value_json['RSSI']}}","ic":"mdi:information-outline","uniq_id":"17B07E_status","dev":{"ids":["17B07E"],"name":"smt-plg-17B07E-4222","mdl":"NOUS A1 Smt Plug","sw":"10.0.0.5(tasmota)","mf":"Tasmota"}}
+Publish Message [tasmota/discovery/70039F17B07E/config]
+Publish Message [tasmota/discovery/70039F17B07E/sensors]
+
+
+    613	126.914274	10.88.50.5	192.168.100.200
+    Publish Message [cmnd/tasmota_17B07E/POWER]
+    OFF
+
+617	127.104221
+Publish Message [tele/tasmota_17B07E/STATE]
+  {"Time":"2025-04-17T16:29:26","Uptime":"0T00:02:04","UptimeSec":124,"Heap":27,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":1,"POWER":"OFF","Wifi":{"AP":2,"SSId":"madnetot","BSSId":"DC:08:56:00:0A:91","Channel":2,"Mode":"11n","RSSI":60,"Signal":-70,"LinkCount":1,"Downtime":"0T00:00:05"}}
+Publish Message [stat/tasmota_17B07E/RESULT]
+  {"POWER":"OFF"}
+Publish Message [stat/tasmota_17B07E/POWER]
+  OFF
+
+
+    717	141.831903	10.88.50.5	192.168.100.200
+    Publish Message [cmnd/tasmota_17B07E/POWER]
+    ON
+
+721	141.988157
+Publish Message [tele/tasmota_17B07E/STATE]
+  {"Time":"2025-04-17T16:29:41","Uptime":"0T00:02:19","UptimeSec":139,"Heap":27,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":1,"POWER":"ON","Wifi":{"AP":2,"SSId":"madnetot","BSSId":"DC:08:56:00:0A:91","Channel":2,"Mode":"11n","RSSI":54,"Signal":-73,"LinkCount":1,"Downtime":"0T00:00:05"}}
+Publish Message [stat/tasmota_17B07E/RESULT]
+  {"POWER":"ON"}
+Publish Message [stat/tasmota_17B07E/POWER]
+  ON
+
+
+  764	153.214552	10.88.50.5	192.168.100.200
+  Publish Message [cmnd/tasmota_17B07E/POWER]
+  OFF
+
+767	153.347692
+Publish Message [tele/tasmota_17B07E/STATE]
+  {"Time":"2025-04-17T16:29:53","Uptime":"0T00:02:31","UptimeSec":151,"Heap":27,"SleepMode":"Dynamic","Sleep":50,"LoadAvg":19,"MqttCount":1,"POWER":"OFF","Wifi":{"AP":2,"SSId":"madnetot","BSSId":"DC:08:56:00:0A:91","Channel":2,"Mode":"11n","RSSI":58,"Signal":-71,"LinkCount":1,"Downtime":"0T00:00:05"}}
+Publish Message [stat/tasmota_17B07E/RESULT]
+  {"POWER":"OFF"}
+Publish Message [stat/tasmota_17B07E/POWER]
+  OFF
+
+
+
+
+Sequence of MQTT message at bootup - boiler-relay-controlv2-2254C4 relay - pandora_dump_mqtt_6.pcap
+
+
+189	29.578867	192.168.100.100	10.88.50.5
+Subscribe Request (id=1) [the-iot-factory/info]
+
+
+193	29.628814	192.168.100.100	10.88.50.5
+Subscribe Request (id=2) [homeassistant/status]
+
+
+196	29.680834	192.168.100.100	10.88.50.5
+Subscribe Request (id=3) [the-iot-factory/boiler-relay-controlv2-2254C4/cmd/RELAY]
+      
+
+198	29.730020	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_H2/config]
+  {"name":"H2","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_H2","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"ppm","ic":"mdi:fire","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['H2']}}"}
+
+
+199	29.730308	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_LPG/config],
+  {"name":"LPG","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_LPG","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"ppm","ic":"mdi:fire","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['LPG']}}"}
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_CH4/config]
+  {"name":"CH4","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_CH4","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"ppm","ic":"mdi:fire","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['CH4']}}"}
+
+
+202	29.734155	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_CO/config],
+  {"name":"CO","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_CO","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"ppm","ic":"mdi:fire","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['CO']}}"}
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_ALCOHOL/config]
+  {"name":"ALCOHOL","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_ALCOHOL","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"ppm","ic":"mdi:fire","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['ALCOHOL']}}"}
+
+
+207	29.787540	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_Clean_air/config],
+  {"name":"Clean_air","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_Clean_air","dev":{"ids":["2254C"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"ic":"mdi:leaf-circle","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['Clean_air']}}"}
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_GAS_interrupt/config]
+  {"name":"GAS_interrupt","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_GAS_interrupt","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['GAS_interrupt']}}"}
+  
+
+209	29.787961	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_Thermostate_interrupt/config],
+  {"name":"Thermostate_interrupt","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_Thermostate_interrupt","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['Thermostate_interrupt']}}"}
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_Thermostate_status/config]
+  {"name":"Thermostate_status","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_Thermostate_status","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"ic":"mdi:thermostat","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['Thermostate_status']}}"}
+
+
+211	29.788961	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_RSSI/config],
+  {"name":"RSSI","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_RSSI","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"dBm","dev_cla":"signal_strength","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['RSSI']}}"}
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_tempSensor/config],
+  {"name":"TempSensor","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_tempSensor","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"C","dev_cla":"temperature","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['tempSensor']}}"}
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_Temperature/config]
+  {"name":"Temperature","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_Temperature","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"C","dev_cla":"temperature","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['temperature']}}"}
+
+
+219	29.823265	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_Humidity/config],
+  {"name":"Humidity","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","uniq_id":"2254C4_Humidity","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"unit_of_meas":"%","dev_cla":"humidity","frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['humidity']}}"}
+Publish Message [homeassistant/switch/boiler-relay-controlv2-2254C4/2254C4_Relay1/config]
+  {"name":"Ext. Thermostat","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","cmd_t":"the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY","pl_off":"R1_OFF","pl_on":"R1_ON","uniq_id":"2254C4_Relay1","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['Relay1']}}"}
+
+
+229	29.871242	192.168.100.100	10.88.50.5
+Publish Message [homeassistant/switch/boiler-relay-controlv2-2254C4/2254C4_Relay2/config],
+  {"name":"Force Heater","stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR","avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT","pl_avail":"Online","pl_not_avail":"Offline","cmd_t":"the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY","pl_off":"R2_OFF","pl_on":"R2_ON","uniq_id":"2254C4_Relay2","dev":{"ids":["2254C4"],"configuration_url":"http://192.168.100.100","name":"boiler-relay-controlv2-2254C4","manufacturer":"The IoT Factory - www.the-iotfactory.com","model":"boiler-relay-controlv2","sw_version":"0.2"},"frc_upd":true,"val_tpl":"{{value_json['SAMPLES']['Relay2']}}"}
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/LWT]
+  Online
+
+
+257	37.118150	192.168.100.100	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/dateUpdate]
+  "18/04/2025 - 07:11:06"
+
+
+259	37.128993	192.168.100.100	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/device_name],
+  "boiler-relay-controlv2-2254C4"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/version],
+  "0.2"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/H2],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/LPG],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/CH4],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/CO],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/ALCOHOL],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Clean_air],
+  "1"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/GAS_interrupt],
+  "0"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Thermostate_interrupt],
+  "0"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Thermostate_status],
+  "0"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/RSSI],
+  "-60"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/tempSensor],
+  null
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/temperature],
+  null
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/humidity],
+  null
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Relay1],
+  "R1_OFF"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Relay2],
+  "R2_OFF"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/LWT]
+  Online
+
+
+262	37.173768	192.168.100.100	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR]
+  {"Time":"2025-04-18T07:11:06","SAMPLES":{"dateUpdate":"18/04/2025 - 07:11:06","device_name":"boiler-relay-controlv2-2254C4","version":"0.2","H2":"0.00","LPG":"0.00","CH4":"0.00","CO":"0.00","ALCOHOL":"0.00","Clean_air":"1","GAS_interrupt":"0","Thermostate_interrupt":"0","Thermostate_status":"0","RSSI":"-60","Relay1":"R1_OFF","Relay2":"R2_OFF","tempSensor":null,"temperature":null,"humidity":null}}
+
+334	57.115772	192.168.100.100	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/dateUpdate]
+  "18/04/2025 - 07:11:26"
+
+
+335	57.127099	192.168.100.100	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/device_name],
+  "boiler-relay-controlv2-2254C4"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/version],
+  "0.2"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/H2],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/LPG],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/CH4],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/CO],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/ALCOHOL],
+  "0.00"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Clean_air],
+  "1"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/GAS_interrupt],
+  "0"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Thermostate_interrupt],
+  "0"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Thermostate_status], 
+  "0"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/RSSI],
+  "-59"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/tempSensor],
+  null
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/temperature],
+  null
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/humidity],
+  null
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Relay1],
+  "R1_OFF"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/Relay2],
+  "R2_OFF"
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/LWT]
+  Online
+
+
+338	57.174299	192.168.100.100	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR]
+  {"Time":"2025-04-18T07:11:26","SAMPLES":{"dateUpdate":"18/04/2025 - 07:11:26","device_name":"boiler-relay-controlv2-2254C4","version":"0.2","H2":"0.00","LPG":"0.00","CH4":"0.00","CO":"0.00","ALCOHOL":"0.00","Clean_air":"1","GAS_interrupt":"0","Thermostate_interrupt":"0","Thermostate_status":"0","RSSI":"-59","Relay1":"R1_OFF","Relay2":"R2_OFF","tempSensor":null,"temperature":null,"humidity":null}}
+
+
+[..................]
+
+
+8	8.766850	192.168.100.221	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY]
+  R1_ON
+
+22	17.915297	192.168.100.221	10.88.50.5
+Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY]
+  R2_ON
+
+
+
+
+//the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR
+{
+  "Time":"2025-04-18T12:41:25",
+  "SAMPLES":
+  {
+    "dateUpdate":"18/04/2025 - 12:41:25",
+    "upTime":"0000-00-00T00:04:20",
+    "upTimeSeconds":"260",
+    "device_name":"boiler-relay-controlv2-2254C4",
+    "version":"0.2",
+    "H2":"0.00",
+    "LPG":"0.00",
+    "CH4":"0.00",
+    "CO":"0.00",
+    "ALCOHOL":"0.00",
+    "Clean_air":"1",
+    "GAS_interrupt":"0",
+    "Thermostate_interrupt":"0",
+    "Thermostate_status":"0",
+    "SSID":"madnetot",
+    "SIGNAL":"-60",
+    "RSSI":"100",
+    "BSSID":"DC:08:56:00:0A:91",
+    "ENCRYPTION":"WPA2",
+    "CHANNEL":"2",
+    "MODE":"STATION",
+    "Relay1":"R1_ON",
+    "Relay2":"R2_OFF",
+    "tempSensor":"26.48",
+    "temperature":"25.52",
+    "humidity":"29.42"
+  }
+}
+
+//homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_RSSI/config
+{
+  "name":"RSSI",
+  "stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR",
+  "avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"2254C4_RSSI",
+  "dev":
+  {
+    "ids":["2254C4"],
+    "configuration_url":"http://192.168.100.100",
+    "name":"boiler-relay-controlv2-2254C4",
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com",
+    "model":"boiler-relay-controlv2",
+    "sw_version":"0.2"
+  },
+  "unit_of_meas":"%",
+  "frc_upd":true,
+  "ic":"mdi:wifi-strength-3",
+  "val_tpl":"{{value_json['SAMPLES']['RSSI']}}"
+}
+
+
+//homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4_SIGNAL/config
+{
+  "name":"SIGNAL",
+  "stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR",
+  "avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT",
+  "pl_avail":"Online",
+  "pl_not_avail":"Offline",
+  "uniq_id":"2254C4_SIGNAL",
+  "dev":
+  {
+    "ids":["2254C4"],
+    "configuration_url":"http://192.168.100.100",
+    "name":"boiler-relay-controlv2-2254C4",
+    "manufacturer":"The IoT Factory - www.the-iotfactory.com",
+    "model":"boiler-relay-controlv2",
+    "sw_version":"0.2"
+    },
+    "unit_of_meas":"dBm",
+    "dev_cla":"signal_strength",
+    "frc_upd":true,
+    "val_tpl":"{{value_json['SAMPLES']['SIGNAL']}}"
+  }
