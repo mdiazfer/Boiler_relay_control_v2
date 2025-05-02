@@ -1,5 +1,7 @@
 Change Log
 ----------
+v0.9.0  - MQTT improvements
+	  + Time on counters: year, moths, yesterday, today
 v0.8.9  - First stable version with HA support
 
 
