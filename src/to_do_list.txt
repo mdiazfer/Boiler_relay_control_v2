@@ -1,3 +1,9 @@
+Change Log
+----------
+v0.8.9  - First stable version with HA support
+
+
+
 To do list for boiler relay control
 -----------------------------------
 - firmware update from wifi

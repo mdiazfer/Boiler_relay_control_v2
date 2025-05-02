@@ -31,6 +31,14 @@
     enum CloudClockStatus {CloudClockOnStatus,CloudClockSendStatus,CloudClockOffStatus};
     enum CloudSyncStatus {CloudSyncOnStatus,CloudSyncSendStatus,CloudSyncOffStatus};
     enum MqttSyncStatus {MqttSyncOnStatus,MqttSyncSendStatus,MqttSyncOffStatus};
+    struct timeOnCounters {
+      uint16_t year;                 //Year of the counters. i.e.: 2025
+      uint32_t today;               //Current day of the today counter. i.e.: 20250427
+      uint32_t yesterday;           //Current day of the yesterday counter. i.e.: 20250426
+      uint32_t counterMonths[12];   //Total time on (seconds) of the month. Months 0-11
+      uint32_t counterYesterday;    //Total time on (seconds) of yesterday
+      uint32_t counterToday;        //Total time on (seconds) of today
+    }; //68 B
     #define _DISPLAYSUPPORTINFO_
   #endif
 
@@ -59,7 +67,7 @@ extern RTC_DATA_ATTR uint64_t lastTimeNTPCheck;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
 extern struct tm nowTimeInfo;
 extern boolean NTPResuming,startTimeConfigure;
-extern bool isBeaconAdvertising;
+extern bool isBeaconAdvertising,ntpSynced;
 
 
 extern HardwareSerial boardSerialPort;

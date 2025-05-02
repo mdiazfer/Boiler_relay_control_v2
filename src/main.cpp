@@ -1,15 +1,3 @@
-//v1.0
-//Actions
-//
-//     TOFF      TRL1-ON          GAP-OFF        TRL2-ON         TOFF       TRL1-ON
-//     OFF        RL1-ON            OFF           RL2-ON         OFF         RL1-ON
-// |-----------|----------|--------------------|----------|----- ~~ ------|----------|-.....
-//  <----------><---------><-------------------><---------><---- ~~ ------><---------><-.....
-//      3s         1.0s             2s              0.5          3s            1s
-//
-//- WiFi connection
-
-
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <HardwareSerial.h>
@@ -28,6 +16,8 @@
 //Global variable definitions stored in RTC memory to be persistent during Sleep periods. 8 KB Max
 RTC_DATA_ATTR boolean firstBoot=true;  //1B - First boot flag.
 RTC_DATA_ATTR int errorsWiFiCnt=0,errorsNTPCnt=0,errorsHTTPUptsCnt=0,errorsMQTTCnt=0;
+RTC_DATA_ATTR uint16_t year=0,previousYear=0;
+RTC_DATA_ATTR uint32_t yesterday=0,today=0;
 RTC_DATA_ATTR enum CloudClockStatus CloudClockCurrentStatus; //4B
 RTC_DATA_ATTR enum CloudClockStatus CloudClockLastStatus; //4 B
 RTC_DATA_ATTR enum CloudSyncStatus CloudSyncCurrentStatus; // 4B
@@ -37,19 +27,21 @@ RTC_DATA_ATTR enum MqttSyncStatus MqttSyncLastStatus; // 4B
 RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
 RTC_DATA_ATTR struct tm startTimeInfo;
 RTC_DATA_ATTR char TZEnvVar[TZ_ENV_VARIABLE_MAX_LENGTH];
-RTC_DATA_ATTR uint32_t error_setup=NO_ERROR;
-RTC_DATA_ATTR uint8_t bootCount=255,resetCount=0;
+RTC_DATA_ATTR uint32_t error_setup=NO_ERROR,minHeapSeen=0xFFFFFFFF; //1*4=4B
+RTC_DATA_ATTR uint8_t bootCount=255,resetCount=0,resetPreventiveCount=0,resetSWCount=0;
 RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestCheck=false,forceWebServerInit=false,forceMQTTpublish=false,
-                      ntpEnabled=true,httpCloudEnabled=true,forceNTPCheck=false,
-                      mqttServerEnabled=true,forceMQTTConnect=false,secureMqttEnabled=false,bluetoothEnabled=false,webServerEnabled=false;
+                      ntpEnabled=true,httpCloudEnabled=true,forceNTPCheck=false,ntpSynced=false,
+                      mqttServerEnabled=true,forceMQTTConnect=false,secureMqttEnabled=false,bluetoothEnabled=false,webServerEnabled=false,timersEepromUpdate=false,
+                      updateHADiscovery=false;
 RTC_DATA_ATTR byte mac[6];
 RTC_DATA_ATTR uint64_t nowTimeGlobal=0,firstLoopTime=0,lastCheckTime=0,lastTimeWifiReconnectionCheck=0,lastTimeHTTPClouCheck=0,lastTimeNTPCheck=0,
                       lastCloudClockChangeCheck=0,lastInterruptTime=0,lastGasSample=0,lastTimeMQTTCheck=0,
-                      lastMQTTChangeCheck=0;
+                      lastMQTTChangeCheck=0,lastTimeSecondCheck=0,lastThermostatOnTime=0,lastBoilerOnTime=0,lastTimeTimerEepromUpdateCheck=0;
 RTC_DATA_ATTR ulong wifiReconnectPeriod=WIFI_RECONNECT_PERIOD;
 RTC_DATA_ATTR String tempHumSensorType=String(TEMP_HUM_SENSOR_TYPE); //16 B
 RTC_DATA_ATTR float valueHum=0,tempSensor=0,valueT=0;
 RTC_DATA_ATTR AsyncMqttClient mqttClient;
+RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear; //61 B each varialbe (heaterTimeOn or boilerTimeOn) - Time in seconds that the heater signal has been on (thermostat or Relay2)
 
 //EEPROM MAP
 
@@ -60,6 +52,7 @@ bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logM
 boolean NTPResuming,startTimeConfigure,wifiResuming;
 uint8_t ntpServerIndex,configVariables,auxLoopCounter=0,auxLoopCounter2=0,auxCounter=0;
 uint16_t rebounds=0;
+uint32_t lastHeap=0;
 uint64_t whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
 float gasSample=0,gasVoltCalibrated=0,RS_airCalibrated=0,RS_CurrentCalibrated=0,gasRatioSample=0;
 struct tm nowTimeInfo;
@@ -122,6 +115,11 @@ void setup() {
   error_setup|=ntpInit(wifiEnabled,ntpEnabled,wifiCurrentStatus,debugModeOn,true);
   boardSerialPort.println("[setup] - error_setup="+String(error_setup));
 
+  //Time on counters init
+  boardSerialPort.print("[setup] - Time on counters initialization");
+  error_setup|=timeOnCountersInit(error_setup,debugModeOn,true,ntpSynced);
+  boardSerialPort.println("[setup] - error_setup="+String(error_setup));
+  
   //MQTT init
   boardSerialPort.print("[setup] - MQTT initialization");
   error_setup|=mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,error_setup,debugModeOn,true,mqttTopicName,device);
@@ -150,6 +148,35 @@ void loop() {
   }
 
   //Rest of loop interactions
+
+  //Check the heap
+  lastHeap=esp_get_minimum_free_heap_size();
+  if(lastHeap<minHeapSeen) {
+    minHeapSeen=lastHeap; //Track the minimun heap size (bytes)
+    EEPROM.writeInt(0x41D,minHeapSeen); //Write in EEPROM
+    EEPROM.commit();
+  }
+  if(lastHeap<ABSULUTE_MIN_HEAP_THRESHOLD) { //Preventive reset to avoid crash
+    resetPreventiveCount++; //preventive resets (mainly becuase low heap situation)
+    EEPROM.write(0x41B,resetPreventiveCount);
+    EEPROM.commit();
+    ESP.restart(); //Rebooting
+  }
+
+  //Regular actions every ONE_SECOND_PERIOD seconds
+  // 1) Check if time on counters need to be updated
+  nowTimeGlobal=millis();
+  if ((nowTimeGlobal-lastTimeSecondCheck) >= ONE_SECOND_PERIOD) {
+    
+    one_second_check_period(false,nowTimeGlobal,ntpSynced);
+  }
+
+  //Regular actions every TIME_COUNTERS_EEPROM_UPDATE_PERIOD seconds to recover WiFi connection
+  nowTimeGlobal=millis();
+  if ((nowTimeGlobal-lastTimeTimerEepromUpdateCheck) >= TIME_COUNTERS_EEPROM_UPDATE_PERIOD) {
+    
+    time_counters_eeprom_update_check_period(true,nowTimeGlobal);
+  }
 
   //Regular actions every WIFI_RECONNECT_PERIOD seconds to recover WiFi connection
   //forceWifiReconnect==true if:
@@ -223,4 +250,5 @@ void loop() {
     //Publish MQTT message with the new samples
     forceMQTTpublish=true;
   }
+ 
 }

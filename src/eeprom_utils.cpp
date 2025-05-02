@@ -1,6 +1,6 @@
 #include "eeprom_utils.h"
 
-//EEPROM MAP
+//EEPROM MAP - Max size for ESP32 is 4kB = 0x000 - 0xFFF - https://esp32.com/viewtopic.php?t=9136#p38187
 //Address 0-5: Stores the firmware version char []*
 //Address 6-7: Stores checksum
 //Address 08: Stores Config Variable Valued (configVariables)
@@ -43,6 +43,13 @@
 //Address 3E0-416: iBeacon Proximity char []* (36 B+null=37 B)
 //Address 417-418: iBeacon Major uint16_t 2 B
 //Address 419-41A: iBeacon Minor uint16_t  2 B
+//Address 41B: resetPreventiveCount - Number of controlled preventive resets since last upgrade
+//Address 41C: resetSwCount - Number of software (restart button) resets since last upgrade
+//Address 41D-420: minHeapSeen uint32_t  4 B
+//Address 421-464: heaterTimeOnYear struct  68 B
+//Address 465-4A8: heaterTimeOnPreviousYear struct  68 B
+//Address 4A9-4EC: boilerTimeOnYear struct  68 B
+//Address 4ED-530: boilerTimeOnPreviousYear struct  68 B
 
 
 uint16_t checkSum(byte *addr, uint32_t count) {
@@ -307,12 +314,20 @@ void factoryConfReset() {
   EEPROM.writeUShort(0x419,aux);
 
   if (debugModeOn) {boardSerialPort.println(" and BLE Minor=0x"+String(aux,HEX));}
-
+  
+  //Set minHeap
+  EEPROM.writeInt(0x41D,minHeapSeen);
+  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote Min Heap Seen=0x"+String(minHeapSeen,HEX));}
+  
   //Initialize bootCount variable
   bootCount=1;
   EEPROM.write(0x3DE,bootCount); 
 
-  //Initialize resetCount variable
-  resetCount=0;
+  //Initialize reset counters
+  resetCount=0; //uncontrolled resets
   EEPROM.write(0x3DF,resetCount); 
+  resetPreventiveCount=0; //preventive resets (mainly becuase low heap situation)
+  EEPROM.write(0x41B,resetPreventiveCount);
+  resetSWCount=0; //reset from the HA restart button
+  EEPROM.write(0x41C,resetSWCount);
 }

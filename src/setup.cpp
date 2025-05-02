@@ -511,6 +511,7 @@ void EEPROMInit() {
   *****************************************************/
 
   bool updateEEPROM=false;
+  char readFirmwareVersion[VERSION_CHAR_LENGTH+1];
 
   //EEPROM init first
   EEPROM.begin(EEPROM_SIZE); // Initialize EEPROM with predefined size. Config variables ares stored there
@@ -518,8 +519,12 @@ void EEPROMInit() {
   memset(activeCookie,'\0',COOKIE_SIZE); //init variable
   memset(currentSetCookie,'\0',COOKIE_SIZE); //init variable
 
+  //Set existing version from global_setup.h
+  memset(firmwareVersion,'\0',VERSION_CHAR_LENGTH+1);
+  sprintf(firmwareVersion,VERSION);
+
   //Check if it is the first run after the very first firmware upload
-  memset(firmwareVersion,'\0',VERSION_CHAR_LENGTH+1);EEPROM.get(0x00,firmwareVersion);
+  memset(readFirmwareVersion,'\0',VERSION_CHAR_LENGTH+1);EEPROM.get(0x00,readFirmwareVersion);
   uint16_t readChecksum,computedChecksum;
   readChecksum=EEPROM.read(7);readChecksum=readChecksum<<8;readChecksum|=EEPROM.read(6);
   computedChecksum=checkSum((byte*)firmwareVersion,VERSION_CHAR_LENGTH);
@@ -528,12 +533,10 @@ void EEPROMInit() {
     //It's the first run after the very first firmware upload
     //Variable inizialization to values configured in global_setup
 
-    if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - Version checksums differ: firmwareVersion"+String(firmwareVersion)+", readChecksums="+String(readChecksum)+", computedChecksum="+String(computedChecksum));}
+    if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - Writting EEPROM needed as the version checksums differ: readFirmwareVersion="+String(readFirmwareVersion)+", readChecksums="+String(readChecksum)+", firmwareVersion="+String(firmwareVersion)+", computedChecksum="+String(computedChecksum));}
 
     //Save version and checksum
-    byte auxBuf[]=VERSION;
-    computedChecksum=checkSum(auxBuf,VERSION_CHAR_LENGTH);
-    for (int i=0; i<VERSION_CHAR_LENGTH; i++) EEPROM.write(i,auxBuf[i]);EEPROM.write(VERSION_CHAR_LENGTH,'\0');
+    for (int i=0; i<VERSION_CHAR_LENGTH; i++) EEPROM.write(i,firmwareVersion[i]);EEPROM.write(VERSION_CHAR_LENGTH,'\0');
     EEPROM.write(6,(byte) computedChecksum);
     computedChecksum=computedChecksum>>8;
     EEPROM.write(7,(byte) computedChecksum);
@@ -587,48 +590,75 @@ void EEPROMInit() {
     bootCount=bootCount==255?EEPROM.read(0x3DE)+1:1; //bootCount = 255 if VERSION = version in EEPROM. Otherwhise bootCount=0 (need to update value in EEPROM)
     EEPROM.write(0x3DE,bootCount);
 
-    //Set the resettCount from EEPROM and check if it needs to be updated
+    //Set the resetCount from EEPROM and check if it needs to be updated
     resetCount=EEPROM.read(0x3DF);
-    switch (esp_reset_reason()) { //v1.2.0 - https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/misc_system_api.html#_CPPv418esp_reset_reason_t
+    resetPreventiveCount=EEPROM.read(0x41B);
+    resetSWCount=EEPROM.read(0x41C);
+    esp_reset_reason_t resetReason=esp_reset_reason();
+    /*
+    0  ESP_RST_UNKNOWN,    //!< Reset reason can not be determined
+    1  ESP_RST_POWERON,    //!< Reset due to power-on event
+    2  ESP_RST_EXT,        //!< Reset by external pin (not applicable for ESP32)
+    3  ESP_RST_SW,         //!< Software reset via esp_restart
+    4  ESP_RST_PANIC,      //!< Software reset due to exception/panic
+    5  ESP_RST_INT_WDT,    //!< Reset (software or hardware) due to interrupt watchdog
+    6  ESP_RST_TASK_WDT,   //!< Reset due to task watchdog
+    7  ESP_RST_WDT,        //!< Reset due to other watchdogs
+    8  ESP_RST_DEEPSLEEP,  //!< Reset after exiting deep sleep mode
+    9  ESP_RST_BROWNOUT,   //!< Brownout reset (software or hardware)
+    10 ESP_RST_SDIO,       //!< Reset over SDIO
+    */
+    switch (resetReason) { //v1.2.0 - https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/misc_system_api.html#_CPPv418esp_reset_reason_t
       case ESP_RST_UNKNOWN: //Reset reason can not be determined
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;updateEEPROM=true;
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_UNKNOWN. Resetting resetCount");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_UNKNOWN (0). Resetting resetCount");break;
+      case ESP_RST_POWERON: //Power-on event
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_POWERON (1)");break;
+      case ESP_RST_EXT: //External pin (not applicable for ESP32)
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_EXT (2)");break;
+      case ESP_RST_SW: //Software reset via esp_restart()
+        resetSWCount++;EEPROM.write(0x41C,resetSWCount);
+        if (resetPreventiveCount!=0) {resetSWCount-=resetPreventiveCount;updateEEPROM=true;} //Substract preventive resets to get the resets from the HA Restart buttong
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_SW (3)");break;
       case ESP_RST_PANIC: //Software reset due to exception/panic
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;updateEEPROM=true;
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_PANIC. Resetting resetCount");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_PANIC (4). Resetting resetCount");break;
       case ESP_RST_INT_WDT: //Reset (software or hardware) due to interrupt watchdog.
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_INT_WDT");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_INT_WDT (5)");break;
       case ESP_RST_TASK_WDT: //Reset due to task watchdog
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;updateEEPROM=true;
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_TASK_WDT. Resetting resetCount");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_TASK_WDT (6). Resetting resetCount");break;
       case ESP_RST_WDT: //Reset due to other watchdogs
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;updateEEPROM=true;
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_WDT. Resetting resetCount");break;
-      case ESP_RST_POWERON: //Power-on event
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_POWERON");break;
-      case ESP_RST_EXT: //External pin (not applicable for ESP32)
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_EXT");break;
-      case ESP_RST_SW: //Software reset via esp_restart()
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_SW");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_WDT (7). Resetting resetCount");break;
       case ESP_RST_DEEPSLEEP: //Reset after exiting deep sleep mode
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_DEEPSLEEP");break;
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_DEEPSLEEP (8)");break;
       case ESP_RST_BROWNOUT: //Brownout reset (software or hardware) - Supply voltage goes below safe level
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_BROWNOUT");break;
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_BROWNOUT (9)");break;
       case ESP_RST_SDIO: //Reset over SDIO
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_SDIO");break;
+        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_SDIO (10)");break;
       default:
         boardSerialPort.println("  [EEPROMInit] - Reset reason=default");break;
     }
+    samples["resetReason"] = String(resetReason);
+
+    //Set minHeapSeen
+    minHeapSeen=EEPROM.readInt(0x41D);
+
+    //Update time on counters
+    EEPROM.get(0x421,heaterTimeOnYear);EEPROM.get(0x465,heaterTimeOnPreviousYear);
+    EEPROM.get(0x4A9,boilerTimeOnYear);EEPROM.get(0x4ED,boilerTimeOnPreviousYear);
   }
 
   if (updateEEPROM) 
-    {if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - Update EEPROM variables with values taken from global_setup.h");}}
+    {if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - No version change, but update EEPROM needed with values taken from global_setup.h");}}
   else 
-    {if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - Update EEPROM with bootCount variables: bootCount="+String(bootCount));}}
+    {if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - No version change, but update EEPROM needed with counter variables");}}
   EEPROM.commit();
 }
 
@@ -918,7 +948,8 @@ uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean s
           }
           
           //Publish HA Discovery messages - v1.9
-          mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString());
+          mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),true); //Remove the topics first
+          mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Update the topics seconds
         }
 
         if (MqttSyncCurrentStatus==MqttSyncOnStatus) {
@@ -967,4 +998,233 @@ uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean s
   }
 
   return errorMqtt;
+}
+
+uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup, bool ntpSynced) {
+  /******************************************************
+   Function timeOnCountersInit
+   Target: Init the Time on counters stuff
+   Parameters:
+    error_setup: errors so far
+    debugModeOn: True to print out logs
+    fromSetup: True if it is called from setup time
+    ntpSynced: True if NTP is synced at least once
+   Return: error_setup
+  *****************************************************/
+
+
+  if (debugModeOn) {
+    if (fromSetup) {boardSerialPort.print("\n");boardSerialPort.print("  [timeOnCountersInit] - Time on counters init.");}
+    else boardSerialPort.print(String(millis())+" - [timeOnCountersInit] - Time on counters init.");
+  }
+  
+  bool updateEeprom=false;
+  struct tm auxTimeInfo,*yesterdayTimeInfo;
+  time_t yesterdayEpoch;
+  getLocalTime(&auxTimeInfo);
+  year=auxTimeInfo.tm_year+1900;
+  previousYear=year-1;
+  today=year*10000+(auxTimeInfo.tm_mon+1)*100+auxTimeInfo.tm_mday;
+  yesterdayEpoch=mktime(&auxTimeInfo)-86400;
+  yesterdayTimeInfo=localtime(&yesterdayEpoch);
+  yesterday=(yesterdayTimeInfo->tm_year+1900)*10000+(yesterdayTimeInfo->tm_mon+1)*100+yesterdayTimeInfo->tm_mday;
+
+  if (!ntpSynced) {
+    //No NTP, so no real date available. Let's skip counters stuff
+    heaterTimeOnYear.year=0; heaterTimeOnPreviousYear.year=0;
+    heaterTimeOnYear.yesterday=0; heaterTimeOnPreviousYear.yesterday=0;
+    heaterTimeOnYear.today=0; heaterTimeOnPreviousYear.today=0;
+    for (int i=0;i<12;i++) {heaterTimeOnYear.counterMonths[i]=0;heaterTimeOnPreviousYear.counterMonths[i]=0;}
+    heaterTimeOnYear.counterYesterday=0;heaterTimeOnPreviousYear.counterYesterday=0;
+    heaterTimeOnYear.counterToday=0;heaterTimeOnPreviousYear.counterToday=0;
+    
+    boilerTimeOnYear.year=0; boilerTimeOnPreviousYear.year=0;
+    boilerTimeOnYear.yesterday=0; boilerTimeOnPreviousYear.yesterday=0;
+    boilerTimeOnYear.today=0; boilerTimeOnPreviousYear.today=0;
+    for (int i=0;i<12;i++) {boilerTimeOnYear.counterMonths[i]=0;boilerTimeOnPreviousYear.counterMonths[i]=0;}
+    boilerTimeOnYear.counterYesterday=0;boilerTimeOnPreviousYear.counterYesterday=0;
+    boilerTimeOnYear.counterToday=0;boilerTimeOnPreviousYear.counterToday=0;
+    
+    //Update JSON variable
+    samples["heaterYear"] = "0";
+    samples["heaterOnYearJan"] = "0";samples["heaterOnYearFeb"] = "0";samples["heaterOnYearMar"] = "0";samples["heaterOnYearApr"] = "0";samples["heaterOnYearMay"] = "0";samples["heaterOnYearJun"] = "0";
+    samples["heaterOnYearJul"] = "0";samples["heaterOnYearAug"] = "0";samples["heaterOnYearSep"] = "0";samples["heaterOnYearOct"] = "0";samples["heaterOnYearNov"] = "0";samples["heaterOnYearDec"] = "0";
+    samples["heaterYesterday"] = "0";
+    samples["heaterToday"] = "0";
+    samples["heaterPreviousYear"] = "0";
+    samples["heaterOnPreviousYearJan"] = "0";samples["heaterOnPreviousYearFeb"] = "0";samples["heaterOnPreviousYearMar"] = "0";samples["heaterOnPreviousYearApr"] = "0";samples["heaterOnPreviousYearMay"] = "0";samples["heaterOnPreviousYearJun"] = "0";
+    samples["heaterOnPreviousYearJul"] = "0";samples["heaterOnPreviousYearAug"] = "0";samples["heaterOnPreviousYearSep"] = "0";samples["heaterOnPreviousYearOct"] = "0";samples["heaterOnPreviousYearNov"] = "0";samples["heaterOnPreviousYearDec"] = "0";
+    
+    samples["boilerYear"] = "0";
+    samples["boilerOnYearJan"] = "0";samples["boilerOnYearFeb"] = "0";samples["boilerOnYearMar"] = "0";samples["boilerOnYearApr"] = "0";samples["boilerOnYearMay"] = "0";samples["boilerOnYearJun"] = "0";
+    samples["boilerOnYearJul"] = "0";samples["boilerOnYearAug"] = "0";samples["boilerOnYearSep"] = "0";samples["boilerOnYearOct"] = "0";samples["boilerOnYearNov"] = "0";samples["boilerOnYearDec"] = "0";
+    samples["boilerYesterday"] = "0";
+    samples["boilerToday"] = "0";
+    samples["boilerPreviousYear"] = "0";
+    samples["boilerOnPreviousYearJan"] = "0";samples["boilerOnPreviousYearFeb"] = "0";samples["boilerOnPreviousYearMar"] = "0";samples["boilerOnPreviousYearApr"] = "0";samples["boilerOnPreviousYearMay"] = "0";samples["boilerOnPreviousYearJun"] = "0";
+    samples["boilerOnPreviousYearJul"] = "0";samples["boilerOnPreviousYearAug"] = "0";samples["boilerOnPreviousYearSep"] = "0";samples["boilerOnPreviousYearOct"] = "0";samples["boilerOnPreviousYearNov"] = "0";samples["boilerOnPreviousYearDec"] = "0";
+
+    if (fromSetup) {
+      boardSerialPort.print("\n");
+      if (debugModeOn) {boardSerialPort.println("  [timeOnCountersInit] - There is no real date as there is no NTP sync.\n  [timeOnCountersInit] - [KO]");}
+      else boardSerialPort.println(" ...... [KO]");
+    }
+    else boardSerialPort.println(" ...... [KO]");
+          
+    error_setup|=ERROR_EEPROM_VARIABLES_INIT;
+    return error_setup;
+  }
+
+  //Check variable coherency. If not, it means it's timers in EEPROM were never store before. Init them.
+  EEPROM.get(0x421,heaterTimeOnYear);EEPROM.get(0x465,heaterTimeOnPreviousYear);
+  EEPROM.get(0x4A9,boilerTimeOnYear); EEPROM.get(0x4ED,boilerTimeOnPreviousYear);
+  
+  /*heaterTimeOnPreviousYear.year=2024;
+  heaterTimeOnPreviousYear.yesterday=20240530;heaterTimeOnPreviousYear.today=20240531;
+  heaterTimeOnPreviousYear.counterYesterday=0;heaterTimeOnPreviousYear.counterToday=0;
+  heaterTimeOnPreviousYear.counterMonths[0]=2178360;heaterTimeOnPreviousYear.counterMonths[1]=156600;heaterTimeOnPreviousYear.counterMonths[2]=100440;heaterTimeOnPreviousYear.counterMonths[3]=41400;heaterTimeOnPreviousYear.counterMonths[4]=16920;heaterTimeOnPreviousYear.counterMonths[5]=0;
+  heaterTimeOnPreviousYear.counterMonths[6]=0;heaterTimeOnPreviousYear.counterMonths[7]=0;heaterTimeOnPreviousYear.counterMonths[8]=0;heaterTimeOnPreviousYear.counterMonths[9]=14760;heaterTimeOnPreviousYear.counterMonths[10]=115200;heaterTimeOnPreviousYear.counterMonths[11]=228960;
+  heaterTimeOnYear.year=2025;
+  heaterTimeOnYear.yesterday=20250420;heaterTimeOnYear.today=20250421;
+  heaterTimeOnYear.counterMonths[0]=1060200;heaterTimeOnYear.counterMonths[1]=181800;heaterTimeOnYear.counterMonths[2]=273960;heaterTimeOnYear.counterMonths[3]=46080;heaterTimeOnYear.counterMonths[4]=0;heaterTimeOnYear.counterMonths[5]=0;
+  heaterTimeOnYear.counterMonths[6]=0;heaterTimeOnYear.counterMonths[7]=0;heaterTimeOnYear.counterMonths[8]=0;heaterTimeOnYear.counterMonths[9]=0;heaterTimeOnYear.counterMonths[10]=0;heaterTimeOnYear.counterMonths[11]=0;
+  heaterTimeOnYear.counterYesterday=0;heaterTimeOnYear.counterToday=0;
+  heaterTimeOnYear.year=0xff;*/
+
+  if (heaterTimeOnYear.year != (heaterTimeOnYear.yesterday/10000) || 
+      heaterTimeOnYear.year != (heaterTimeOnYear.today/10000) ||
+      heaterTimeOnPreviousYear.year != (heaterTimeOnPreviousYear.yesterday/10000) || 
+      heaterTimeOnPreviousYear.year != (heaterTimeOnPreviousYear.today/10000) ||
+      boilerTimeOnYear.year != (boilerTimeOnYear.yesterday/10000) || 
+      boilerTimeOnYear.year != (boilerTimeOnYear.today/10000) ||
+      boilerTimeOnPreviousYear.year != (boilerTimeOnPreviousYear.yesterday/10000) || 
+      boilerTimeOnPreviousYear.year != (boilerTimeOnPreviousYear.today/10000)) {
+
+        //No coherency. Variables needs to to init and stored in EEPROM
+        if (debugModeOn) {if (fromSetup) {boardSerialPort.print("\n");}boardSerialPort.println("  [timeOnCountersInit] - No EEPROM coherency. Writting counters in EEPROM");}
+
+        //Initialize time on counters
+        heaterTimeOnYear.year=year; heaterTimeOnPreviousYear.year=previousYear;
+        heaterTimeOnYear.yesterday=yesterday; heaterTimeOnPreviousYear.yesterday=yesterday-10000; 
+        heaterTimeOnYear.today=today; heaterTimeOnPreviousYear.today=today-10000;
+        for (int i=0; i<12; i++) {heaterTimeOnYear.counterMonths[i]=0;heaterTimeOnPreviousYear.counterMonths[i]=0;}
+        heaterTimeOnYear.counterYesterday=0; heaterTimeOnPreviousYear.counterYesterday=0;
+        heaterTimeOnYear.counterToday=0; heaterTimeOnPreviousYear.counterToday=0;
+
+        //Initialize time on counters
+        boilerTimeOnYear.year=year; boilerTimeOnPreviousYear.year=year-1;
+        boilerTimeOnYear.yesterday=yesterday; boilerTimeOnPreviousYear.yesterday=yesterday-10000;
+        boilerTimeOnYear.today=today; boilerTimeOnPreviousYear.today=today-10000;
+        for (int i=0; i<12; i++) {boilerTimeOnYear.counterMonths[i]=0;boilerTimeOnPreviousYear.counterMonths[i]=0;}
+        boilerTimeOnYear.counterYesterday=0; boilerTimeOnPreviousYear.counterYesterday=0;
+        boilerTimeOnYear.counterToday=0; boilerTimeOnPreviousYear.counterToday=0;
+        
+        updateEeprom=true;
+  }
+  else {
+    if (debugModeOn) {if (fromSetup) {boardSerialPort.print("\n");} boardSerialPort.println("  [timeOnCountersInit] - EEPROM variables are coherent. Not writting counters in EEPROM.");}
+    if (today==heaterTimeOnYear.today) {
+      //Boot same day than date in EEPROM
+      //Do nothing. Variables already got from EEPROM
+      if (debugModeOn) boardSerialPort.println("  [timeOnCountersInit] - Date saved in EEPROM is same than today. Do nothing else.");
+    }
+    else {
+      //Boot different day than date in EEPROM
+      if (yesterday==heaterTimeOnYear.today) {
+        //Boot the next day than date in EEPROMtersInit] - year="+String(year)+", heaterTimeOnYear.year="+String(heaterTimeOnYear.year));
+        if (year==heaterTimeOnYear.year) {
+          //Boot the next day than date in EEPROM and same year
+          heaterTimeOnYear.counterYesterday=heaterTimeOnYear.counterToday; boilerTimeOnYear.counterYesterday=boilerTimeOnYear.counterToday;
+        }
+        else {
+          //It's January 1st or a new year
+          memcpy(&heaterTimeOnPreviousYear,&heaterTimeOnYear,sizeof(heaterTimeOnYear)); memcpy(&boilerTimeOnPreviousYear,&boilerTimeOnYear,sizeof(boilerTimeOnYear));
+          heaterTimeOnYear.year=year; boilerTimeOnYear.year=year;
+          for (int i=0; i<12; i++) {heaterTimeOnYear.counterMonths[i]=0;boilerTimeOnYear.counterMonths[i]=0;}
+          heaterTimeOnYear.counterYesterday=heaterTimeOnYear.counterToday; boilerTimeOnYear.counterYesterday=boilerTimeOnYear.counterToday;
+        }
+      }
+      else {
+        //No next day than in EEPROM
+        if (year==heaterTimeOnYear.year) {
+          //i.e.: Boot one week after than date in EEPROM and same year
+          heaterTimeOnYear.counterYesterday=0;boilerTimeOnYear.counterYesterday=0;
+        }
+        else {
+          //Boot in different year
+          if (previousYear==heaterTimeOnYear.year) {
+            //i.e.: Boot 14 months after than date in EEPROM
+            memcpy(&heaterTimeOnPreviousYear,&heaterTimeOnYear,sizeof(heaterTimeOnYear)); memcpy(&boilerTimeOnPreviousYear,&boilerTimeOnYear,sizeof(boilerTimeOnYear));
+          }
+          else {
+            //i.e.: Boot 3 years after than date in EEPROM
+            heaterTimeOnPreviousYear.year=previousYear; boilerTimeOnPreviousYear.year=previousYear;
+            heaterTimeOnPreviousYear.yesterday=yesterday-10000; boilerTimeOnPreviousYear.yesterday=yesterday-10000; 
+            heaterTimeOnPreviousYear.today=today-10000; boilerTimeOnPreviousYear.today=today-10000;
+            for (int i=0; i<12; i++) {heaterTimeOnPreviousYear.counterMonths[i]=0;boilerTimeOnPreviousYear.counterMonths[i]=0;}
+            heaterTimeOnPreviousYear.counterYesterday=0;boilerTimeOnPreviousYear.counterYesterday=0;
+            heaterTimeOnPreviousYear.counterToday=0;boilerTimeOnPreviousYear.counterToday=0;
+          }
+          heaterTimeOnYear.year=year; boilerTimeOnYear.year=year;
+          for (int i=0; i<12; i++) {heaterTimeOnYear.counterMonths[i]=0;boilerTimeOnYear.counterMonths[i]=0;}
+          heaterTimeOnYear.counterYesterday=0;boilerTimeOnYear.counterYesterday=0;
+        }
+      }
+
+      heaterTimeOnYear.yesterday=yesterday; boilerTimeOnYear.yesterday=yesterday;
+      heaterTimeOnYear.today=today; boilerTimeOnYear.today=today;
+      heaterTimeOnYear.counterToday=0;boilerTimeOnYear.counterToday=0;
+
+      updateEeprom=true;
+    }
+  } 
+
+  //Save variables in EEPROM
+  if (updateEeprom) {
+    EEPROM.put(0x421,heaterTimeOnYear); EEPROM.put(0x465,heaterTimeOnPreviousYear);
+    EEPROM.put(0x4A9,boilerTimeOnYear); EEPROM.put(0x4ED,boilerTimeOnPreviousYear);
+    EEPROM.commit();
+    if (debugModeOn) boardSerialPort.println("  [timeOnCountersInit] - EEPROM updated with variables and counters");
+  }
+
+  //Update JSON variable
+  uint32_t auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnYear.counterMonths[i];
+  samples["heaterYear"] = String(heaterTimeOnYear.year);
+  samples["heaterYesterda"] = String(heaterTimeOnYear.yesterday);
+  samples["heaterToday"] = String(heaterTimeOnYear.today);
+  samples["heaterOnYear"] = String(auxTimeOn);
+  samples["heaterOnYearJan"] = String(heaterTimeOnYear.counterMonths[0]);samples["heaterOnYearFeb"] = String(heaterTimeOnYear.counterMonths[1]);samples["heaterOnYearMar"] = String(heaterTimeOnYear.counterMonths[2]);samples["heaterOnYearApr"] = String(heaterTimeOnYear.counterMonths[3]);samples["heaterOnYearMay"] = String(heaterTimeOnYear.counterMonths[4]);samples["heaterOnYearJun"] = String(heaterTimeOnYear.counterMonths[5]);
+  samples["heaterOnYearJul"] = String(heaterTimeOnYear.counterMonths[6]);samples["heaterOnYearAug"] = String(heaterTimeOnYear.counterMonths[7]);samples["heaterOnYearSep"] = String(heaterTimeOnYear.counterMonths[8]);samples["heaterOnYearOct"] = String(heaterTimeOnYear.counterMonths[9]);samples["heaterOnYearNov"] = String(heaterTimeOnYear.counterMonths[10]);samples["heaterOnYearDec"] = String(heaterTimeOnYear.counterMonths[11]);
+  samples["heaterOnYesterday"] = String(heaterTimeOnYear.counterYesterday);
+  samples["heaterOnToday"] = String(heaterTimeOnYear.counterToday);
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnPreviousYear.counterMonths[i];
+  samples["heaterPreviousYear"] = String(heaterTimeOnPreviousYear.year);
+  samples["heaterOnPreviousYear"] = String(auxTimeOn);
+  samples["heaterOnPreviousYearJan"] = String(heaterTimeOnPreviousYear.counterMonths[0]);samples["heaterOnPreviousYearFeb"] = String(heaterTimeOnPreviousYear.counterMonths[1]);samples["heaterOnPreviousYearMar"] = String(heaterTimeOnPreviousYear.counterMonths[2]);samples["heaterOnPreviousYearApr"] = String(heaterTimeOnPreviousYear.counterMonths[3]);samples["heaterOnPreviousYearMay"] = String(heaterTimeOnPreviousYear.counterMonths[4]);samples["heaterOnPreviousYearJun"] = String(heaterTimeOnPreviousYear.counterMonths[5]);
+  samples["heaterOnPreviousYearJul"] = String(heaterTimeOnPreviousYear.counterMonths[6]);samples["heaterOnPreviousYearAug"] = String(heaterTimeOnPreviousYear.counterMonths[7]);samples["heaterOnPreviousYearSep"] = String(heaterTimeOnPreviousYear.counterMonths[8]);samples["heaterOnPreviousYearOct"] = String(heaterTimeOnPreviousYear.counterMonths[9]);samples["heaterOnPreviousYearNov"] = String(heaterTimeOnPreviousYear.counterMonths[10]);samples["heaterOnPreviousYearDec"] = String(heaterTimeOnPreviousYear.counterMonths[11]);
+  
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnYear.counterMonths[i];
+  samples["boilerYear"] = String(boilerTimeOnYear.year);
+  samples["boilerYesterday"] = String(boilerTimeOnYear.yesterday);
+  samples["boilerToday"] = String(boilerTimeOnYear.today);
+  samples["boilerOnYear"] = String(auxTimeOn);
+  samples["boilerOnYearJan"] = String(boilerTimeOnYear.counterMonths[0]);samples["boilerOnYearFeb"] = String(boilerTimeOnYear.counterMonths[1]);samples["boilerOnYearMar"] = String(boilerTimeOnYear.counterMonths[2]);samples["boilerOnYearApr"] = String(boilerTimeOnYear.counterMonths[3]);samples["boilerOnYearMay"] = String(boilerTimeOnYear.counterMonths[4]);samples["boilerOnYearJun"] = String(boilerTimeOnYear.counterMonths[5]);
+  samples["boilerOnYearJul"] = String(boilerTimeOnYear.counterMonths[6]);samples["boilerOnYearAug"] = String(boilerTimeOnYear.counterMonths[7]);samples["boilerOnYearSep"] = String(boilerTimeOnYear.counterMonths[8]);samples["boilerOnYearOct"] = String(boilerTimeOnYear.counterMonths[9]);samples["boilerOnYearNov"] = String(boilerTimeOnYear.counterMonths[10]);samples["boilerOnYearDec"] = String(boilerTimeOnYear.counterMonths[11]);
+  samples["boilerOnYesterday"] = String(boilerTimeOnYear.counterYesterday);
+  samples["boilerOnToday"] = String(boilerTimeOnYear.counterToday);
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnPreviousYear.counterMonths[i];
+  samples["boilerPreviousYear"] = String(boilerTimeOnPreviousYear.year);
+  samples["boilerOnPreviousYear"] = String(auxTimeOn);
+  samples["boilerOnPreviousYearJan"] = String(boilerTimeOnPreviousYear.counterMonths[0]);samples["boilerOnPreviousYearFeb"] = String(boilerTimeOnPreviousYear.counterMonths[1]);samples["boilerOnPreviousYearMar"] = String(boilerTimeOnPreviousYear.counterMonths[2]);samples["boilerOnPreviousYearApr"] = String(boilerTimeOnPreviousYear.counterMonths[3]);samples["boilerOnPreviousYearMay"] = String(boilerTimeOnPreviousYear.counterMonths[4]);samples["boilerOnPreviousYearJun"] = String(boilerTimeOnPreviousYear.counterMonths[5]);
+  samples["boilerOnPreviousYearJul"] = String(boilerTimeOnPreviousYear.counterMonths[6]);samples["boilerOnPreviousYearAug"] = String(boilerTimeOnPreviousYear.counterMonths[7]);samples["boilerOnPreviousYearSep"] = String(boilerTimeOnPreviousYear.counterMonths[8]);samples["boilerOnPreviousYearOct"] = String(boilerTimeOnPreviousYear.counterMonths[9]);samples["boilerOnPreviousYearNov"] = String(boilerTimeOnPreviousYear.counterMonths[10]);samples["boilerOnPreviousYearDec"] = String(boilerTimeOnPreviousYear.counterMonths[11]);
+
+  //samples.printTo(boardSerialPort); Print out the JSON variable
+
+  if (fromSetup) {
+    if (debugModeOn) {boardSerialPort.println("  [timeOnCountersInit] - Counter variables got from EEPROM.\n  [timeOnCountersInit] - [OK]");}
+    else boardSerialPort.println(" ...... [OK]");
+  }
+  else boardSerialPort.println(" ...... [OK]");
+ 
+  return error_setup;
 }

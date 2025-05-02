@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "0.8.7"
+#define VERSION "0.9.0"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -23,7 +23,7 @@
 #define PIN_LED 23     //GPIO pin LED control
 #define PIN_THERMOSTATE 26    //GPIO interrupt pin thermostate ON
 #define PIN_GAS_SENSOR_A0  35    //GPIO pin for GAS samples - ADC1. Looks like pins in ADC2 can't be used for Analog if the WiFi module is used: https://www.luisllamas.es/en/esp32-adc/
-#define EEPROM_SIZE 0x450
+#define EEPROM_SIZE 0x1000
 
 #define DEVICE_NAME_PREFIX "boiler-relay-controlv2"
 #ifndef DEBUG_MODE_ON
@@ -94,10 +94,13 @@
 #define ERROR_NTP_SERVER              0x00000080
 #define ERROR_CLOUD_SERVER            0x00000100
 #define ERROR_MQTT_SERVER             0x00040000
+#define ERROR_EEPROM_VARIABLES_INIT   0x00080000
 
 //Timers and Global stuff
 #define INITIAL_BOOTIME X  //milliseconds - Time to bootup as per board measurements
 #define uS_TO_S_FACTOR  1000000
+#define ONE_SECOND_PERIOD 1000  //Millisenconds - 1 second
+#define TIME_COUNTERS_EEPROM_UPDATE_PERIOD 3600000  //Millisenconds - 1 hour
 #define HTTP_ANSWER_TIMEOUT 7000  //Millisenconds
 #define NTP_KO_CHECK_PERIOD  60000 //Milliseconds. 1 minute
 #define NTP_CHECK_TIMEOUT     5000  //Millisecons. Should have NTP anser within 2 sc.
@@ -145,6 +148,7 @@
 #define MQTT_TOPIC_CMD_SUFIX_SUBSCRIPTION "cmnd/RELAY"
 #define MQTT_HA_SENSOR_TOPIC_PREFIX "homeassistant/sensor"
 #define MQTT_HA_BINARY_SENSOR_TOPIC_PREFIX "homeassistant/binary_sensor"
+#define MQTT_HA_BUTTON_TOPIC_PREFIX "homeassistant/button"
 #define MQTT_HA_SWITCH_TOPIC_PREFIX "homeassistant/switch"
 #define MQTT_HA_B_AND_LWT_TOPIC_PREFIX "homeassistant/status"
 

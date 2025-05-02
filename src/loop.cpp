@@ -277,17 +277,17 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
   int32_t auxRebounds; //int32 instead of uint16 because auxRebouds might have negaative values. To construct the http request
   
   if (thermostateStatus) {auxStatus="ON";} else {auxStatus="OFF";}
-  boardSerialPort.println(String(millis())+" - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate="+String(thermostatInterrupt)+", thermostateStatus="+auxStatus);
+  boardSerialPort.println(String(millis())+" - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate="+String(thermostatInterrupt)+" Status (thermostateStatus) was="+auxStatus);
   
   //Update rebouds according to the current status
   if (thermostatInterrupt==1) {
     auxRebounds=rebounds;
     if (thermostateStatus) {
-      if (debugModeOn) {boardSerialPort.println("        - [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
+      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
     }
     else {
-      thermostateStatus=true; auxStatus="ON";
-      if (debugModeOn) {boardSerialPort.println("        - [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}
+      thermostateStatus=true; auxStatus="ON"; lastThermostatOnTime=millis();
+      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}
       rebounds=0;
     }
   }
@@ -295,11 +295,11 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
     auxRebounds=-rebounds;
     if (thermostateStatus) {
       thermostateStatus=false; auxStatus="OFF";
-      if (debugModeOn) {boardSerialPort.println("        - [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}  
+      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}  
       rebounds=0;
     }
     else {
-      if (debugModeOn) {boardSerialPort.println("        - [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
+      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
     }
   }
 
@@ -399,7 +399,7 @@ void gas_sample(bool debugModeOn) {
   iconGasInterrupt=gasInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
   samples["Thermostate_interrupt"] = thermostateInterrupt==1?"ON":"OFF";
   iconThermInterrupt=thermostateInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
-  samples["Thermostate_auxStatus"] = thermostateStatus==1?"ON":"OFF";
+  samples["Thermostate_status"] = thermostateStatus==1?"ON":"OFF";
   if (thermostateStatus) iconThermStatus=String("mdi:radiator");
   else {if (digitalRead(PIN_RL1) && !digitalRead(PIN_RL2)) iconThermStatus=String("mdi:radiator-off"); else iconThermStatus=String("mdi:radiator-disabled");}
   samples["SSID"] = WiFi.SSID();
@@ -498,8 +498,45 @@ void gas_sample(bool debugModeOn) {
   samples["errorsNTPCnt"] = String(errorsNTPCnt);
   samples["errorsHTTPUptsCnt"] = String(errorsHTTPUptsCnt);
   samples["errorsMQTTCnt"] = String(errorsMQTTCnt);
-  samples["bootCount"] = String(bootCount);
-  samples["resetCount"] = String(resetCount);
+  samples["bootCount"] = String(bootCount); //Total since last update
+  samples["resetNormalCount"] = String(bootCount-resetPreventiveCount-resetSWCount-resetCount); //Normal resets
+  samples["resetPreventiveCount"] = String(resetPreventiveCount); //Preventive resets (low heap situation)
+  samples["resetSWCount"] = String(resetSWCount); //Reset due to Restart HA Button
+  samples["resetCount"] = String(resetCount); //uncontrolled resets
+  samples["lastHeap"] = String(esp_get_free_heap_size());
+  samples["minHeapSeen"] = String(minHeapSeen);
+  samples["reboot"] = String("online");
+  samples["reset_time_counters"] = String("online");
+  
+  uint32_t auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnYear.counterMonths[i];
+  samples["heaterYear"] = String(heaterTimeOnYear.year);
+  samples["heaterYesterday"] = String(heaterTimeOnYear.yesterday);
+  samples["heaterToday"] = String(heaterTimeOnYear.today);
+  samples["heaterOnYear"] = String(auxTimeOn);
+  samples["heaterOnYearJan"] = String(heaterTimeOnYear.counterMonths[0]);samples["heaterOnYearFeb"] = String(heaterTimeOnYear.counterMonths[1]);samples["heaterOnYearMar"] = String(heaterTimeOnYear.counterMonths[2]);samples["heaterOnYearApr"] = String(heaterTimeOnYear.counterMonths[3]);samples["heaterOnYearMay"] = String(heaterTimeOnYear.counterMonths[4]);samples["heaterOnYearJun"] = String(heaterTimeOnYear.counterMonths[5]);
+  samples["heaterOnYearJul"] = String(heaterTimeOnYear.counterMonths[6]);samples["heaterOnYearAug"] = String(heaterTimeOnYear.counterMonths[7]);samples["heaterOnYearSep"] = String(heaterTimeOnYear.counterMonths[8]);samples["heaterOnYearOct"] = String(heaterTimeOnYear.counterMonths[9]);samples["heaterOnYearNov"] = String(heaterTimeOnYear.counterMonths[10]);samples["heaterOnYearDec"] = String(heaterTimeOnYear.counterMonths[11]);
+  samples["heaterOnYesterday"] = String(heaterTimeOnYear.counterYesterday);
+  samples["heaterOnToday"] = String(heaterTimeOnYear.counterToday);
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnPreviousYear.counterMonths[i];
+  samples["heaterPreviousYear"] = String(heaterTimeOnPreviousYear.year);
+  samples["heaterOnPreviousYear"] = String(auxTimeOn);
+  samples["heaterOnPreviousYearJan"] = String(heaterTimeOnPreviousYear.counterMonths[0]);samples["heaterOnPreviousYearFeb"] = String(heaterTimeOnPreviousYear.counterMonths[1]);samples["heaterOnPreviousYearMar"] = String(heaterTimeOnPreviousYear.counterMonths[2]);samples["heaterOnPreviousYearApr"] = String(heaterTimeOnPreviousYear.counterMonths[3]);samples["heaterOnPreviousYearMay"] = String(heaterTimeOnPreviousYear.counterMonths[4]);samples["heaterOnPreviousYearJun"] = String(heaterTimeOnPreviousYear.counterMonths[5]);
+  samples["heaterOnPreviousYearJul"] = String(heaterTimeOnPreviousYear.counterMonths[6]);samples["heaterOnPreviousYearAug"] = String(heaterTimeOnPreviousYear.counterMonths[7]);samples["heaterOnPreviousYearSep"] = String(heaterTimeOnPreviousYear.counterMonths[8]);samples["heaterOnPreviousYearOct"] = String(heaterTimeOnPreviousYear.counterMonths[9]);samples["heaterOnPreviousYearNov"] = String(heaterTimeOnPreviousYear.counterMonths[10]);samples["heaterOnPreviousYearDec"] = String(heaterTimeOnPreviousYear.counterMonths[11]);
+  
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnYear.counterMonths[i];
+  samples["boilerYear"] = String(boilerTimeOnYear.year);
+  samples["boilerYesterday"] = String(boilerTimeOnYear.yesterday);
+  samples["boilerToday"] = String(boilerTimeOnYear.today);
+  samples["boilerOnYear"] = String(auxTimeOn);
+  samples["boilerOnYearJan"] = String(boilerTimeOnYear.counterMonths[0]);samples["boilerOnYearFeb"] = String(boilerTimeOnYear.counterMonths[1]);samples["boilerOnYearMar"] = String(boilerTimeOnYear.counterMonths[2]);samples["boilerOnYearApr"] = String(boilerTimeOnYear.counterMonths[3]);samples["boilerOnYearMay"] = String(boilerTimeOnYear.counterMonths[4]);samples["boilerOnYearJun"] = String(boilerTimeOnYear.counterMonths[5]);
+  samples["boilerOnYearJul"] = String(boilerTimeOnYear.counterMonths[6]);samples["boilerOnYearAug"] = String(boilerTimeOnYear.counterMonths[7]);samples["boilerOnYearSep"] = String(boilerTimeOnYear.counterMonths[8]);samples["boilerOnYearOct"] = String(boilerTimeOnYear.counterMonths[9]);samples["boilerOnYearNov"] = String(boilerTimeOnYear.counterMonths[10]);samples["boilerOnYearDec"] = String(boilerTimeOnYear.counterMonths[11]);
+  samples["boilerOnYesterday"] = String(boilerTimeOnYear.counterYesterday);
+  samples["boilerOnToday"] = String(boilerTimeOnYear.counterToday);
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnPreviousYear.counterMonths[i];
+  samples["boilerPreviousYear"] = String(boilerTimeOnPreviousYear.year);
+  samples["boilerOnPreviousYear"] = String(auxTimeOn);
+  samples["boilerOnPreviousYearJan"] = String(boilerTimeOnPreviousYear.counterMonths[0]);samples["boilerOnPreviousYearFeb"] = String(boilerTimeOnPreviousYear.counterMonths[1]);samples["boilerOnPreviousYearMar"] = String(boilerTimeOnPreviousYear.counterMonths[2]);samples["boilerOnPreviousYearApr"] = String(boilerTimeOnPreviousYear.counterMonths[3]);samples["boilerOnPreviousYearMay"] = String(boilerTimeOnPreviousYear.counterMonths[4]);samples["boilerOnPreviousYearJun"] = String(boilerTimeOnPreviousYear.counterMonths[5]);
+  samples["boilerOnPreviousYearJul"] = String(boilerTimeOnPreviousYear.counterMonths[6]);samples["boilerOnPreviousYearAug"] = String(boilerTimeOnPreviousYear.counterMonths[7]);samples["boilerOnPreviousYearSep"] = String(boilerTimeOnPreviousYear.counterMonths[8]);samples["boilerOnPreviousYearOct"] = String(boilerTimeOnPreviousYear.counterMonths[9]);samples["boilerOnPreviousYearNov"] = String(boilerTimeOnPreviousYear.counterMonths[10]);samples["boilerOnPreviousYearDec"] = String(boilerTimeOnPreviousYear.counterMonths[11]);
 }
 
 void temperature_sample(bool debugModeOn) {
@@ -551,70 +588,97 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
       //mqttTopicName=the-iot-factory/boiler-relay-controlv2-E02940
 
       //Publish sample values message under mqttTopicName (the-iot-factory propietary), not retain in the server
-      String packetIddateUpdate=String(mqttClient.publish(String(mqttTopicName+"/dateUpdate").c_str(), 0, false, JSON.stringify(samples["dateUpdate"]).c_str()));
-      String packetIddatedevice_name=String(mqttClient.publish(String(mqttTopicName+"/device_name").c_str(), 0, false, JSON.stringify(samples["device_name"]).c_str()));
-      String packetIdversion=String(mqttClient.publish(String(mqttTopicName+"/version").c_str(), 0, false, JSON.stringify(samples["version"]).c_str()));
-      String packetIdstartTime=String(mqttClient.publish(String(mqttTopicName+"/startTime").c_str(), 0, false, JSON.stringify(samples["startTime"]).c_str()));
-      String packetIdupTime=String(mqttClient.publish(String(mqttTopicName+"/upTime").c_str(), 0, false, JSON.stringify(samples["upTime"]).c_str()));
-      String packetIdupTimeSeconds=String(mqttClient.publish(String(mqttTopicName+"/upTimeSeconds").c_str(), 0, false, JSON.stringify(samples["upTimeSeconds"]).c_str()));
-      String packetIdH2=String(mqttClient.publish(String(mqttTopicName+"/H2").c_str(), 0, false, JSON.stringify(samples["H2"]).c_str()));
-      String packetIdLPG=String(mqttClient.publish(String(mqttTopicName+"/LPG").c_str(), 0, false, JSON.stringify(samples["LPG"]).c_str()));
-      String packetIdCH4=String(mqttClient.publish(String(mqttTopicName+"/CH4").c_str(), 0, false, JSON.stringify(samples["CH4"]).c_str()));
-      String packetIdCO=String(mqttClient.publish(String(mqttTopicName+"/CO").c_str(), 0, false, JSON.stringify(samples["CO"]).c_str()));
-      String packetIdALCOHOL=String(mqttClient.publish(String(mqttTopicName+"/ALCOHOL").c_str(), 0, false, JSON.stringify(samples["ALCOHOL"]).c_str()));
-      String packetIdClean_air=String(mqttClient.publish(String(mqttTopicName+"/Clean_air").c_str(), 0, false, JSON.stringify(samples["Clean_air"]).c_str()));
-      String packetIdGAS_interrupt=String(mqttClient.publish(String(mqttTopicName+"/GAS_interrupt").c_str(), 0, false, JSON.stringify(samples["GAS_interrupt"]).c_str()));
-      String packetIdThermostate_interrupt=String(mqttClient.publish(String(mqttTopicName+"/Thermostate_interrupt").c_str(), 0, false, JSON.stringify(samples["Thermostate_interrupt"]).c_str()));
-      String packetIdThermostate_status=String(mqttClient.publish(String(mqttTopicName+"/Thermostate_status").c_str(), 0, false, JSON.stringify(samples["Thermostate_status"]).c_str()));
-      String packetIdSSID=String(mqttClient.publish(String(mqttTopicName+"/SSID").c_str(), 0, false, JSON.stringify(samples["SSID"]).c_str()));
-      String packetIdBSSID=String(mqttClient.publish(String(mqttTopicName+"/BSSID").c_str(), 0, false, JSON.stringify(samples["BSSID"]).c_str()));
-      String packetIdSIGNAL=String(mqttClient.publish(String(mqttTopicName+"/SIGNAL").c_str(), 0, false, JSON.stringify(samples["SIGNAL"]).c_str()));
-      String packetIdRSSI=String(mqttClient.publish(String(mqttTopicName+"/RSSI").c_str(), 0, false, JSON.stringify(samples["RSSI"]).c_str()));
-      String packetIdENCRYPTION=String(mqttClient.publish(String(mqttTopicName+"/ENCRYPTION").c_str(), 0, false, JSON.stringify(samples["ENCRYPTION"]).c_str()));
-      String packetIdCHANNEL=String(mqttClient.publish(String(mqttTopicName+"/CHANNEL").c_str(), 0, false, JSON.stringify(samples["CHANNEL"]).c_str()));
-      String packetIdMODE=String(mqttClient.publish(String(mqttTopicName+"/MODE").c_str(), 0, false, JSON.stringify(samples["MODE"]).c_str()));
-      String packetIdtempSensor=String(mqttClient.publish(String(mqttTopicName+"/tempSensor").c_str(), 0, false, JSON.stringify(samples["tempSensor"]).c_str()));
-      String packetIdtemperature=String(mqttClient.publish(String(mqttTopicName+"/temperature").c_str(), 0, false, JSON.stringify(samples["temperature"]).c_str()));
-      String packetIdhumidity=String(mqttClient.publish(String(mqttTopicName+"/humidity").c_str(), 0, false, JSON.stringify(samples["humidity"]).c_str()));
-      String packetIdNTP=String(mqttClient.publish(String(mqttTopicName+"/NTP").c_str(), 0, false, JSON.stringify(samples["NTP"]).c_str()));
-      String packetIdHTTP_CLOUD=String(mqttClient.publish(String(mqttTopicName+"/HTTP_CLOUD").c_str(), 0, false, JSON.stringify(samples["HTTP_CLOUD"]).c_str()));
-      String packetIdRelay1=String(mqttClient.publish(String(mqttTopicName+"/Relay1").c_str(), 0, false, JSON.stringify(samples["Relay1"]).c_str()));
-      String packetIdRelay2=String(mqttClient.publish(String(mqttTopicName+"/Relay2").c_str(), 0, false, JSON.stringify(samples["Relay2"]).c_str()));
+      mqttClient.publish(String(mqttTopicName+"/dateUpdate").c_str(), 0, false, JSON.stringify(samples["dateUpdate"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/device_name").c_str(), 0, false, JSON.stringify(samples["device_name"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/version").c_str(), 0, false, JSON.stringify(samples["version"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/startTime").c_str(), 0, false, JSON.stringify(samples["startTime"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/upTime").c_str(), 0, false, JSON.stringify(samples["upTime"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/upTimeSeconds").c_str(), 0, false, JSON.stringify(samples["upTimeSeconds"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/H2").c_str(), 0, false, JSON.stringify(samples["H2"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/LPG").c_str(), 0, false, JSON.stringify(samples["LPG"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/CH4").c_str(), 0, false, JSON.stringify(samples["CH4"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/CO").c_str(), 0, false, JSON.stringify(samples["CO"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/ALCOHOL").c_str(), 0, false, JSON.stringify(samples["ALCOHOL"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/Clean_air").c_str(), 0, false, JSON.stringify(samples["Clean_air"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/GAS_interrupt").c_str(), 0, false, JSON.stringify(samples["GAS_interrupt"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/Thermostate_interrupt").c_str(), 0, false, JSON.stringify(samples["Thermostate_interrupt"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/Thermostate_status").c_str(), 0, false, JSON.stringify(samples["Thermostate_status"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/SSID").c_str(), 0, false, JSON.stringify(samples["SSID"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/BSSID").c_str(), 0, false, JSON.stringify(samples["BSSID"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/SIGNAL").c_str(), 0, false, JSON.stringify(samples["SIGNAL"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/RSSI").c_str(), 0, false, JSON.stringify(samples["RSSI"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/ENCRYPTION").c_str(), 0, false, JSON.stringify(samples["ENCRYPTION"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/CHANNEL").c_str(), 0, false, JSON.stringify(samples["CHANNEL"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/MODE").c_str(), 0, false, JSON.stringify(samples["MODE"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/tempSensor").c_str(), 0, false, JSON.stringify(samples["tempSensor"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/temperature").c_str(), 0, false, JSON.stringify(samples["temperature"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/humidity").c_str(), 0, false, JSON.stringify(samples["humidity"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/NTP").c_str(), 0, false, JSON.stringify(samples["NTP"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/HTTP_CLOUD").c_str(), 0, false, JSON.stringify(samples["HTTP_CLOUD"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/Relay1").c_str(), 0, false, JSON.stringify(samples["Relay1"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/Relay2").c_str(), 0, false, JSON.stringify(samples["Relay2"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsWiFiCnt").c_str(), 0, false, JSON.stringify(samples["errorsWiFiCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsNTPCnt").c_str(), 0, false, JSON.stringify(samples["errorsNTPCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsHTTPUptsCnt").c_str(), 0, false, JSON.stringify(samples["errorsHTTPUptsCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsMQTTCnt").c_str(), 0, false, JSON.stringify(samples["errorsMQTTCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/bootCount").c_str(), 0, false, JSON.stringify(samples["bootCount"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/resetNormalCount").c_str(), 0, false, JSON.stringify(samples["resetNormalCount"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/resetPreventiveCount").c_str(), 0, false, JSON.stringify(samples["resetPreventiveCount"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/resetSWCount").c_str(), 0, false, JSON.stringify(samples["resetSWCount"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/resetCount").c_str(), 0, false, JSON.stringify(samples["resetCount"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/minHeapSeen").c_str(), 0, false, JSON.stringify(samples["minHeapSeen"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/lastHeap").c_str(), 0, false, JSON.stringify(samples["lastHeap"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/resetReason").c_str(), 0, false, JSON.stringify(samples["resetReason"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/reboot").c_str(), 0, false, JSON.stringify(samples["reboot"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterYear").c_str(), 0, false, JSON.stringify(samples["heaterYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterYesterday").c_str(), 0, false, JSON.stringify(samples["heaterYesterday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterToday").c_str(), 0, false, JSON.stringify(samples["heaterToday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnYear").c_str(), 0, false, JSON.stringify(samples["heaterOnYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnYearJan").c_str(), 0, false, JSON.stringify(samples["heaterOnYearJan"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearFeb").c_str(), 0, false, JSON.stringify(samples["heaterOnYearFeb"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearMar").c_str(), 0, false, JSON.stringify(samples["heaterOnYearMar"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnYearApr").c_str(), 0, false, JSON.stringify(samples["heaterOnYearApr"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearMay").c_str(), 0, false, JSON.stringify(samples["heaterOnYearMay"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearJun").c_str(), 0, false, JSON.stringify(samples["heaterOnYearJun"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnYearJul").c_str(), 0, false, JSON.stringify(samples["heaterOnYearJul"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearAug").c_str(), 0, false, JSON.stringify(samples["heaterOnYearAug"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearSep").c_str(), 0, false, JSON.stringify(samples["heaterOnYearSep"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnYearOct").c_str(), 0, false, JSON.stringify(samples["heaterOnYearOct"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearNov").c_str(), 0, false, JSON.stringify(samples["heaterOnYearNov"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnYearDec").c_str(), 0, false, JSON.stringify(samples["heaterOnYearDec"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnYesterday").c_str(), 0, false, JSON.stringify(samples["heaterOnYesterday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnToday").c_str(), 0, false, JSON.stringify(samples["heaterOnToday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterPreviousYear").c_str(), 0, false, JSON.stringify(samples["heaterPreviousYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYear").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearJan").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearJan"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearFeb").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearFeb"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearMar").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearMar"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearApr").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearApr"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearMay").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearMay"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearJun").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearJun"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearJul").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearJul"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearAug").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearAug"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearSep").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearSep"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearOct").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearOct"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearNov").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearNov"]).c_str());mqttClient.publish(String(mqttTopicName+"/heaterOnPreviousYearDec").c_str(), 0, false, JSON.stringify(samples["heaterOnPreviousYearDec"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerYear").c_str(), 0, false, JSON.stringify(samples["boilerYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerYesterday").c_str(), 0, false, JSON.stringify(samples["boilerYesterday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerToday").c_str(), 0, false, JSON.stringify(samples["boilerToday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnYear").c_str(), 0, false, JSON.stringify(samples["boilerOnYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnYearJan").c_str(), 0, false, JSON.stringify(samples["boilerOnYearJan"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearFeb").c_str(), 0, false, JSON.stringify(samples["boilerOnYearFeb"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearMar").c_str(), 0, false, JSON.stringify(samples["boilerOnYearMar"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnYearApr").c_str(), 0, false, JSON.stringify(samples["boilerOnYearApr"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearMay").c_str(), 0, false, JSON.stringify(samples["boilerOnYearMay"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearJun").c_str(), 0, false, JSON.stringify(samples["boilerOnYearJun"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnYearJul").c_str(), 0, false, JSON.stringify(samples["boilerOnYearJul"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearAug").c_str(), 0, false, JSON.stringify(samples["boilerOnYearAug"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearSep").c_str(), 0, false, JSON.stringify(samples["boilerOnYearSep"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnYearOct").c_str(), 0, false, JSON.stringify(samples["boilerOnYearOct"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearNov").c_str(), 0, false, JSON.stringify(samples["boilerOnYearNov"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnYearDec").c_str(), 0, false, JSON.stringify(samples["boilerOnYearDec"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnYesterday").c_str(), 0, false, JSON.stringify(samples["boilerOnYesterday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnToday").c_str(), 0, false, JSON.stringify(samples["boilerOnToday"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerPreviousYear").c_str(), 0, false, JSON.stringify(samples["boilerPreviousYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYear").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYear"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearJan").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearJan"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearFeb").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearFeb"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearMar").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearMar"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearApr").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearApr"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearMay").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearMay"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearJun").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearJun"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearJul").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearJul"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearAug").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearAug"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearSep").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearSep"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearOct").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearOct"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearNov").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearNov"]).c_str());mqttClient.publish(String(mqttTopicName+"/boilerOnPreviousYearDec").c_str(), 0, false, JSON.stringify(samples["boilerOnPreviousYearDec"]).c_str());
       
       //Home Assistant support
       //Publish sample values message, not retain in the server
       mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Online\0"); //Availability message, not retain in the broker. This makes HA to subscribe to the */SENSOR topic if not already done
       getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
       String message=String("{\"Time\":\""+String(s)+"\",\"SAMPLES\":"+JSON.stringify(samples)+"}");
-      String packetIdHA=String(mqttClient.publish(String(mqttTopicName+"/SENSOR").c_str(), 0, false, message.c_str()));
+      mqttClient.publish(String(mqttTopicName+"/SENSOR").c_str(), 0, false, message.c_str());
 
-      if (debugModeOn) boardSerialPort.println(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages published:\n    "+mqttTopicName+"/dateUpdate "+JSON.stringify(samples["dateUpdate"])+", packetIddateUpdate="+packetIddateUpdate+
-                    "\n    "+mqttTopicName+"/device_name "+JSON.stringify(samples["device_name"])+", packetIddatedevice_name="+packetIddatedevice_name+", "+mqttTopicName+"/version "+JSON.stringify(samples["version"])+", packetIdversion="+packetIdversion+
-                    "\n    "+mqttTopicName+"/startTime "+JSON.stringify(samples["startTime"])+", packetIdstartTime="+packetIdstartTime+", "+mqttTopicName+"/upTime "+JSON.stringify(samples["upTime"])+", packetIdupTime="+packetIdupTime+", "+mqttTopicName+"/upTimeSeconds "+JSON.stringify(samples["upTimeSeconds"])+", packetIdupTimeSeconds="+packetIdupTimeSeconds+
-                    "\n    "+mqttTopicName+"/H2 "+JSON.stringify(samples["H2"])+", packetIdH2="+packetIdH2+", "+mqttTopicName+"/LPG "+JSON.stringify(samples["LPG"])+", packetIdLPG="+packetIdLPG+
-                    "\n    "+mqttTopicName+"/CH4 "+JSON.stringify(samples["CH4"])+", packetIdCH4="+packetIdCH4+", "+mqttTopicName+"/CO "+JSON.stringify(samples["CO"])+", packetIdCO="+packetIdCO+
-                    "\n    "+mqttTopicName+"/ALCOHOL "+JSON.stringify(samples["ALCOHOL"])+", packetIdALCOHOL="+packetIdALCOHOL+", "+mqttTopicName+"/Clean_air "+JSON.stringify(samples["Clean_air"])+", packetIdClean_air="+packetIdClean_air+
-                    "\n    "+mqttTopicName+"/GAS_interrupt "+JSON.stringify(samples["GAS_interrupt"])+", packetIdGAS_interrupt="+packetIdGAS_interrupt+", "+mqttTopicName+"/Thermostate_interrupt "+JSON.stringify(samples["Thermostate_interrupt"])+", packetIdThermostate_interrupt="+packetIdThermostate_interrupt+
-                    "\n    "+mqttTopicName+"/Thermostate_status "+JSON.stringify(samples["Thermostate_status"])+", packetIdThermostate_status="+packetIdThermostate_status+", "+mqttTopicName+"/SSID "+JSON.stringify(samples["SSID"])+", packetIdSSID="+packetIdSSID+
-                    "\n    "+mqttTopicName+"/BSSID "+JSON.stringify(samples["BSSID"])+", packetIdupBSSID="+packetIdBSSID+", "+mqttTopicName+"/SIGNAL "+JSON.stringify(samples["SIGNAL"])+", packetIdSIGNAL="+packetIdSIGNAL+
-                    "\n    "+mqttTopicName+"/RSSI "+JSON.stringify(samples["RSSI"])+", packetIdRSSI="+packetIdRSSI+", "+mqttTopicName+"/ENCRYPTION "+JSON.stringify(samples["ENCRYPTION"])+", packetIdENCRYPTION="+packetIdENCRYPTION+
-                    "\n    "+mqttTopicName+"/CHANNEL "+JSON.stringify(samples["CHANNEL"])+", packetIdCHANNEL="+packetIdCHANNEL+", "+mqttTopicName+"/MODE "+JSON.stringify(samples["MODE"])+", packetIdMODE="+packetIdMODE+
-                    "\n    "+mqttTopicName+"/tempSensor "+JSON.stringify(samples["tempSensor"])+", packetIdtempSensor="+packetIdtempSensor+", "+mqttTopicName+"/temperature "+JSON.stringify(samples["temperature"])+", packetIdtemperature="+packetIdtemperature+
-                    "\n    "+mqttTopicName+"/humidity "+JSON.stringify(samples["humidity"])+", packetIdhumidity="+packetIdhumidity+
-                    "\n    "+mqttTopicName+"/NTP "+JSON.stringify(samples["NTP"])+", packetIdNTP="+packetIdNTP+", "+mqttTopicName+"/HTTP_CLOUD "+JSON.stringify(samples["HTTP_CLOUD"])+", packetIdHTTP_CLOUD="+packetIdHTTP_CLOUD+
-                    "\n    "+mqttTopicName+"/Relay1 "+JSON.stringify(samples["Relay1"])+", packetIdRelay1="+packetIdRelay1+", "+mqttTopicName+"/Relay2 "+JSON.stringify(samples["Relay2"])+", packetIdRelay2="+packetIdRelay2+
-                    "\n    "+mqttTopicName+"/SENSOR '"+message+"', packetIdHA="+packetIdHA);
+      if (debugModeOn) boardSerialPort.println(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages published");
 
       //Publish HA Discovery messages at random basis to make sure HA always recives the Discovery Packet
       // even if it didn't receive it after it rebooted due to network issues or whatever - v1.9.2
-      if (random(0,33) < 2)  //random < 2 ==> probability ~3%, ==> ~1 every 10 min (at samples/20s rate)) v1.9.2
-        mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString()); 
+      if ((random(0,33) < 2) || updateHADiscovery) { //random < 2 ==> probability ~3%, ==> ~1 every 10 min (at samples/20s rate)) v1.9.2
+                                                    //updateHADiscovery: True if year changed. Update Timer Counters Year in HA MQTT
+        mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); 
+        if (updateHADiscovery) updateHADiscovery=false;
+      }
 
       MqttSyncCurrentStatus=MqttSyncOnStatus;
     }
@@ -626,4 +690,126 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
       errorsMQTTCnt++;
     }
   }
+}
+
+void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpSynced) {
+  /******************************************************
+   Function one_second_check_period
+   Target: Regular actions every ONE_SECOND_PERIOD seconds.
+    1) Check if time on counters need to be updated
+   Parameters:
+    debugModeOn: Print out the logs or not
+    nowTimeGlobal: current time the function was called in milliseconds
+    ntpSynced: True if NTP is synced at least once
+   *****************************************************/
+
+  struct tm auxTimeInfo,*auxYesterdayTimeInfo; //36 B
+  time_t auxYesterdayEpoch;
+  uint32_t auxToday,auxYesterday,auxMonth,auxYear;
+
+  
+  /*
+    struct tm {
+      int	tm_sec;		// seconds after the minute [0-60]
+      int	tm_min;		// minutes after the hour [0-59]
+      int	tm_hour;	// hours since midnight [0-23]
+      int	tm_mday;	// day of the month [1-31]
+      int	tm_mon;		// months since January [0-11]
+      int	tm_year;	// years since 1900
+      int	tm_wday;	// days since Sunday [0-6]
+      int	tm_yday;	// days since January 1 [0-365]
+      int	tm_isdst;	// Daylight Savings Time flag
+      long	tm_gmtoff;	// offset from UTC in seconds
+      char	*tm_zone;	// timezone abbreviation
+    };
+*/
+  
+
+  if (debugModeOn) {boardSerialPort.println(String(nowTimeGlobal)+" - [loop - ONE_SECOND_PERIOD] - Doing actions every second.");}
+
+  //At this point the variables already updated, even right after boot time.
+  if (ntpSynced) {
+    //Get time only if NTP was synced at leat once
+    getLocalTime(&auxTimeInfo);
+    auxToday=(auxTimeInfo.tm_year+1900)*10000+(auxTimeInfo.tm_mon+1)*100+auxTimeInfo.tm_mday;
+    //26/Nov/2025 => 20251126, 26/Apr/2025 => 20250426, 2/Apr/2025 => 20250402
+    auxYesterdayEpoch=mktime(&auxTimeInfo)-86400; //One day less
+    auxYesterdayTimeInfo=localtime(&auxYesterdayEpoch);
+    auxYesterday=(auxYesterdayTimeInfo->tm_year+1900)*10000+(auxYesterdayTimeInfo->tm_mon+1)*100+auxYesterdayTimeInfo->tm_mday;
+    auxMonth=(today-year*10000)/100;
+
+    if (thermostateStatus) { //Update counters if the heater is on
+      heaterTimeOnYear.counterToday+=(nowTimeGlobal-lastThermostatOnTime)/1000;
+      heaterTimeOnYear.counterMonths[auxMonth-1]+=(nowTimeGlobal-lastThermostatOnTime)/1000;
+      lastThermostatOnTime=nowTimeGlobal;
+      timersEepromUpdate=true; //Update EEPROM in the next cycle
+    }
+    else {
+      if (today!=auxToday) {
+        //New day
+        heaterTimeOnYear.counterYesterday=heaterTimeOnYear.counterToday;
+        heaterTimeOnYear.counterToday=0;
+
+        if ((auxTimeInfo.tm_year+1900) > (heaterTimeOnYear.year)) {
+          //New year
+          memcpy(&heaterTimeOnPreviousYear,&heaterTimeOnYear,sizeof(heaterTimeOnYear)); //Update heaterTimeOnPreviousYear with heaterTimeOnYear
+          heaterTimeOnYear.year=auxTimeInfo.tm_year+1900;
+          heaterTimeOnYear.today=auxToday;
+          heaterTimeOnYear.yesterday=today;
+          heaterTimeOnYear.counterYesterday=0;
+          heaterTimeOnYear.counterToday=0;
+          updateHADiscovery=true;
+        }
+        else {
+          //Same year
+          //Do nothing
+        }
+        yesterday=today;
+        today=auxToday;
+        timersEepromUpdate=true; //Update EEPROM in the next cycle
+      }
+      else {
+        //Same day
+        //Do nothing
+      }
+    }
+
+    /*
+    if (boilerStatus) { //Update counters if the boiler is on
+    
+    }
+    else {
+
+    }
+    */
+  }
+  
+  //No time on counter update if there is no NTP sync  
+  lastTimeSecondCheck=nowTimeGlobal;
+}
+
+void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal) {
+  /******************************************************
+   Function time_counters_eeprom_update_check_period
+   Target: Regular actions every TIME_COUNTERS_EEPROM_UPDATE_PERIOD seconds.
+    1) Check if EEPROM must be updated with new values of the time counters
+   Parameters:
+    debugModeOn: Print out the logs or not
+    nowTimeGlobal: current time the function was called in milliseconds
+   Returns: Nothing
+   *****************************************************/
+
+  if (timersEepromUpdate) {
+    //Update EEPROM only if there are new time counter values
+    EEPROM.put(0x421,heaterTimeOnYear); EEPROM.put(0x465,heaterTimeOnPreviousYear);
+    EEPROM.put(0x4A9,boilerTimeOnYear); EEPROM.put(0x4ED,boilerTimeOnPreviousYear);
+    EEPROM.commit();
+    if (debugModeOn) boardSerialPort.println(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - EEPROM updated with variables and counters");
+    timersEepromUpdate=false;
+  }
+  else {
+    if (debugModeOn) boardSerialPort.println(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - No need to update EEPROM with variables and counters");
+  }
+
+  lastTimeTimerEepromUpdateCheck=nowTimeGlobal;
 }

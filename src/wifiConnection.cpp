@@ -295,6 +295,7 @@ uint32_t wifiConnect(boolean debugModeOn=true, uint8_t* auxLoopCounter=nullptr, 
   }
 
   //Case for successfull NTP sync
+  ntpSynced=true; //This flag is unset at boot time. If true, it means NTP syc was succesfull at least once
   if (debugModeOn) {
       if (!fromSetup) {
         boardSerialPort.println("  [setupNTPConfig] - CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck)+", errorsNTPCnt="+String(errorsNTPCnt));
