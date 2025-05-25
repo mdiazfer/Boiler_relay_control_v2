@@ -2,6 +2,8 @@
 #include <SoftwareSerial.h>
 #include <HardwareSerial.h>
 #include <Wire.h>
+#include <ESPAsyncWebServer.h>
+#include <SPIFFS.h>
 #include <Arduino_JSON.h>
 #include <AsyncMqttClient.h>
 #include "SHT2x.h"
@@ -12,10 +14,12 @@
 #include "interrupt.h"
 #include "loop.h"
 #include "eeprom_utils.h"
+#include "webServer.h"
+#include "webSocket.h"
 
 //Global variable definitions stored in RTC memory to be persistent during Sleep periods. 8 KB Max
 RTC_DATA_ATTR boolean firstBoot=true;  //1B - First boot flag.
-RTC_DATA_ATTR int errorsWiFiCnt=0,errorsNTPCnt=0,errorsHTTPUptsCnt=0,errorsMQTTCnt=0;
+RTC_DATA_ATTR boolean OTAUpgradeBinAllowed=false,SPIFFSUpgradeBinAllowed=false; //2*1=2B - v1.2.0 To block SPIFFS upgrade if there is something wrong with SPIFFS partition
 RTC_DATA_ATTR uint16_t year=0,previousYear=0;
 RTC_DATA_ATTR uint32_t yesterday=0,today=0;
 RTC_DATA_ATTR enum CloudClockStatus CloudClockCurrentStatus; //4B
@@ -27,43 +31,53 @@ RTC_DATA_ATTR enum MqttSyncStatus MqttSyncLastStatus; // 4B
 RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
 RTC_DATA_ATTR struct tm startTimeInfo;
 RTC_DATA_ATTR char TZEnvVar[TZ_ENV_VARIABLE_MAX_LENGTH];
-RTC_DATA_ATTR uint32_t error_setup=NO_ERROR,minHeapSeen=0xFFFFFFFF; //1*4=4B
-RTC_DATA_ATTR uint8_t bootCount=255,resetCount=0,resetPreventiveCount=0,resetSWCount=0;
+RTC_DATA_ATTR uint32_t error_setup=NO_ERROR,minHeapSinceUpgrade=0xFFFFFFFF,minHeapSinceBoot=0xFFFFFFFF; //1*4=4B
+RTC_DATA_ATTR uint8_t bootCount=255,resetCount=0,resetPreventiveCount=0,resetPreventiveWebServerCount=0,resetSWCount=0,resetSWWebCount=0,resetSWMqttCount=0,resetSWUpgradeCount=0,resetWebServerCnt=0,
+                      errorsWiFiCnt=0,errorsNTPCnt=0,errorsHTTPUptsCnt=0,errorsMQTTCnt=0,SPIFFSErrors=0,errorsWebServerCnt=0,errorsConnectivityCnt=0;
 RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestCheck=false,forceWebServerInit=false,forceMQTTpublish=false,
                       ntpEnabled=true,httpCloudEnabled=true,forceNTPCheck=false,ntpSynced=false,
                       mqttServerEnabled=true,forceMQTTConnect=false,secureMqttEnabled=false,bluetoothEnabled=false,webServerEnabled=false,timersEepromUpdate=false,
-                      updateHADiscovery=false;
+                      updateHADiscovery=false,deviceReset=false,factoryReset=false,logTagged=false,reconnectWifiAndRestartWebServer=false,resyncNTPServer=false;
 RTC_DATA_ATTR byte mac[6];
 RTC_DATA_ATTR uint64_t nowTimeGlobal=0,firstLoopTime=0,lastCheckTime=0,lastTimeWifiReconnectionCheck=0,lastTimeHTTPClouCheck=0,lastTimeNTPCheck=0,
-                      lastCloudClockChangeCheck=0,lastInterruptTime=0,lastGasSample=0,lastTimeMQTTCheck=0,
+                      lastCloudClockChangeCheck=0,lastInterruptTime=0,lastGasSample=0,lastTimeMQTTCheck=0,lastTimeConnectiviyCheck=0,
                       lastMQTTChangeCheck=0,lastTimeSecondCheck=0,lastThermostatOnTime=0,lastBoilerOnTime=0,lastTimeTimerEepromUpdateCheck=0;
 RTC_DATA_ATTR ulong wifiReconnectPeriod=WIFI_RECONNECT_PERIOD;
 RTC_DATA_ATTR String tempHumSensorType=String(TEMP_HUM_SENSOR_TYPE); //16 B
 RTC_DATA_ATTR float valueHum=0,tempSensor=0,valueT=0;
 RTC_DATA_ATTR AsyncMqttClient mqttClient;
 RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear; //61 B each varialbe (heaterTimeOn or boilerTimeOn) - Time in seconds that the heater signal has been on (thermostat or Relay2)
+//RTC_DATA_ATTR AsyncWebServer *webServer=new AsyncWebServer(WEBSERVER_PORT); //1*84=84B
+//RTC_DATA_ATTR AsyncWebServer *webServer=nullptr;
+//RTC_DATA_ATTR AsyncWebSocket *webSocket=nullptr; // Create a WebSocket object for the web console (send logs and receive commands)
+RTC_DATA_ATTR AsyncWebServer webServer(WEBSERVER_PORT); //1*84=84B
+RTC_DATA_ATTR AsyncWebSocket webSocket(WEBSOCKET_CONSOLE_URI); // Create a WebSocket object for the web console (send logs and receive commands)
+//RTC_DATA_ATTR AsyncEventSource webEvents(WEBSERVER_SAMPLES_EVENT); //1*104=104B
+RTC_DATA_ATTR HardwareSerial boardSerialPort(0); // Serial port is using UART0
+RTC_DATA_ATTR String bootLogs; // Initial logs at boot time
 
-//EEPROM MAP
+//EEPROM MAP - See eeprom_utils.cpp
 
 //Global variable definitions stored in regular RAM. 520 KB Max
 bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logMessageTRL2_ON=false,logMessageGAP_OFF=false,
-      thermostateStatus=false,thermostateInterrupt=false,gasClear=false,gasInterrupt=false,isBeaconAdvertising;
-//bool debugModeOn=false;
+      thermostateStatus=false,thermostateInterrupt=false,gasClear=false,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
+      webLogsOn=false,serialLogsOn=debugModeOn,eepromUpdate=false;
 boolean NTPResuming,startTimeConfigure,wifiResuming;
-uint8_t ntpServerIndex,configVariables,auxLoopCounter=0,auxLoopCounter2=0,auxCounter=0;
+uint8_t ntpServerIndex,configVariables,auxLoopCounter=0,auxLoopCounter2=0,auxCounter=0,fileUpdateError=0,errorOnActiveCookie=0,errorOnWrongCookie=0;
 uint16_t rebounds=0;
-uint32_t lastHeap=0;
+uint32_t lastHeap=0,flashSize=ESP.getFlashChipSize(),programSize=ESP.getSketchSize(),fileSystemSize=0,fileSystemUsed=0;;
 uint64_t whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
+int updateCommand;
 float gasSample=0,gasVoltCalibrated=0,RS_airCalibrated=0,RS_CurrentCalibrated=0,gasRatioSample=0;
+size_t fileUpdateSize=0,OTAAvailableSize=0,SPIFFSAvailableSize=0;
 struct tm nowTimeInfo;
 String TZEnvVariable(NTP_TZ_ENV_VARIABLE),TZName(NTP_TZ_NAME),device(DEVICE_NAME_PREFIX),serverToUploadSamplesString(SERVER_UPLOAD_SAMPLES),
         mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,userName,userPssw,
         iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus,
-        ntpServers[4];
+        ntpServers[4],lastURI,fileUpdateName;
 wifiNetworkInfo wifiNet;
 wifiCredentials wifiCred;
 enum CloudClockStatus previousCloudClockCurrentStatus;
-HardwareSerial boardSerialPort(0); // Serial port is using UART0
 SHT2x tempHumSensor; //Temp and Hum sensor
 JSONVar samples;
 IPAddress serverToUploadSamplesIPAddress; //8*2=16
@@ -75,94 +89,161 @@ void setup() {
   boardSerialPort.begin(SERIAL_PORT_SPEED);
   randomSeed(analogRead(GPIO_NUM_32));
 
-  boardSerialPort.print("\n[setup] - Doing regular bootup v");boardSerialPort.print(VERSION);boardSerialPort.println(", debugModeOn="+String(debugModeOn)+" ..........");
-  boardSerialPort.println("[setup] - Serial: OK");
+  printLog("\n[setup] - Doing regular bootup v");printLog(VERSION);printLogln(", debugModeOn="+String(debugModeOn)+" ..........");
+  printLogln("[setup] - Serial: OK");
 
   //GPIO Mode definitons for both the LED and the Relays control pins
   pinMode(PIN_RL1,OUTPUT);digitalWrite(PIN_RL1,LOW); //To force the Relay1 OFF
   pinMode(PIN_RL2,OUTPUT);digitalWrite(PIN_RL2,LOW); //To force the Relay2 OFF
   pinMode(PIN_LED,OUTPUT);digitalWrite(PIN_LED,LOW); //To force the LED OFF
-  boardSerialPort.println("[setup] - LED and Relays set OFF");
+  printLogln("[setup] - LED and Relays set OFF");
 
   analogReadResolution(12); //12 bits resolution (supposed to be default) 2^12=4096 values
   pinMode(PIN_GAS_SENSOR_A0,ANALOG);
   pinMode(PIN_GAS_SENSOR_D0,INPUT);
-  boardSerialPort.println("[setup] - GAS inputs set. Analog GPIO "+String(PIN_GAS_SENSOR_A0)+", ADC resolution 12 bits. Digital GPIO "+String(PIN_GAS_SENSOR_D0));
+  printLogln("[setup] - GAS inputs set. Analog GPIO "+String(PIN_GAS_SENSOR_A0)+", ADC resolution 12 bits. Digital GPIO "+String(PIN_GAS_SENSOR_D0));
 
   //Init variables
   variablesInit();
-  boardSerialPort.println("[setup] - Device: "+device+", boots since last update="+String(bootCount)+", uncontrolled resets="+String(resetCount));
+  printLogln("[setup] - Device: "+device+", boots since last update="+String(bootCount)+", uncontrolled resets="+String(resetCount));
 
   //Hum and Temp sensor init
-  boardSerialPort.print("[setup] - Temp & Hum Sensor initialization");
+  printLog("[setup] - Temp & Hum Sensor initialization");
   error_setup|=tempSensorInit(debugModeOn);
-  boardSerialPort.println("[setup] - error_setup="+String(error_setup));
+  printLogln("[setup] - error_setup="+String(error_setup));
 
   //WiFi init
   wifiCurrentStatus=wifiOffStatus; //It's updated in wifiInit
-  boardSerialPort.print("[setup] - WiFi initialization");
+  printLog("[setup] - WiFi initialization");
   error_setup=wifiInit(wifiEnabled,debugModeOn);
-  boardSerialPort.println("[setup] - error_setup="+String(error_setup));
-
+  printLogln("[setup] - error_setup="+String(error_setup));
+  
   //HTTP - Cloud server init
   CloudSyncCurrentStatus=CloudSyncOffStatus; //It's updated in httpCloudInit
-  boardSerialPort.print("[setup] - HTTP Cloud initialization");
+  printLog("[setup] - HTTP Cloud initialization");
   error_setup|=httpCloudInit(wifiEnabled,httpCloudEnabled,wifiCurrentStatus,debugModeOn,true);
-  boardSerialPort.println("[setup] - error_setup="+String(error_setup));
+  printLogln("[setup] - error_setup="+String(error_setup));
   
   //NTP init
-  boardSerialPort.print("[setup] - NTP initialization");
+  printLog("[setup] - NTP initialization");
   error_setup|=ntpInit(wifiEnabled,ntpEnabled,wifiCurrentStatus,debugModeOn,true);
-  boardSerialPort.println("[setup] - error_setup="+String(error_setup));
+  printLogln("[setup] - error_setup="+String(error_setup));
+
+  //SPIFFS init
+  printLog("[setup] - SPIFFS initialization");
+  error_setup|=spiffsInit(debugModeOn,true);
+  printLogln("[setup] - error_setup="+String(error_setup));
+  
+  //WebServer init
+  printLog("[setup] - Web Server initialization");
+  error_setup|=webServerInit(error_setup,wifiEnabled,webServerEnabled,wifiCurrentStatus,debugModeOn,true);
+  if (!(error_setup & ERROR_WEB_SERVER)) webLogsOn=debugModeOn; //Enable web logs only if webServer and webSocket is not error
+  printLogln("[setup] - error_setup="+String(error_setup));
 
   //Time on counters init
-  boardSerialPort.print("[setup] - Time on counters initialization");
+  printLog("[setup] - Time on counters initialization");
   error_setup|=timeOnCountersInit(error_setup,debugModeOn,true,ntpSynced);
-  boardSerialPort.println("[setup] - error_setup="+String(error_setup));
+  printLogln("[setup] - error_setup="+String(error_setup));
   
   //MQTT init
-  boardSerialPort.print("[setup] - MQTT initialization");
+  printLog("[setup] - MQTT initialization");
   error_setup|=mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,error_setup,debugModeOn,true,mqttTopicName,device);
-  boardSerialPort.println("[setup] - error_setup="+String(error_setup));
+  printLogln("[setup] - error_setup="+String(error_setup));
 
-  boardSerialPort.println("[setup] - ---------oooooOOOOOoooo-----------");
-  if (error_setup==0x00) boardSerialPort.println("[setup] - Setup ends with no errors. Running loop() now");
-  else boardSerialPort.println("[setup] - Setup ends with errors (0x"+String(error_setup,HEX)+"). Running loop() now");
-  boardSerialPort.println("[setup] - ---------oooooOOOOOoooo-----------");
+  printLogln("[setup] - ---------oooooOOOOOoooo-----------");
+  if (error_setup==0x00) printLogln("[setup] - Setup ends with no errors. Running loop() now");
+  else printLogln("[setup] - Setup ends with errors (0x"+String(error_setup,HEX)+"). Running loop() now");
+  printLogln("[setup] - ---------oooooOOOOOoooo-----------");
 }
 
 void loop() {
   // Loop code
   if (firstLoopTime==0) { //To be ran the very first loop
-    firstLoopTime=millis(); //Get the boarad initialization time
+    firstLoopTime=millis(); //Get the board initialization time
     firstBoot=false;
 
     //Set the interrupt pin
     attachInterrupt(digitalPinToInterrupt(PIN_GAS_SENSOR_D0), gas_probe_triggered, FALLING);
     if (digitalRead(PIN_GAS_SENSOR_D0)==1) {gasClear=true;};
-    if (debugModeOn) boardSerialPort.println(String(millis())+" - [loop] - Interrupt set for GPIO pin "+String(PIN_GAS_SENSOR_D0)+", gasClear="+String(gasClear));
+    if (debugModeOn) printLogln(String(millis())+" - [loop] - Interrupt set for GPIO pin "+String(PIN_GAS_SENSOR_D0)+", gasClear="+String(gasClear));
 
     attachInterrupt(digitalPinToInterrupt(PIN_THERMOSTATE), thermostate_change, CHANGE);
     if (digitalRead(PIN_THERMOSTATE)==1) {thermostateStatus=true;} else {thermostateStatus=false;};
-    if (debugModeOn) boardSerialPort.println(String(millis())+" - [loop] - Interrupt set for GPIO pin "+String(PIN_THERMOSTATE)+", thermostateStatus="+String(thermostateStatus));
+    if (debugModeOn) printLogln(String(millis())+" - [loop] - Interrupt set for GPIO pin "+String(PIN_THERMOSTATE)+", thermostateStatus="+String(thermostateStatus));
   }
 
   //Rest of loop interactions
 
   //Check the heap
   lastHeap=esp_get_minimum_free_heap_size();
-  if(lastHeap<minHeapSeen) {
-    minHeapSeen=lastHeap; //Track the minimun heap size (bytes)
-    EEPROM.writeInt(0x41D,minHeapSeen); //Write in EEPROM
-    EEPROM.commit();
+  if(lastHeap<minHeapSinceBoot) minHeapSinceBoot=lastHeap;
+  if(lastHeap<minHeapSinceUpgrade) {
+    minHeapSinceUpgrade=lastHeap; //Track the minimun heap size (bytes)
+    EEPROM.writeInt(0x41D,minHeapSinceUpgrade); //Write in EEPROM
+    eepromUpdate=true; //EEPROM to be updated at the end of the cycle.
   }
-  if(lastHeap<ABSULUTE_MIN_HEAP_THRESHOLD) { //Preventive reset to avoid crash
+  if (lastHeap<ABSULUTE_MIN_HEAP_THRESHOLD) { //Preventive reset to avoid crash
     resetPreventiveCount++; //preventive resets (mainly becuase low heap situation)
     EEPROM.write(0x41B,resetPreventiveCount);
     EEPROM.commit();
     ESP.restart(); //Rebooting
   }
+  else if(lastHeap<WEBSERVER_MIN_HEAP_SIZE) {
+    resetPreventiveWebServerCount++; //preventive web reset resets (mainly becuase low heap situation)
+    EEPROM.write(0x531,resetPreventiveWebServerCount);
+    EEPROM.commit();
+    ESP.restart(); //Rebooting
+  }
 
+  //Regular actions every WIFI_RECONNECT_PERIOD seconds to recover WiFi connection
+  //forceWifiReconnect==true if:
+  // 1) after heap size was below ABSULUTE_MIN_HEAP_THRESHOLD
+  // 2) after detection the webServer is down
+  nowTimeGlobal=millis();
+  if ((((nowTimeGlobal-lastTimeWifiReconnectionCheck) >= wifiReconnectPeriod) || forceWifiReconnect ) && 
+      wifiEnabled && !firstBoot && (wifiCurrentStatus==wifiOffStatus || WiFi.status()!=WL_CONNECTED) ) {
+     
+    if (!forceWifiReconnect && wifiEnabled && !firstBoot && WiFi.status()!=WL_CONNECTED) {
+      errorsWiFiCnt++;EEPROM.write(0x535,errorsWiFiCnt);eepromUpdate=true;
+      printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi not connected. Wifi restart required. error_setup=0x"+String(error_setup,HEX)+"), errorsWiFiCnt="+String(errorsWiFiCnt)+", lastHeap="+String(lastHeap));
+    }
+    else {
+      printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi restart required to either free heap memory up or restart web server. error_setup=0x"+String(error_setup,HEX)+"), lastHeap="+String(lastHeap));
+    }
+    bool auxWebLogsOn=webLogsOn;
+    webLogsOn=false;
+    detachNetwork(); //detach the network and network services before restarting them again
+    forceWifiReconnect=false;
+    wifi_reconnect_period(debugModeOn); //restart network
+    
+    if (WiFi.status()==WL_CONNECTED) {  //restart network services
+      error_setup&=!ERROR_WIFI_SETUP;
+      error_setup&=!ERROR_CLOUD_SERVER; error_setup|=httpCloudInit(wifiEnabled,httpCloudEnabled,wifiCurrentStatus,false,false);
+      error_setup&=!ERROR_NTP_SERVER; error_setup|=ntpInit(wifiEnabled,ntpEnabled,wifiCurrentStatus,false,false);
+      error_setup&=!ERROR_SPIFFS_SETUP; error_setup|=spiffsInit(false,false);
+      //error_setup&=!ERROR_WEB_SERVER; error_setup&=!ERROR_WEB_SOCKET;error_setup|=webServerInit(error_setup,wifiEnabled,webServerEnabled,wifiCurrentStatus,debugModeOn,false);
+      if ((error_setup & ERROR_EEPROM_VARIABLES_INIT)!=0) {error_setup&=!ERROR_EEPROM_VARIABLES_INIT; error_setup|=timeOnCountersInit(error_setup,false,false,ntpSynced);} //This is in case during first boot was not wifi
+      error_setup&=!ERROR_MQTT_SERVER; error_setup|=mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,error_setup,false,false,mqttTopicName,device);
+      webLogsOn=auxWebLogsOn;
+      if (error_setup==0) printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi and network services successfully restarted . error_setup=0x"+String(error_setup,HEX)+"), heap="+String(esp_get_minimum_free_heap_size()));
+      else printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi successfully restarted but there are network services errors: error_setup=0x"+String(error_setup,HEX)+"), heap="+String(esp_get_minimum_free_heap_size()));
+    }
+    else {
+      error_setup|=ERROR_WIFI_SETUP;
+      if (error_setup==0) printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi and network services unsuccessfully restarted . error_setup=0x"+String(error_setup,HEX)+"), heap="+String(esp_get_minimum_free_heap_size()));
+    }
+  }
+
+  //Regular actions every NTP_KO_CHECK_PERIOD seconds. Cheking if NTP is off or should be checked
+  //forceNTPCheck is true if:
+  // 1) After NTP server config in firstSetup()
+  nowTimeGlobal=millis();
+  if ((nowTimeGlobal-lastTimeNTPCheck) >= NTP_KO_CHECK_PERIOD || forceNTPCheck) {
+    
+    ntp_ko_check_period(false);
+    if ((error_setup & ERROR_EEPROM_VARIABLES_INIT)!=0) {error_setup&=!ERROR_EEPROM_VARIABLES_INIT; error_setup|=timeOnCountersInit(error_setup,false,false,ntpSynced);}
+  }
+  
   //Regular actions every ONE_SECOND_PERIOD seconds
   // 1) Check if time on counters need to be updated
   nowTimeGlobal=millis();
@@ -171,51 +252,31 @@ void loop() {
     one_second_check_period(false,nowTimeGlobal,ntpSynced);
   }
 
-  //Regular actions every TIME_COUNTERS_EEPROM_UPDATE_PERIOD seconds to recover WiFi connection
+  //Regular actions every TIME_COUNTERS_EEPROM_UPDATE_PERIOD seconds
   nowTimeGlobal=millis();
   if ((nowTimeGlobal-lastTimeTimerEepromUpdateCheck) >= TIME_COUNTERS_EEPROM_UPDATE_PERIOD) {
     
     time_counters_eeprom_update_check_period(true,nowTimeGlobal);
   }
 
-  //Regular actions every WIFI_RECONNECT_PERIOD seconds to recover WiFi connection
-  //forceWifiReconnect==true if:
-  // 1) after ICON_STATUS_REFRESH_PERIOD
-  // 2) after configuring WiFi = ON in the Config Menu
-  // 3) or wake up from sleep (only by pressing buttons, no by timer)
-  // 4) or previous WiFi re-connection try was ABORTED (button pressed) or BREAK (need to refresh display)
-  // 5) after heap size was below ABSULUTE_MIN_HEAP_THRESHOLD
-  // 6) after detection the webServer is down
-  nowTimeGlobal=millis();
-  if ((((nowTimeGlobal-lastTimeWifiReconnectionCheck) >= wifiReconnectPeriod) || forceWifiReconnect ) && 
-      wifiEnabled && !firstBoot && (wifiCurrentStatus==wifiOffStatus || WiFi.status()!=WL_CONNECTED) ) {
-     
-    wifi_reconnect_period(debugModeOn);
-  }
-
-  //Regular actions every NTP_KO_CHECK_PERIOD seconds. Cheking if NTP is off or should be checked
-  //forceNTPCheck is true if:
-  // 1) After NTP server config in firstSetup()
-  // 2) If the previous NTP check was aborted due either Button action or Display Refresh
-  // 2) WiFi has been setup ON in config menu
-  nowTimeGlobal=millis();
-  if ((nowTimeGlobal-lastTimeNTPCheck) >= NTP_KO_CHECK_PERIOD || forceNTPCheck) {
-    
-    ntp_ko_check_period(false);
-  }
-
-  //Regular actions after THERMOSTATE_INTERRUPT_DELAY milliseconds the thermostate interrupt was triggered to check the value of Thermostate pin
-  //Delay of THERMOSTATE_INTERRUPT_DELAY milliseconds is needed to avoid bouncing
-  nowTimeGlobal=millis();
-  if (thermostateInterrupt && (nowTimeGlobal-lastInterruptTime >= THERMOSTATE_INTERRUPT_DELAY)) {
-    thermostate_interrupt_triggered(debugModeOn); //Sending HTTP Cloud updates is done from that function
-  }
-
   //Regular actions every MQTT_CHECK_PERIOD seconds to check on MQTT connection
+  // or due to forceMQTTConnect (from webServer (/cloud form))
   nowTimeGlobal=millis();
-  if (nowTimeGlobal-lastTimeMQTTCheck >= MQTT_CHECK_PERIOD) {
-    if (wifiEnabled && WiFi.status()==WL_CONNECTED && mqttServerEnabled && MqttSyncCurrentStatus==MqttSyncOffStatus)
-      mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,NO_ERROR,false,debugModeOn,mqttTopicName,device);
+  if ((nowTimeGlobal-lastTimeMQTTCheck >= MQTT_CHECK_PERIOD) || forceMQTTConnect) {
+
+    //Connect to MQTT broker as it was enabled from the webserver
+    //forceMQTTConnect is set from webServer (/cloud form)
+    if (WiFi.status()==WL_CONNECTED && !mqttClient.connected() && mqttServerEnabled && forceMQTTConnect) {
+      if (debugModeOn) printLogln(String(millis())+" - [loop - forceMQTTConnect] - Connecting to the MQTT broker as it was set in the web form.");
+      error_setup&=!ERROR_MQTT_SERVER;
+      error_setup|=mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,error_setup,debugModeOn,false,mqttTopicName,device);
+      forceMQTTConnect=false;
+    }
+    else if (wifiEnabled && WiFi.status()==WL_CONNECTED && mqttServerEnabled && MqttSyncCurrentStatus==MqttSyncOffStatus) {
+      //Regular action every MQTT_CHECK_PERIOD seconds
+      error_setup&=!ERROR_MQTT_SERVER;
+      error_setup|=mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,error_setup,debugModeOn,false,mqttTopicName,device);
+    }
     lastTimeMQTTCheck=nowTimeGlobal;
   }
   
@@ -231,6 +292,55 @@ void loop() {
     lastGasSample=nowTimeGlobal;
   }
 
+  //Regular actions every CONNECTIVITY_CHECK_PERIOD seconds
+  nowTimeGlobal=millis();
+  if ((nowTimeGlobal-lastTimeConnectiviyCheck >= CONNECTIVITY_CHECK_PERIOD) && WiFi.status()==WL_CONNECTED && 
+          wifiEnabled && !firstBoot ) {
+    //Check connectivity and reset it if needed
+    // WiFi.status()==WL_CONNECTED && no FQDN resolved and error in sample_upload && mqttClient not connected and error in checkURL and no GW ping
+    // NTP status is not check as NTP checks take time (random period) and forcing NTP in here is avoided (as it may take several loop cycles = complexity)
+    switch (connectiviy_check_period(debugModeOn,nowTimeGlobal)) {
+      case ERROR_WEB_SERVER:
+        resetWebServerCnt++; //Stats
+        EEPROM.write(0x53B,errorsWebServerCnt);
+        EEPROM.write(0x53C,resetWebServerCnt);
+        EEPROM.commit();
+        ESP.restart(); //Rebooting
+      break;
+      case ERROR_NO_CONNECTIVITY:
+        forceWifiReconnect=true; //Next loop cycle restart wifi}
+      break;
+      case NO_ERROR:
+      default:
+        //Do nothing
+      break;
+    }
+  }
+  
+  //Check interrupt flags
+  if (gasInterrupt) {
+    if (debugModeOn) {printLogln(String(millis())+"  - [loop] - GAS interrupt detected and gas_probe_triggered routine triggered: gasClear flag was '"+String(gasClear)+"' (1=NO GAS, 0=GAS)");}
+    gas_sample(debugModeOn); //gasClear flag is updated
+    
+    //JSON object is updated just right after taking the samples.
+    //Publish MQTT message with the new samples
+    if (!gasClear) {
+      if (debugModeOn) {printLogln(String(millis())+"  - [loop] - GAS detected after getting readings. MQTT message to be sent");}
+      forceMQTTpublish=true;
+    }
+    else {
+      if (debugModeOn) {printLogln(String(millis())+"  - [loop] - GAS clear after getting readings, so GAS interrupt was wrong, probably cause thermostast interrupt. Don't send MQTT message.");}
+    }
+    gasInterrupt=false;
+  }
+
+  //Regular actions after THERMOSTATE_INTERRUPT_DELAY milliseconds the thermostate interrupt was triggered to check the value of Thermostate pin
+  //Delay of THERMOSTATE_INTERRUPT_DELAY milliseconds is needed to avoid bouncing
+  nowTimeGlobal=millis();
+  if (thermostateInterrupt && (nowTimeGlobal-lastInterruptTime >= THERMOSTATE_INTERRUPT_DELAY)) {
+    thermostate_interrupt_triggered(debugModeOn); //Sending HTTP Cloud updates is done from that function
+  }
+
   //Check if mqtt samples must be published
   //Situations for forceMQTTpublish=true:
   // - every SAMPLE_PERIOD
@@ -239,16 +349,7 @@ void loop() {
     mqtt_publish_samples(wifiEnabled,mqttServerEnabled,secureMqttEnabled,false);
     forceMQTTpublish=false;
   }
-  
-  //Check interrupt flags
-  if (gasInterrupt) {
-    if (debugModeOn) {boardSerialPort.println(String(millis())+"  - [loop] - GAS interrupt detected and gas_probe_triggered routine triggered: gasClear="+String(gasClear));}
-    gas_sample(debugModeOn);
-    gasInterrupt=false;
 
-    //JSON object is updated just right after taking the samples.
-    //Publish MQTT message with the new samples
-    forceMQTTpublish=true;
-  }
+  if (eepromUpdate) {EEPROM.commit(); eepromUpdate=false;}
  
 }

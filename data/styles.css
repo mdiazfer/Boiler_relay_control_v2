@@ -1,0 +1,503 @@
+textarea {
+  resize: vertical;
+  width: 98%;
+  height: 500px;
+  padding: 5px;
+  overflow: scroll;
+  background: #1f1f1f;
+  color: #65c115;
+}
+
+a:link {
+  color: lightskyblue;
+  background-color: transparent; 
+  text-decoration: none;
+}
+
+a:visited {
+  color: lightgreen;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+body {
+  font-size: 90%;
+  font-family: "Helvetica";
+}
+
+img {
+  max-width: 100%;
+  width: 175px;
+  height: 36.8887px;
+}
+
+input, select, button, textarea {
+  max-width: 100%;
+}
+
+meter, progress, output {
+  max-width: 100%;
+}
+
+div#tswsidecol {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+}
+
+div#tswsidecolindex {
+  /*float: right;*/
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+}
+
+div#tswsidecolgraphs {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+}
+
+div#tswsidecolinfo {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+  padding-bottom: 1%;
+}
+
+div#tswsidecolbasic {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+}
+
+div#tswsidecolcloud {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+}
+
+div#tswsidecolconsole {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+}
+
+div#tswsidecolapindex {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+}
+
+div#tswsidecolmaint {
+  float: left;
+  width: 27%;
+  color: white;
+  background-color: #34383b;
+  padding-top: 1%;
+}
+
+div#tswcontent {
+  float: right;
+  width: 70%;
+  color: white;
+  background-color: #34383b;
+}
+
+div#tswmeasurementstitle {
+  float: left;
+  width: 40%;
+  color: white;
+  background-color: #34383b;
+  padding-left: 1%;
+}
+
+div#tswupdateheader {
+  float: right;
+  width: 25%;
+  color: #b69249;
+  background-color: #34383b;
+  padding-right: 8%;
+}
+
+div#tswupdate {
+  float: right;
+  width: 36%;
+  color: #b69249;
+  background-color: #34383b;
+  padding-right: 1%;
+}
+
+div#tswcontentgraphs {
+  float: right;
+  width: 70%;
+  color: white;
+  background-color: #34383b;
+  height: 1548px;
+}
+
+div#tswcontentinfo {
+  float: right;
+  width: 70%;
+  color: white;
+  background-color: #34383b;
+}
+
+@media only screen and ( max-width : 629px ) {
+  div#tswcontainer {
+    float: none;
+    width: 370px;
+  }
+  div#tswcontainerindex {
+    float: none;
+    width: 529px;
+  }
+  div#tswcontainerinfo {
+    float: none;
+    width: 629px;
+  }
+  div#tswheader {
+    float: none;
+    width: 100%;
+  }
+  div#tswfooter {
+    float: none;
+    width: 100%;
+  }
+  div#tswsidecol {
+    float: none;
+    width: 100%;
+    height: 100%;
+  }
+  div#tswsidecolindex {
+    float: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+  }
+  div#tswsidecolgraphs {
+    float: none;
+    clear: both;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+  }
+  div#tswsidecolinfo {
+    float: none;
+    clear: both;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+    padding-bottom: 1%;
+  }
+  div#tswsidecolbasic {
+    float: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+  }
+  div#tswsidecolcloud {
+    float: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+  }
+  div#tswsidecolconsole {
+    float: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+  }
+  div#tswsidecolmaint {
+    float: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+  }
+  div#tswsidecolapindex {
+    float: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 1%;
+  }
+  div#tswcontent {
+    float: none;
+    width: 100%;
+    /*max-width : 529px*/
+    height: 100%;
+  }
+  div#tswmeasurementstitle {
+    float: left;
+    width: 40%;
+    padding-left: 1%;
+  }
+  div#tswupdateheader {
+    float: right;
+    width: 25%;
+    padding-left: 8%;
+  }
+  div#tswupdate {
+    float: right;
+    width: 36%;
+    padding-left: 1%;
+  }
+  div#tswcontentgraphs {
+    float: none;
+    width: 100%;
+    color: white;
+    background-color: #34383b;
+    height: 1450px;
+  }
+  div#tswcontentinfo {
+    float: none;
+    width: 100%;
+    color: white;
+    background-color: #34383b;
+    height: 1080px;
+  }
+}
+
+div#tswcontproper {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+div#tswcontainer {
+  background-color: #1d2324;
+}
+
+div#tswcontainerindex {
+  background-color: #1d2324;
+}
+
+div#tswcontainerinfo {
+  background-color: #1d2324;
+}
+
+div#tswsideproper, div#tswothersideproper {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+div#tswheader {
+  color: white;
+  background-color: #34383b;
+}
+
+div#tswfooter {
+  color: white;
+  background-color: #34383b;
+}
+
+#logo {
+  display: block;
+  float: left;
+  padding-top: 2%;
+}
+
+#tswcontainer {
+  width: 800px;
+  margin: auto;
+}
+
+#tswcontainerindex {
+  width: 800px;
+  margin: auto;
+}
+
+#tswcontainerinfo {
+  width: 800px;
+  margin: auto;
+}
+
+#tswcontent {
+  margin: auto auto auto 0%;
+}
+
+#tswcontentgraphs {
+  margin: auto auto auto 0%;
+}
+
+#tswcontentinfo {
+  margin: auto auto auto 0%;
+}
+
+#tswsidecol {
+  margin-left: 0%;
+  margin-right: 3%;
+}
+
+#tswsidecolindex {
+  margin: auto auto auto 0%;
+  /*margin-left: 0%;
+  margin-right: 3%;*/
+  height: 570px;
+  padding-top: 1%;
+}
+
+#tswsidecolgraphs {
+  margin-left: 0%;
+  margin-right: 3%;
+  height: 1540px;
+  padding-top: 1%;
+}
+
+#tswsidecolinfo {
+  margin: auto auto auto 0%;
+  height: 1160px;
+  padding-top: 1%;
+  padding-bottom: 1%;
+}
+
+#tswsidecolbasic {
+  margin-left: 0%;
+  margin-right: 3%;
+  height: 807px;
+  padding-top: 1%;
+}
+
+#tswsidecolcloud {
+  margin-left: 0%;
+  margin-right: 3%;
+  height: 630px;
+  padding-top: 1%;
+}
+
+#tswsidecolconsole {
+  margin-left: 0%;
+  margin-right: 3%;
+  height: 630px;
+  padding-top: 1%;
+}
+
+#tswsidecolmaint {
+  margin-left: 0%;
+  margin-right: 3%;
+  height: 808px;
+  padding-top: 1%;
+}
+
+#tswsidecolapindex {
+  margin-left: 0%;
+  margin-right: 3%;
+  height: 388px;
+  padding-top: 1%;
+}
+
+#tswcontproper {
+  min-height: 280px;
+}
+
+#tswwificredentials {
+  display: block;
+  float: left;
+  width: 50%;
+}
+
+#tswntpservers {
+  display: block;
+}
+
+#tswadminusername {
+  display: block;
+  float: left;
+  width: 50%;
+}
+
+#tswadminuserpssw {
+  display: block;
+  
+}
+
+#tswsamples {
+  width: 50%;
+  float: left;
+  padding-right: 5%;
+  padding-bottom: 5%;
+}
+
+#tswwifiinfo {
+  width: 45%;
+  float: right;
+  padding-bottom: 5%;
+}
+
+#tswdevice {
+  float: left;
+  width: 50%;
+  padding-right: 5%;
+  clear: left;
+}
+
+#tswnetinfo {
+  float: left;
+  clear: right;
+  padding-top: 5%;
+  padding-bottom: 5%;
+  width: 45%;
+}
+
+#tswmiscinfo {
+  float: left;
+  clear: both;
+  width: 100%;
+  padding-top: 5%;
+}
+
+#tswmiscinfoleft {
+  float: left;
+}
+
+#tswmiscinforight {
+  /*clear: right;
+  position: relative;
+  left: 5%;*/
+  float: left;
+}
+
+.card-content {
+  padding: 5%;
+}
+
+.card-grid {
+  max-width: 1200px;
+  margin: 0px auto;
+  display: grid;
+  -webkit-grid-gap: 2rem;
+  grid-gap: 2rem;
+  -webkit-grid-template-columns: 1fr 100px 100px;
+  grid-template-columns: 1fr 100px 100px;
+}
+
+.card {
+  max-width: 240px;
+  background-color: #34383b;
+  box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, 0.5);
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #89bfff;
+}
+
+#id-card-CO2 {
+  min-width: 220px;
+  margin-top: 40%;
+  height: 300px;
+}

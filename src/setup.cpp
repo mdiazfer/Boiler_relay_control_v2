@@ -4,6 +4,222 @@
 
 #include "setup.h"
 
+void printLogln(String logMessage, unsigned char base) {
+  /******************************************************
+   Function printLog
+   Target: Prints logs in both serial port and web socket (if avialbable). It prints out a
+      new line character at the end of the message
+   Parameters:
+    String logMessage: Message to print out
+    unsigned char: base in case it's a number
+   Return: Nothing
+  *****************************************************/
+  
+  if (base==HEX) {
+    String aux=String(logMessage.toInt(),HEX);
+    if (serialLogsOn) boardSerialPort.println(aux);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux+"\n");
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux+"\n";
+  }
+  else {
+    if (serialLogsOn) boardSerialPort.println(logMessage);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(logMessage+"\n");
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage+"\n";
+  }
+  
+  if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
+}
+
+void printLog(String logMessage, unsigned char base) {
+  /******************************************************
+   Function printLog
+   Target: Prints logs in both serial port and web socket (if avialbable)
+   Parameters:
+    String logMessage: Message to print out
+    unsigned char: base in case it's a number
+   Return: Nothing
+  *****************************************************/
+  if (base==HEX) {
+    String aux=String(logMessage.toInt(),HEX);
+    if (serialLogsOn) boardSerialPort.print(aux);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux);
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux;
+  }
+  else {
+    if (serialLogsOn) boardSerialPort.print(logMessage);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(logMessage);
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage;
+  }
+
+  if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
+}
+
+void printLogln(uint8_t logMessage, unsigned char base) {
+  /******************************************************
+   Function printLog
+   Target: Prints logs in both serial port and web socket (if avialbable). It prints out a
+      new line character at the end of the message
+   Parameters:
+    uint8_t logMessage: Message to print out
+    unsigned char: base in case it's a number
+   Return: Nothing
+  *****************************************************/
+  if (base==HEX) {
+    String aux=String(logMessage,HEX);
+    if (serialLogsOn) boardSerialPort.println(aux);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux+"\n");
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux+"\n";
+  }
+  else {
+    if (serialLogsOn) boardSerialPort.println(String(logMessage));
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(logMessage)+"\n");
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage+"\n";
+  }
+
+  if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
+}
+
+void printLog(uint8_t logMessage, unsigned char base) {
+  /******************************************************
+   Function printLog
+   Target: Prints logs in both serial port and web socket (if avialbable)
+   Parameters:
+    uint8_t logMessage: Message to print out
+    unsigned char: base in case it's a number
+   Return: Nothing
+  *****************************************************/
+  if (base==HEX) {
+    String aux=String(logMessage,HEX);
+    if (serialLogsOn) boardSerialPort.print(aux);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux);
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux;
+  }
+  else {
+    if (serialLogsOn) boardSerialPort.print(String(logMessage));
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+         !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(logMessage));
+    if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage;
+  }
+
+  if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
+}
+
+void printLogln(tm * timeinfo, const char *format) {
+  /******************************************************
+   Function printLogln
+   Target: Prints logs in both serial port and web socket (if avialbable). It prints out a
+      new line character at the end of the message
+   Parameters:
+    tm * timeinfo: Time structucture to print out
+    const char format: Format of the text
+   Return: Nothing
+  *****************************************************/
+  char s[100];
+  strftime(s,sizeof(s),format,timeinfo);
+  if (serialLogsOn) boardSerialPort.println(String(s));
+  if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+       !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(s)+"\n");
+  if (millis()<=BOOT_LOGS_TIME) bootLogs+=String(s)+"\n";
+
+  if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
+}
+
+void printLog(tm * timeinfo, const char *format) {
+  /******************************************************
+   Function printLog
+   Target: Prints logs in both serial port and web socket (if avialbable).
+   Parameters:
+    tm * timeinfo: Time structucture to print out
+    const char format: Format of the text
+   Return: Nothing
+  *****************************************************/
+  char s[100];
+  strftime(s,sizeof(s),format,timeinfo);
+  if (serialLogsOn) boardSerialPort.print(String(s));
+  if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
+       !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(s));
+  if (millis()<=BOOT_LOGS_TIME) bootLogs+=String(s);
+
+  if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
+}
+
+void detachNetwork(void) {
+  /******************************************************
+   Function detachNetwork
+   Target: Close WiFi connection and reinit modules to release memory in the hope to increase heap size
+   Parameters: None
+   Return: Nothing
+  *****************************************************/
+  
+  
+  
+  /*webSocket.closeAll();
+  webSocket.cleanupClients();
+  webServer.removeHandler(&webSocket);
+  webServer.reset();
+  //webServer.end();
+  */
+  SPIFFS.end();
+  mqttClient.disconnect(true);
+  WiFi.disconnect(true,false);
+  //WiFi.disconnect();
+  wifiCurrentStatus=wifiOffStatus;
+  CloudSyncCurrentStatus=CloudSyncOffStatus;
+  CloudClockCurrentStatus=CloudClockOffStatus;
+  MqttSyncCurrentStatus=MqttSyncOffStatus;
+  forceWifiReconnect=true; //Force to reconnect WiFi in the next loop cycle
+  forceWebServerInit=true; //Force to reinit the webServer
+  //CloudSyncCurrentStatus (External HTTP server) and  CloudClockCurrentStatus (NTP Server) will be init by their own
+  delay(WEBSERVER_SEND_DELAY);
+  //WiFi.reconnect();
+  
+  if (debugModeOn) printLogln(String(millis())+" - [detachNetwork] - WiFi related modules stoped. They will be initiated in the next loop cycle");
+}
+
+String roundFloattoString(float_t number, uint8_t decimals) {
+  //Round float to "decimals" decimals in String format
+  String myString;  
+
+  int ent,dec,auxEnt,auxDec,aux1,aux2;
+
+  if (decimals==1) {
+    //Better precision operating without pow()
+    aux1=number*100;
+    ent=aux1/100;
+    aux2=ent*100;
+    dec=aux1-aux2; if (dec<0) dec=-dec;
+  }
+  else 
+    if (decimals==2) {
+      //Better precision operating without pow()
+      aux1=number*1000;
+      ent=aux1/1000;
+      aux2=ent*1000;
+      dec=aux1-aux2; if (dec<0) dec=-dec;
+    }
+    else {
+      ent=int(number);
+      dec=abs(number*pow(10,decimals+1)-ent*pow(10,decimals+1));
+    }
+  auxEnt=int(float(dec/10));
+  if (auxEnt>=10) auxEnt=9; //Need adjustment for wrong rounds in xx.98 or xx.99
+  auxDec=abs(auxEnt*10-dec);
+  if (auxDec>=5) auxEnt++;
+  if (auxEnt>=10) {auxEnt=0; ent++;}
+
+  if (decimals==0) myString=String(number).toInt(); 
+  else myString=String(ent)+"."+String(auxEnt);
+
+  return myString;
+}
+
 String IpAddress2String(const IPAddress& ipAddress) {
   /******************************************************
    Function IpAddress2String
@@ -47,6 +263,127 @@ IPAddress stringToIPAddress(String stringIPAddress) {
   
   return IPAddress(IPAddressOctectArray[0],IPAddressOctectArray[1],IPAddressOctectArray[2],IPAddressOctectArray[3]);
 }
+
+size_t getAppOTAPartitionSize(uint8_t type, uint8_t subtype) {
+  /******************************************************
+   Function getAppOTAPartitionSize
+   Target: Getting the partition size available for OTA. Should be the maximum binary file size to upload via OTA.
+   Parameters:
+    type: partition type
+    subtype: partition subtype
+  *****************************************************/
+  
+  esp_partition_iterator_t iter;
+  const esp_partition_t *partition=nullptr;
+
+  switch (type) {
+    case ESP_PARTITION_TYPE_APP:
+    { const esp_partition_t* nonRunningPartition=nullptr;
+      const esp_partition_t* runningPartition=esp_ota_get_running_partition();
+      OTAUpgradeBinAllowed=false; //v1.2.0 To block OTA upgrade if there is only one partition
+      if (runningPartition==nullptr) {
+        //Something wetn wrong
+        if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Couldn't get the running partition");}
+        return 0;
+      }
+      
+      if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Got the running partition");}
+      
+      //Getting all the APP-type partitions
+      iter = esp_partition_find((esp_partition_type_t) type, (esp_partition_subtype_t) subtype, NULL);
+      if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Name, type, subtype, offset, length");}
+      uint8_t appPartitionNumber=0;
+      while (iter != nullptr)
+      {
+        partition = esp_partition_get(iter);
+        //if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - "+String(partition->label)+" app "+String(partition->subtype)+" 0x"+String(partition->address,HEX)+" 0x"+String(partition->size,HEX)+" ("+String(partition->size)+" B)");}
+        iter = esp_partition_next(iter);
+        appPartitionNumber++;
+      }
+      esp_partition_iterator_release(iter);
+
+      if (appPartitionNumber!=2) {
+        //Wrong number of app partitions by design of this firmware
+        if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Wrong number of APP partitions. It should be 2 rather than "+String(appPartitionNumber));}
+        //OTA upgrade is not allowed
+        return 0;
+      }
+
+      //Getting the non-running APP-type partition
+      iter = esp_partition_find((esp_partition_type_t) type, (esp_partition_subtype_t) subtype, NULL);
+      while (iter != nullptr)
+      {
+        partition = esp_partition_get(iter);
+        if (runningPartition!=partition) {
+          nonRunningPartition=partition;
+          if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - "+String(partition->label)+" app "+String(partition->subtype)+" 0x"+String(partition->address,HEX)+" 0x"+String(partition->size,HEX)+" ("+String(partition->size)+" B) is the non-running partition");}
+          break;
+        }
+        else {
+          if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - "+String(partition->label)+" app "+String(partition->subtype)+" 0x"+String(partition->address,HEX)+" 0x"+String(partition->size,HEX)+" ("+String(partition->size)+" B) is the running partition");}
+        }
+        iter = esp_partition_next(iter);
+      }
+      esp_partition_iterator_release(iter);
+
+      if (nonRunningPartition==nullptr) {
+        //Something wetn wrong getting the non-running partion
+        if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Couldn't get the non-running partition");}
+        return 0;
+      }
+
+      if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Got the non-running partition and size "+String(nonRunningPartition->size)+" B");}
+      OTAUpgradeBinAllowed=true;  //v1.2.0 To block OTA upgrade if there is only one partition
+      return nonRunningPartition->size;
+    }  
+    break;
+    case ESP_PARTITION_TYPE_DATA:
+    { SPIFFSUpgradeBinAllowed=false;  //v1.2.0 To block SPIFFS upgrade if there is something wrong with SPIFFS partition
+      if (subtype!=0x82) return 0; //Not SPIFFS partition
+
+      iter = esp_partition_find((esp_partition_type_t) type, (esp_partition_subtype_t) subtype, NULL);
+      if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Name, type, subtype, offset, length");}
+      while (iter != nullptr) //Assuming there is only one SPIFFS partition (Getting the first one)
+      {
+        partition = esp_partition_get(iter);
+        if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - "+String(partition->label)+" app "+String(partition->subtype)+" 0x"+String(partition->address,HEX)+" 0x"+String(partition->size,HEX)+" ("+String(partition->size)+" B) is the SPIFFS partition");}
+        break;  
+        iter = esp_partition_next(iter);
+      }
+      esp_partition_iterator_release(iter);
+
+      if (partition==nullptr) {
+        //Something wetn wrong getting the SPIFFS partion
+        if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Couldn't get the SPIFFS partition");}
+        return 0;
+      }
+
+      if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Got the SPIFFS partition and size "+String(partition->size)+" B");}
+      SPIFFSUpgradeBinAllowed=true; //v1.2.0 To block SPIFFS upgrade if there is something wrong with SPIFFS partition
+      return partition->size;
+    }
+    break;
+    default:
+      //It's supposed never get here
+      return 0;
+    break;
+  }
+  
+  //Interesting code to get the DATA partition.
+  /*iter = esp_partition_find(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  while (iter != nullptr)
+  {
+    const esp_partition_t *partition = esp_partition_get(iter);
+    if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - "+String(partition->label)+" data "+String(partition->subtype)+" 0x"+String(partition->address,HEX)+" 0x"+String(partition->size,HEX)+" ("+String(partition->size)+" B)");}
+    iter = esp_partition_next(iter);
+  }
+  esp_partition_iterator_release(iter);
+  if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Info on running partition");}
+  if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - "+String(partition->label)+" data "+String(partition->subtype)+" 0x"+String(partition->address,HEX)+" 0x"+String(partition->size,HEX)+" ("+String(partition->size)+" B)");}
+  if (debugModeOn) {printLogln("  [getAppOTAPartitionSize] - Ending partition conde");}
+  */
+}
+
 
 bool wifiVariablesInit() {
   /******************************************************
@@ -254,7 +591,7 @@ bool wifiVariablesInit() {
 
 bool initTZVariables() {
   /******************************************************
-   Function wifiVariablesInit
+   Function initTZVariables
    Target: Init TZVariables
             If varialbes exist in global_setup.h and doesn't exit in EEPPROM, then update EEPROM 
    Parameters: None
@@ -533,7 +870,7 @@ void EEPROMInit() {
     //It's the first run after the very first firmware upload
     //Variable inizialization to values configured in global_setup
 
-    if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - Writting EEPROM needed as the version checksums differ: readFirmwareVersion="+String(readFirmwareVersion)+", readChecksums="+String(readChecksum)+", firmwareVersion="+String(firmwareVersion)+", computedChecksum="+String(computedChecksum));}
+    if (debugModeOn) {printLogln("  [EEPROMInit] - Writting EEPROM needed as the version checksums differ: readFirmwareVersion="+String(readFirmwareVersion)+", readChecksums="+String(readChecksum)+", firmwareVersion="+String(firmwareVersion)+", computedChecksum="+String(computedChecksum));}
 
     //Save version and checksum
     for (int i=0; i<VERSION_CHAR_LENGTH; i++) EEPROM.write(i,firmwareVersion[i]);EEPROM.write(VERSION_CHAR_LENGTH,'\0');
@@ -586,14 +923,38 @@ void EEPROMInit() {
     //If variables exist in global_setup.h and doesn't exist in EEPPROM, then update EEPROM 
     updateEEPROM|=mqttVariablesInit();
 
+    
+    //Get the WEB and MQTT User Credential-related variables from EEPROM
+    char auxUserName[WEB_USER_CREDENTIAL_LENGTH],auxUserPssw[WEB_PW_CREDENTIAL_LENGTH];
+    memset(auxUserName,'\0',WEB_USER_CREDENTIAL_LENGTH);EEPROM.get(0x2A8,auxUserName);userName=String(auxUserName);
+    memset(auxUserPssw,'\0',WEB_PW_CREDENTIAL_LENGTH);EEPROM.get(0x2B3,auxUserPssw);userPssw=String(auxUserPssw);
+    memset(auxUserName,'\0',WEB_USER_CREDENTIAL_LENGTH);EEPROM.get(0x2FF,auxUserName);mqttUserName=String(auxUserName);
+    memset(auxUserPssw,'\0',WEB_PW_CREDENTIAL_LENGTH);EEPROM.get(0x30A,auxUserPssw);mqttUserPssw=String(auxUserPssw);
+
+    //Set minHeapSinceUpgrade
+    minHeapSinceUpgrade=EEPROM.readInt(0x41D);
+
     //Set the bootCount from EEPROM
     bootCount=bootCount==255?EEPROM.read(0x3DE)+1:1; //bootCount = 255 if VERSION = version in EEPROM. Otherwhise bootCount=0 (need to update value in EEPROM)
     EEPROM.write(0x3DE,bootCount);
 
-    //Set the resetCount from EEPROM and check if it needs to be updated
-    resetCount=EEPROM.read(0x3DF);
+    //Set the counters for resets and errors from EEPROM
+    resetCount=EEPROM.read(0x3DF); //uncontrolled resets
     resetPreventiveCount=EEPROM.read(0x41B);
-    resetSWCount=EEPROM.read(0x41C);
+    resetPreventiveWebServerCount=EEPROM.read(0x531);
+    resetSWCount=EEPROM.read(0x41C); //all ESP.restart() resets
+    resetSWWebCount=EEPROM.read(0x532); //resets done from the web maintenance page
+    resetSWMqttCount=EEPROM.read(0x533); //resets done from the HA (mqqtt) page
+    resetSWUpgradeCount=EEPROM.read(0x534); //resets done due to firmware upgrade from maintenance web page
+    errorsWiFiCnt=EEPROM.read(0x535); //Counter for WiFi errors
+    errorsNTPCnt=EEPROM.read(0x536); // Counter for NTP sync errors
+    errorsHTTPUptsCnt=EEPROM.read(0x537); // Counter for HTTP Cloud uploads errors
+    errorsMQTTCnt=EEPROM.read(0x538); //Counter for MQTT errors
+    SPIFFSErrors=EEPROM.read(0x539); //Counter for SPIFFS errors
+    errorsConnectivityCnt=EEPROM.read(0x53A); //Counter for Connectivity errors (being WiFi connected)
+    errorsWebServerCnt=EEPROM.read(0x53B); //Counter for Web Server errors (being WiFi connected but not serving web pages)
+    resetWebServerCnt=EEPROM.read(0x53C); //Counter for Web Server resets (being WiFi connected but not serving web pages)
+
     esp_reset_reason_t resetReason=esp_reset_reason();
     /*
     0  ESP_RST_UNKNOWN,    //!< Reset reason can not be determined
@@ -611,44 +972,41 @@ void EEPROMInit() {
     switch (resetReason) { //v1.2.0 - https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/misc_system_api.html#_CPPv418esp_reset_reason_t
       case ESP_RST_UNKNOWN: //Reset reason can not be determined
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;EEPROM.write(0x3DF,resetCount);
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_UNKNOWN (0). Resetting resetCount");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);updateEEPROM=true;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_UNKNOWN (0). Resetting resetCount");break;
       case ESP_RST_POWERON: //Power-on event
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_POWERON (1)");break;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_POWERON (1)");break;
       case ESP_RST_EXT: //External pin (not applicable for ESP32)
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_EXT (2)");break;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_EXT (2)");break;
       case ESP_RST_SW: //Software reset via esp_restart()
-        resetSWCount++;EEPROM.write(0x41C,resetSWCount);
-        if (resetPreventiveCount!=0) {resetSWCount-=resetPreventiveCount;updateEEPROM=true;} //Substract preventive resets to get the resets from the HA Restart buttong
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_SW (3)");break;
+        resetSWCount++; //Total number of ESP.restarts, including preventive resets, firmware upgrade, resets from web and mqtt
+        EEPROM.write(0x41C,resetSWCount);updateEEPROM=true;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_SW (3)");break;
       case ESP_RST_PANIC: //Software reset due to exception/panic
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;EEPROM.write(0x3DF,resetCount);
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_PANIC (4). Resetting resetCount");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);updateEEPROM=true;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_PANIC (4). Resetting resetCount");break;
       case ESP_RST_INT_WDT: //Reset (software or hardware) due to interrupt watchdog.
-        resetCount++;EEPROM.write(0x3DF,resetCount);
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_INT_WDT (5)");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);updateEEPROM=true;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_INT_WDT (5)");break;
       case ESP_RST_TASK_WDT: //Reset due to task watchdog
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;EEPROM.write(0x3DF,resetCount);
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_TASK_WDT (6). Resetting resetCount");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);updateEEPROM=true;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_TASK_WDT (6). Resetting resetCount");break;
       case ESP_RST_WDT: //Reset due to other watchdogs
         //In all these cases, there was a wrong code that triggered the reset. Count it
-        resetCount++;EEPROM.write(0x3DF,resetCount);
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_WDT (7). Resetting resetCount");break;
+        resetCount++;EEPROM.write(0x3DF,resetCount);updateEEPROM=true;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_WDT (7). Resetting resetCount");break;
       case ESP_RST_DEEPSLEEP: //Reset after exiting deep sleep mode
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_DEEPSLEEP (8)");break;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_DEEPSLEEP (8)");break;
       case ESP_RST_BROWNOUT: //Brownout reset (software or hardware) - Supply voltage goes below safe level
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_BROWNOUT (9)");break;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_BROWNOUT (9)");break;
       case ESP_RST_SDIO: //Reset over SDIO
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=ESP_RST_SDIO (10)");break;
+        printLogln("  [EEPROMInit] - Reset reason=ESP_RST_SDIO (10)");break;
       default:
-        boardSerialPort.println("  [EEPROMInit] - Reset reason=default");break;
+        printLogln("  [EEPROMInit] - Reset reason=default");break;
     }
     samples["resetReason"] = String(resetReason);
-
-    //Set minHeapSeen
-    minHeapSeen=EEPROM.readInt(0x41D);
 
     //Update time on counters
     EEPROM.get(0x421,heaterTimeOnYear);EEPROM.get(0x465,heaterTimeOnPreviousYear);
@@ -656,9 +1014,9 @@ void EEPROMInit() {
   }
 
   if (updateEEPROM) 
-    {if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - No version change, but update EEPROM needed with values taken from global_setup.h");}}
+    {if (debugModeOn) {printLogln("  [EEPROMInit] - No version change, but update EEPROM needed with values taken from global_setup.h");}}
   else 
-    {if (debugModeOn) {boardSerialPort.println("  [EEPROMInit] - No version change, but update EEPROM needed with counter variables");}}
+    {if (debugModeOn) {printLogln("  [EEPROMInit] - No version change, but update EEPROM needed with counter variables");}}
   EEPROM.commit();
 }
 
@@ -670,29 +1028,87 @@ void variablesInit() {
    Returns: Nothing
   *****************************************************/
   
-  //Adding the 3 latest mac bytes to the device name (in Hex format)
-  WiFi.macAddress(mac);
-  device=device+"-"+String((char)hex_digits[mac[3]>>4])+String((char)hex_digits[mac[3]&15])+
-    String((char)hex_digits[mac[4]>>4])+String((char)hex_digits[mac[4]&15])+
-    String((char)hex_digits[mac[5]>>4])+String((char)hex_digits[mac[5]&15]);
+  //Get the wakeup cause
+  esp_sleep_wakeup_cause_t wakeup_reason=esp_sleep_get_wakeup_cause();
+  switch(wakeup_reason) {
+    case ESP_SLEEP_WAKEUP_UNDEFINED:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_UNDEFINED (0)");break;
+    case ESP_SLEEP_WAKEUP_ALL:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_ALL (1)");break;
+    case ESP_SLEEP_WAKEUP_EXT0:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_EXT0 (2)");break;
+    case ESP_SLEEP_WAKEUP_EXT1:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_EXT1 (3)");break;
+    case ESP_SLEEP_WAKEUP_TIMER:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_TIMER (4)");break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_TOUCHPAD (5)");break;
+    case ESP_SLEEP_WAKEUP_ULP:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_ULP (6)");break;
+    case ESP_SLEEP_WAKEUP_GPIO:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_GPIO (7)");break;
+    case ESP_SLEEP_WAKEUP_UART:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_UART (8)");break;
+    case ESP_SLEEP_WAKEUP_WIFI:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_WIFI (9)");break;
+    case ESP_SLEEP_WAKEUP_COCPU:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_COCPU (10)");break;
+    case ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG (11)");break;
+    case ESP_SLEEP_WAKEUP_BT:printLogln(String(millis())+" - [variablesInit] - wakeup reason: ESP_SLEEP_WAKEUP_BT (12)");break;
+    default:printLogln(String(millis())+" - [variablesInit] - wakeup reason: default");break;
+    
+    break;
+  }
 
-  //EEPROM init
-  EEPROMInit(); //Wifi, ntp, web server and mqtt variables updated from that function
-  
- //Variable init
-  lastMQTTChangeCheck=0,lastCloudClockChangeCheck=0;
+  switch(wakeup_reason) { //Code structure to prepare sleep modes in the future
+    case ESP_SLEEP_WAKEUP_UNDEFINED:
+    case ESP_SLEEP_WAKEUP_ALL:
+    case ESP_SLEEP_WAKEUP_EXT0: //Wake up from Deep Sleep Mode by pressing Button1 or softReset
+    case ESP_SLEEP_WAKEUP_EXT1: //Wake up from Hibernate Mode by long pressing Button1
+    case ESP_SLEEP_WAKEUP_TIMER: //Scheduled wake up
+    case ESP_SLEEP_WAKEUP_TOUCHPAD:
+    case ESP_SLEEP_WAKEUP_ULP:
+    case ESP_SLEEP_WAKEUP_GPIO:
+    case ESP_SLEEP_WAKEUP_UART:
+    case ESP_SLEEP_WAKEUP_WIFI:
+    case ESP_SLEEP_WAKEUP_COCPU:
+    case ESP_SLEEP_WAKEUP_COCPU_TRAP_TRIG:
+    case ESP_SLEEP_WAKEUP_BT:
+    default:
+      //Adding the 3 latest mac bytes to the device name (in Hex format)
+      WiFi.macAddress(mac);
+      device=device+"-"+String((char)hex_digits[mac[3]>>4])+String((char)hex_digits[mac[3]&15])+
+        String((char)hex_digits[mac[4]>>4])+String((char)hex_digits[mac[4]&15])+
+        String((char)hex_digits[mac[5]>>4])+String((char)hex_digits[mac[5]&15]);
 
-  //MQTT callbacks definition
-  mqttClient.onConnect(onMqttConnect);
-  mqttClient.onDisconnect(onMqttDisconnect);
-  mqttClient.onSubscribe(onMqttSubscribe);
-  mqttClient.onMessage(onMqttMessage);
-  mqttClient.onUnsubscribe(onMqttUnsubscribe);
-  mqttClient.onPublish(onMqttPublish);
+      //EEPROM init
+      EEPROMInit(); //Wifi, ntp, web server and mqtt variables updated from that function
+      
+    //Variable init
+      lastMQTTChangeCheck=0,lastCloudClockChangeCheck=0;
 
-  //Pre-setting up URL things to upload samples to an external server
-  //Converting SERVER_UPLOAD_SAMPLES into IPAddress variable
-  serverToUploadSamplesIPAddress=stringToIPAddress(serverToUploadSamplesString);
+      //bool
+      debugModeOn=DEBUG_MODE_ON;logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
+      thermostateStatus=false;thermostateInterrupt=false;gasClear=false;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
+      webLogsOn=false;eepromUpdate=false;
+      //webLogsOn=false;
+      //uint8_t
+      auxLoopCounter=0;auxLoopCounter2=0;auxCounter=0;fileUpdateError=0;errorOnActiveCookie=0;errorOnWrongCookie=0;
+      //uint16_t
+      rebounds=0;
+      //uint32_t
+      lastHeap=0;minHeapSinceBoot=0xFFFFFFFF;flashSize=ESP.getFlashChipSize();programSize=ESP.getSketchSize();fileSystemSize=0;fileSystemUsed=0;
+      //uint64_t
+      whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
+      //float
+      gasSample=0;gasVoltCalibrated=0;RS_airCalibrated=0;RS_CurrentCalibrated=0;gasRatioSample=0;
+      //size_t
+      fileUpdateSize=0;OTAAvailableSize=0;SPIFFSAvailableSize=0;
+      //String
+      TZEnvVariable=String(NTP_TZ_ENV_VARIABLE);TZName=String(NTP_TZ_NAME);serverToUploadSamplesString=String(SERVER_UPLOAD_SAMPLES);
+
+      //MQTT callbacks definition
+      mqttClient.onConnect(onMqttConnect);
+      mqttClient.onDisconnect(onMqttDisconnect);
+      mqttClient.onSubscribe(onMqttSubscribe);
+      mqttClient.onMessage(onMqttMessage);
+      mqttClient.onUnsubscribe(onMqttUnsubscribe);
+      mqttClient.onPublish(onMqttPublish);
+
+      //Pre-setting up URL things to upload samples to an external server
+      //Converting SERVER_UPLOAD_SAMPLES into IPAddress variable
+      serverToUploadSamplesIPAddress=stringToIPAddress(serverToUploadSamplesString);
+    break;
+  }
 }
 
 uint32_t tempSensorInit(boolean debugModeOn) {
@@ -715,23 +1131,23 @@ uint32_t tempSensorInit(boolean debugModeOn) {
     error_setup|=ERROR_SENSOR_TEMP_HUM_SETUP;
   if ((error_setup & ERROR_SENSOR_TEMP_HUM_SETUP)==0) { 
     if (debugModeOn) {
-      boardSerialPort.print("\n  [tempSensorInit] - Tp/Hm Sensor type: "); boardSerialPort.println(tempHumSensorType); 
-      boardSerialPort.print("  [tempSensorInit] - Tp/Hm Sen. status: "); boardSerialPort.println(statSns,HEX);
-      boardSerialPort.print("  [tempSensorInit] - Tp/Hm Sen.  error: "); boardSerialPort.println(errorSns,HEX);
-      boardSerialPort.print("  [tempSensorInit] - Tp/Hm Sen. resolu.: "); boardSerialPort.println(tempHumSensor.getResolution());
-      boardSerialPort.println("  [tempSensorInit] - OK");
+      printLog("\n  [tempSensorInit] - Tp/Hm Sensor type: "); printLogln(tempHumSensorType); 
+      printLog("  [tempSensorInit] - Tp/Hm Sen. status: "); printLogln(String(statSns),HEX); //boardSerialPort.println(statSns,HEX);
+      printLog("  [tempSensorInit] - Tp/Hm Sen.  error: "); printLogln(String(errorSns),HEX); //boardSerialPort.println(errorSns,HEX);
+      printLog("  [tempSensorInit] - Tp/Hm Sen. resolu.: "); printLogln(String(tempHumSensor.getResolution())); //boardSerialPort.println(tempHumSensor.getResolution());
+      printLogln("  [tempSensorInit] - OK");
     }
-    else boardSerialPort.println(" ...... [OK]");
+    else printLogln(" ...... [OK]");
   }
   else {
     if (debugModeOn) {
-      boardSerialPort.print(".\n  [tempSensorInit] - Tp/Hm Sensor type: "); boardSerialPort.print(tempHumSensorType);boardSerialPort.println(" - Shouldn't be UNKNOWN");
-      boardSerialPort.print("  [tempSensorInit] - Tp/Hm Sen. status: "); boardSerialPort.println(statSns,HEX);
-      boardSerialPort.print("  [tempSensorInit] - Tp/Hm Sen.  error: "); boardSerialPort.print(errorSns,HEX);boardSerialPort.println(" - Should be 0");
-      boardSerialPort.print("  [tempSensorInit] - Tp/Hm Sen. resolu.: "); boardSerialPort.println(tempHumSensor.getResolution());
-      boardSerialPort.println("  [tempSensorInit] - KO");
+      printLog(".\n  [tempSensorInit] - Tp/Hm Sensor type: "); printLog(tempHumSensorType);printLogln(" - Shouldn't be UNKNOWN");
+      printLog("  [tempSensorInit] - Tp/Hm Sen. status: "); printLogln(String(statSns),HEX); //boardSerialPort.println(statSns,HEX);
+      printLog("  [tempSensorInit] - Tp/Hm Sen.  error: "); printLog(String(errorSns),HEX);printLogln(" - Should be 0"); //boardSerialPort.print(errorSns,HEX);boardSerialPort.println(" - Should be 0");
+      printLog("  [tempSensorInit] - Tp/Hm Sen. resolu.: "); printLogln(String(tempHumSensor.getResolution())); //boardSerialPort.println(tempHumSensor.getResolution());
+      printLogln("  [tempSensorInit] - KO");
     }
-    else boardSerialPort.println(" ...... [KO]");
+    else printLogln(" ...... [KO]");
   }
   return error_setup;
 }
@@ -750,19 +1166,19 @@ uint32_t wifiInit(boolean wifiEnabled,boolean debugModeOn) {
   
   if (wifiEnabled) {//Only if WiFi is enabled
     if (debugModeOn) {
-      boardSerialPort.println("\n  [wifiInit] - WiFi enabled. Setting WiFi variables ....");
-      boardSerialPort.println("  [wifiInit]    + wifiCred.wifiSSIDs[0]='"+wifiCred.wifiSSIDs[0]+"', wifiCred.wifiPSSWs[0]='"+wifiCred.wifiPSSWs[0]+"', wifiCred.wifiSITEs[0]='"+wifiCred.wifiSITEs[0]+"'");
-      boardSerialPort.println("  [wifiInit]    + wifiCred.wifiSSIDs[1]='"+wifiCred.wifiSSIDs[1]+"', wifiCred.wifiPSSWs[1]='"+wifiCred.wifiPSSWs[1]+"', wifiCred.wifiSITEs[1]='"+wifiCred.wifiSITEs[1]+"'");
-      boardSerialPort.println("  [wifiInit]    + wifiCred.wifiSSIDs[2]='"+wifiCred.wifiSSIDs[2]+"', wifiCred.wifiPSSWs[2]='"+wifiCred.wifiPSSWs[2]+"', wifiCred.wifiSITEs[2]='"+wifiCred.wifiSITEs[2]+"'");
-      boardSerialPort.println("  [wifiInit]    + ntpServers[0]='"+ntpServers[0]+"', ntpServers[1]='"+ntpServers[1]+"', ntpServers[2]='"+ntpServers[2]+"', ntpServers[3]='"+ntpServers[3]+"'");
-      boardSerialPort.println("  [wifiInit]    + TZEnvVariable='"+TZEnvVariable+"', TZName='"+TZName+"'");
+      printLogln("\n  [wifiInit] - WiFi enabled. Setting WiFi variables ....");
+      printLogln("  [wifiInit]    + wifiCred.wifiSSIDs[0]='"+wifiCred.wifiSSIDs[0]+"', wifiCred.wifiPSSWs[0]='"+wifiCred.wifiPSSWs[0]+"', wifiCred.wifiSITEs[0]='"+wifiCred.wifiSITEs[0]+"'");
+      printLogln("  [wifiInit]    + wifiCred.wifiSSIDs[1]='"+wifiCred.wifiSSIDs[1]+"', wifiCred.wifiPSSWs[1]='"+wifiCred.wifiPSSWs[1]+"', wifiCred.wifiSITEs[1]='"+wifiCred.wifiSITEs[1]+"'");
+      printLogln("  [wifiInit]    + wifiCred.wifiSSIDs[2]='"+wifiCred.wifiSSIDs[2]+"', wifiCred.wifiPSSWs[2]='"+wifiCred.wifiPSSWs[2]+"', wifiCred.wifiSITEs[2]='"+wifiCred.wifiSITEs[2]+"'");
+      printLogln("  [wifiInit]    + ntpServers[0]='"+ntpServers[0]+"', ntpServers[1]='"+ntpServers[1]+"', ntpServers[2]='"+ntpServers[2]+"', ntpServers[3]='"+ntpServers[3]+"'");
+      printLogln("  [wifiInit]    + TZEnvVariable='"+TZEnvVariable+"', TZName='"+TZName+"'");
     }
     error_setup|=wifiConnect(debugModeOn,&auxLoopCounter,&auxCounter);
 
     //print Logs
     if ((error_setup & ERROR_WIFI_SETUP)==0 ) { 
-      if (debugModeOn) boardSerialPort.println("[setup] - WiFi connection .......... [OK]");
-      else boardSerialPort.println(" ...... [OK]");
+      if (debugModeOn) printLogln("[setup] - WiFi connection .......... [OK]");
+      else printLogln(" ...... [OK]");
 
       //WifiNet is updated in printCurrentWiFi(), which is called by wifiConnect(true,X);
       //WiFi.RSSI() might be used instead, but doesn't hurt keeping wifiNet.RSSI instead, as printCurrentWiFi() is required
@@ -772,15 +1188,16 @@ uint32_t wifiInit(boolean wifiEnabled,boolean debugModeOn) {
       else if (wifiNet.RSSI>=WIFI_050_RSSI) wifiCurrentStatus=wifi50Status;
       else if (wifiNet.RSSI>=WIFI_025_RSSI) wifiCurrentStatus=wifi25Status;
       else if (wifiNet.RSSI<WIFI_000_RSSI) wifiCurrentStatus=wifi0Status;
-    } else {
-      if (debugModeOn) boardSerialPort.println("  [wifiInit] - WiFi connection .......... [KO]");
-      else boardSerialPort.println(" ...... [KO]");
+    }
+    else {
+      if (debugModeOn) printLogln("  [wifiInit] - WiFi connection .......... [KO]");
+      else printLogln(" ...... [KO]");
       wifiCurrentStatus=wifiOffStatus;
     }
   }
   else {//If WiFi is not enabled, then inform
-    if (debugModeOn) boardSerialPort.println("\n  [wifiInit] - WiFi connection .......... [N/E]");
-    else boardSerialPort.println(" ...... [N/E]");
+    if (debugModeOn) printLogln("\n  [wifiInit] - WiFi connection .......... [N/E]");
+    else printLogln(" ...... [N/E]");
     wifiCurrentStatus=wifiOffStatus;
   }
 
@@ -805,27 +1222,38 @@ uint32_t httpCloudInit(boolean wifiEnabled,boolean httpCloudEnabled,enum wifiSta
 
   if (httpCloudEnabled) {//Only if HTTP Cloud is enabled
     if (wifiCurrentStatus!=wifiOffStatus && wifiEnabled) { 
-      if (debugModeOn) boardSerialPort.println("\n  [httpCloudInit] - Setting HTTP Cloud server ....");
+      if (debugModeOn) {
+        if (fromSetup) {printLogln("\n  [httpCloudInit] - Setting HTTP Cloud server ....");}
+        else printLogln(String(millis())+" - [httpCloudInit] - Setting HTTP Cloud server ....");
+      }
       error_setup|=sendHttpRequest(debugModeOn,serverToUploadSamplesIPAddress,SERVER_UPLOAD_PORT,"test HTTP/1.1",fromSetup);
       lastTimeHTTPClouCheck=millis();
       if ((error_setup & ERROR_CLOUD_SERVER)==0) {
         CloudSyncCurrentStatus=CloudSyncOnStatus;
-        if (debugModeOn) boardSerialPort.println("  [httpCloudInit] - HTTP Cloud config .......... [OK]");
-        else boardSerialPort.println(" ...... [OK]");
+        if (debugModeOn) {
+          if (fromSetup) printLogln("  [httpCloudInit] - HTTP Cloud config .......... [OK]");
+          else printLogln(String(millis())+" - [httpCloudInit] - HTTP Cloud config .......... [OK]");
+        }
       }
       else {
-        if (debugModeOn) boardSerialPort.println("  [httpCloudInit] - HTTP Cloud config .......... [KO]");
-        else boardSerialPort.println(" ...... [KO]");
+        if (debugModeOn) {
+          if (fromSetup) printLogln("  [httpCloudInit] - HTTP Cloud config .......... [KO]");
+          else printLogln(String(millis())+"  [httpCloudInit] - HTTP Cloud config .......... [KO]");
+        }
       }
     }
     else {
-      if (debugModeOn) boardSerialPort.println("\n  [httpCloudInit] - HTTP Cloud server can't be setup: No WiFi connection or WiFi is disabled....");
-      else boardSerialPort.println(" ...... [KO-N/E]");
+      if (debugModeOn) {
+        if (fromSetup) printLogln("\n  [httpCloudInit] - HTTP Cloud server can't be setup: No WiFi connection or WiFi is disabled....");
+        else printLogln(String(millis())+"  [httpCloudInit] - HTTP Cloud config .......... [KO-N/E]");
+      }
     }
   }
   else {
-    if (debugModeOn) boardSerialPort.println("\n  [httpCloudInit] - HTTP Cloud is disabled....");
-    else boardSerialPort.println(" ...... [N/E]");
+    if (debugModeOn) {
+      if (fromSetup) printLogln("\n  [httpCloudInit] - HTTP Cloud is disabled .......... [N/E]");
+      else printLogln(String(millis())+"  [httpCloudInit] - HTTP Cloud is disabled .......... [N/E]");
+    }
   }
   CloudSyncLastStatus=CloudSyncCurrentStatus;
 
@@ -850,33 +1278,45 @@ uint32_t ntpInit(boolean wifiEnabled,boolean ntpEnabled,enum wifiStatus wifiCurr
 
   if (ntpEnabled) {//Only if NTP is enabled
     if (wifiCurrentStatus!=wifiOffStatus && wifiEnabled) { 
-      if (debugModeOn) boardSerialPort.println("\n  [ntpInit] - Setting NTP server ....");
+      if (debugModeOn) {
+        if (fromSetup) {printLogln("\n  [ntpInit] - Setting NTP server ....");}
+        else printLog(String(millis())+" - [ntpInit] - Setting NTP server ....");
+      }
       error_setup|=setupNTPConfig(debugModeOn,fromSetup,&auxLoopCounter2,&whileLoopTimeLeft); //Control variables were init in initVariables()
       lastTimeNTPCheck=millis();
       if ((error_setup & ERROR_NTP_SERVER)==0) {
         CloudClockCurrentStatus=CloudClockOnStatus;
-        if (debugModeOn) boardSerialPort.println("  [ntpInit] - NTP config .......... [OK]");
-        else boardSerialPort.println(" ...... [OK]");
+        if (debugModeOn) {
+          if (fromSetup) printLogln("  [ntpInit] - NTP config .......... [OK]");
+          else printLogln(String(millis())+" -   [ntpInit] - NTP config .......... [OK]");
+        }
       }
       else {
         CloudClockCurrentStatus=CloudClockOffStatus;
-        if (debugModeOn) boardSerialPort.println("  [ntpInit] - NTP config .......... [KO]");
-        else boardSerialPort.println(" ...... [KO]");
+        if (debugModeOn) {
+          if (fromSetup) printLogln("  [ntpInit] - NTP config .......... [KO]");
+          else printLogln(String(millis())+" -   [ntpInit] - NTP config .......... [KO]");
+        }
       }
     }
     else {
-      if (debugModeOn) boardSerialPort.println("\n  [ntpInit] - NTP server can't be setup: No WiFi connection or WiFi is disabled....");
-      else boardSerialPort.println(" ...... [KO-N/E]");
+      if (debugModeOn) {
+        if (fromSetup) printLogln("\n  [ntpInit] - NTP server can't be setup: No WiFi connection or WiFi is disabled .......... [N/E]");
+        else printLogln(String(millis())+" -   [ntpInit] - NTP is disabled .......... [KO-N/E]");
+      }
     }
   }
   else {
-    if (debugModeOn) boardSerialPort.println("\n  [ntpInit] - NTP is disabled....");
-    else boardSerialPort.println(" ...... [N/E]");
+    if (debugModeOn) {
+      if (fromSetup) printLogln("\n  [ntpInit] - NTP is disabled .......... [N/E]");
+      else printLogln(String(millis())+" -   [ntpInit] - NTP is disabled .......... [N/E]");
+    }
   }
   CloudClockLastStatus=CloudClockCurrentStatus;
 
   return error_setup;
 }
+
 
 uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean secureMqttEnabled, uint32_t error_setup, bool debugModeOn, bool fromSetup, String mqttTopicName, String device) {
   /******************************************************
@@ -899,8 +1339,8 @@ uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean s
   if (mqttServerEnabled) {//Only if MQTT is enabled
     if (wifiCurrentStatus!=wifiOffStatus && wifiEnabled) { 
       if (debugModeOn) {
-        if (fromSetup) {boardSerialPort.print("\n");boardSerialPort.print("  [mqttClientInit] - MQTT init.");}
-        else boardSerialPort.print(String(millis())+" - [mqttClientInit] - MQTT init.");
+        if (fromSetup) {printLog("\n");printLog("  [mqttClientInit] - MQTT init.");}
+        else printLog(String(millis())+" - [mqttClientInit] - MQTT init.");
       }
       
       //Connect to MQTT Server
@@ -928,9 +1368,9 @@ uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean s
         mqttClient.setWill(topicLWT,0,false,payloadLWT);
 
         if (fromSetup && debugModeOn) {
-          boardSerialPort.println("\n  [mqttClientInit] - Connecting to MQTT SRV: "+mqttServer+", secureMqttEnabled="+String(secureMqttEnabled));
-          boardSerialPort.println("  [mqttClientInit] - Root Topic Name="+mqttTopicName);
-          boardSerialPort.println("  [mqttClientInit] - userName="+userName+", userPssw=******");
+          printLogln("\n  [mqttClientInit] - Connecting to MQTT SRV: "+mqttServer+", secureMqttEnabled="+String(secureMqttEnabled));
+          printLogln("  [mqttClientInit] - Root Topic Name="+mqttTopicName);
+          printLogln("  [mqttClientInit] - userName="+userName+", userPssw=******");
         }
 
         //Connect to MQTT broker
@@ -943,62 +1383,177 @@ uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean s
         if (mqttClient.connected()) {
           MqttSyncCurrentStatus=MqttSyncOnStatus;
           if (fromSetup && debugModeOn) {
-            boardSerialPort.println("  [mqttClientInit] - Connection to MQTT SRV: "+mqttServer+" [OK]");
-            boardSerialPort.println("  [mqttClientInit] - Sending Home Assistant Discovery Messages");
+            printLogln("  [mqttClientInit] - Connection to MQTT SRV: "+mqttServer+" [OK]");
+            printLogln("  [mqttClientInit] - Sending Home Assistant Discovery Messages");
           }
           
           //Publish HA Discovery messages - v1.9
           mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),true); //Remove the topics first
-          mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Update the topics seconds
+          mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Update the topics then
         }
 
         if (MqttSyncCurrentStatus==MqttSyncOnStatus) {
-          if (fromSetup) {
-            if (debugModeOn) {boardSerialPort.println("  [mqttClientInit] - [OK]");}
-            else boardSerialPort.println(" ...... [OK]");
+          if (debugModeOn) {
+            if (fromSetup) printLogln("  [mqttClientInit] - MQTT config .......... [OK]");
+            else printLogln(String(millis())+" -   [mqttClientInit] - MQTT config .......... [OK]");
           }
-          else boardSerialPort.println(" ...... [OK]");
         }
         else
         {
-          if (fromSetup) {
-            if (debugModeOn) {boardSerialPort.println("  [mqttClientInit] - [KO]");}
-            else boardSerialPort.println(" ...... [KO]");
+          if (debugModeOn) {
+            if (fromSetup) printLogln("  [mqttClientInit] - MQTT config .......... [KO]");
+            else printLogln(String(millis())+" -   [mqttClientInit] - MQTT config .......... [KO]");
           }
-          else boardSerialPort.println(" ...... [KO]");
           errorMqtt=ERROR_MQTT_SERVER;
         }
       }
       else 
       {
-        if (fromSetup) {
-          if (debugModeOn)  {boardSerialPort.println("  [mqttClientInit]- No WiFi");}
-          else boardSerialPort.println(" ...... [KO-N/E]");
+        if (debugModeOn) {
+          if (fromSetup) printLogln("\n  [mqttClientInit] - MQTT server can't be setup: No WiFi connection or WiFi is disabled .......... [KO-N/E]");
+          else printLogln(String(millis())+" -   [mqttClientInit] - MQTT is disabled .......... [KO-N/E]");
         }
-        else boardSerialPort.println(" ...... [KO-N/E]");
         errorMqtt=ERROR_MQTT_SERVER;
       }
     }
     else {
-      if (fromSetup) {
-        if (debugModeOn) boardSerialPort.println("\n  [mqttClientInit] - MQTT server can't be setup: No WiFi connection or WiFi is disabled....");
-        else boardSerialPort.println(" ...... [KO-N/E]");
-      }
-      else boardSerialPort.println(" ...... [KO-N/E]"); //This case is supposed not to occur
+      if (debugModeOn) {
+        if (fromSetup) printLogln("\n  [mqttClientInit] - MQTT server can't be setup: No WiFi connection or WiFi is disabled .......... [KO-N/E]");
+        else printLogln(String(millis())+" -   [mqttClientInit] - MQTT is disabled .......... [KO-N/E]"); //This case is supposed not to occur
+      } 
       errorMqtt=ERROR_MQTT_SERVER;
     }
   }
   else {
-    if (fromSetup) {
-      if (debugModeOn) boardSerialPort.println("\n  [mqttClientInit] - MQTT is disabled....");
-      else boardSerialPort.println(" ...... [N/E]");
+    if (debugModeOn) {
+      if (fromSetup) printLogln("\n  [mqttClientInit] - MQTT is disabled .......... [N/E]");
+      else printLogln(String(millis())+" -   [mqttClientInit] - MQTT is disabled .......... [N/E]");  //This case is supposed not to occur
     }
-    else boardSerialPort.println(" ...... [N/E]"); //This case is supposed not to occur
     errorMqtt=ERROR_MQTT_SERVER;
   }
 
   return errorMqtt;
 }
+
+uint32_t spiffsInit(boolean debugModeOn,boolean fromSetup) {
+  /******************************************************
+   Function spiffsInit
+   Target: Init the SPIFFS stuff
+   Parameters:
+    error_setup: Error setup from main code
+    debugModeOn: True to print out logs
+    fromSetup: True if called from setup
+   Return: error_setup
+  *****************************************************/
+  uint32_t errorSPIFFS=NO_ERROR;
+
+  if (debugModeOn) {
+    if (fromSetup) {printLog("\n");printLog("  [spiffsInit] - SPIFFS init.");}
+    else printLog(String(millis())+" - [spiffsInit] - SPIFFS init.");
+  }
+  
+  if (SPIFFS.begin(true)) {
+    fileSystemSize = SPIFFS.totalBytes();
+    fileSystemUsed = SPIFFS.usedBytes();
+    if (fromSetup) {
+      if (debugModeOn) {printLogln("\n  [spiffsInit] - [OK]");}
+      else printLogln(" ...... [OK]");
+    }
+    else if (debugModeOn) printLogln(" ...... [OK]");
+
+    //Web variables that need to be initialized
+    flashSize = ESP.getFlashChipSize();
+    programSize = ESP.getSketchSize();
+    OTAAvailableSize=getAppOTAPartitionSize(ESP_PARTITION_TYPE_APP,ESP_PARTITION_SUBTYPE_ANY);
+    SPIFFSAvailableSize=getAppOTAPartitionSize(ESP_PARTITION_TYPE_DATA,0x82);
+    fileSystemSize=SPIFFS.totalBytes();
+    fileSystemUsed=SPIFFS.usedBytes();
+  }
+  else {
+    if (fromSetup) {
+      if (debugModeOn) {printLogln("\n  [spiffsInit] - [KO]");}
+      else printLogln(" ...... [KO]");
+    }
+    else if (debugModeOn) printLogln(" ...... [KO]");
+
+    //Web variables that need to be initialized
+    flashSize = ESP.getFlashChipSize();
+    programSize = 0;
+    OTAAvailableSize=0;
+    SPIFFSAvailableSize=0;
+    fileSystemSize=0;
+    fileSystemUsed=0;
+
+    errorSPIFFS|=ERROR_SPIFFS_SETUP;
+    SPIFFSErrors++;EEPROM.write(0x539,SPIFFSErrors);eepromUpdate=true;
+  }
+
+  return errorSPIFFS;
+}
+
+uint32_t webServerInit(uint32_t error_setup,boolean wifiEnabled,boolean webServerEnabled,enum wifiStatus wifiCurrentStatus,boolean debugModeOn,boolean fromSetup) {
+  /******************************************************
+   Function webServerInit
+   Target: Init the Web Server stuff
+   Parameters:
+    error_setup: Error setup from main code
+    wifiEnabled: True if WiFi is enabled
+    webServerEnabled: True if Web server is enabled
+    wifiCurrentStatus: enum wifiStatus {wifiOffStatus,wifi0Status,wifi25Status,wifi50Status,wifi75Status,wifi100Status};
+    debugModeOn: True to print out logs
+    fromSetup: True if called from setup
+   Return: error_setup
+  *****************************************************/
+  uint32_t errorWebServer=NO_ERROR;
+  forceWebServerInit=false;
+
+  if (webServerEnabled && !(error_setup & ERROR_SPIFFS_SETUP) ) {//Only if Web server is enabled and not SPIFFS errors
+    //if (forceWebServerInit) webServer=AsyncWebServer::AsyncWebServer(WEBSERVER_PORT);
+    
+    if (wifiCurrentStatus!=wifiOffStatus && wifiEnabled) { 
+      if (debugModeOn) {
+        if (fromSetup) {printLog("\n");printLog("  [webServerInit] - Web Server init, error_setup="+String(error_setup,HEX));}
+        else printLog(String(millis())+" - [webServerInit] - Web Server init, error_setup="+String(error_setup,HEX));
+      }
+      errorWebServer|=initWebServer();
+
+      if (!errorWebServer) {
+        //if (forceWebServerInit) webSocket=new AsyncWebSocket(WEBSOCKET_CONSOLE_URI);
+        errorWebServer|=initWebSocket();
+        if (!errorWebServer) {
+          if (debugModeOn) {
+            if (fromSetup) printLogln("\n  [webServerInit] - Web Server .......... [OK]");
+            else printLogln(String(millis())+" -   [webServerInit] - Web Server .......... [OK]");
+          }
+          return NO_ERROR;
+        }
+      }
+      
+      //At this point, errorWebServer=ERROR_WEB_SERVER or ERROR_WEB_SOCKET
+      if (debugModeOn) {
+        if (fromSetup) printLogln("\n  [webServerInit] - Web Server .......... [KO]");
+        else printLogln(String(millis())+" -   [webServerInit] - Web Server .......... [KO]");
+      }
+    }
+    else {
+      if (debugModeOn) {
+        if (fromSetup) printLogln("\n  [webServerInit] - Web Server can't be setup: No WiFi connection or WiFi is disabled .......... [KO-N/E]");
+        else printLogln(String(millis())+" -   [webServerInit] - Web Server is disabled .......... [KO-N/E]");
+      }
+      errorWebServer=ERROR_WEB_SERVER;
+    }
+  }
+  else {
+    if (debugModeOn) {
+      if (fromSetup) printLogln("\n  [webServerInit] - Web Server is disabled .......... [N/E]");
+      else printLogln(String(millis())+" -   [webServerInit] - Web Server is disabled .......... [N/E]");
+    }
+    errorWebServer=ERROR_WEB_SERVER;
+  }
+
+  return errorWebServer;
+}
+
 
 uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup, bool ntpSynced) {
   /******************************************************
@@ -1012,10 +1567,9 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
    Return: error_setup
   *****************************************************/
 
-
   if (debugModeOn) {
-    if (fromSetup) {boardSerialPort.print("\n");boardSerialPort.print("  [timeOnCountersInit] - Time on counters init.");}
-    else boardSerialPort.print(String(millis())+" - [timeOnCountersInit] - Time on counters init.");
+    if (fromSetup) {printLog("\n");printLog("  [timeOnCountersInit] - Time on counters init.");}
+    else printLog(String(millis())+" - [timeOnCountersInit] - Time on counters init.");
   }
   
   bool updateEeprom=false;
@@ -1064,12 +1618,10 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
     samples["boilerOnPreviousYearJan"] = "0";samples["boilerOnPreviousYearFeb"] = "0";samples["boilerOnPreviousYearMar"] = "0";samples["boilerOnPreviousYearApr"] = "0";samples["boilerOnPreviousYearMay"] = "0";samples["boilerOnPreviousYearJun"] = "0";
     samples["boilerOnPreviousYearJul"] = "0";samples["boilerOnPreviousYearAug"] = "0";samples["boilerOnPreviousYearSep"] = "0";samples["boilerOnPreviousYearOct"] = "0";samples["boilerOnPreviousYearNov"] = "0";samples["boilerOnPreviousYearDec"] = "0";
 
-    if (fromSetup) {
-      boardSerialPort.print("\n");
-      if (debugModeOn) {boardSerialPort.println("  [timeOnCountersInit] - There is no real date as there is no NTP sync.\n  [timeOnCountersInit] - [KO]");}
-      else boardSerialPort.println(" ...... [KO]");
+    if (debugModeOn) {
+      if (fromSetup) {printLogln("\n  [timeOnCountersInit] - There is no real date as there is no NTP sync.\n  [timeOnCountersInit] - [KO]");}
+      else printLogln(String(millis())+" [timeOnCountersInit] - [KO]");
     }
-    else boardSerialPort.println(" ...... [KO]");
           
     error_setup|=ERROR_EEPROM_VARIABLES_INIT;
     return error_setup;
@@ -1100,8 +1652,8 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
       boilerTimeOnPreviousYear.year != (boilerTimeOnPreviousYear.yesterday/10000) || 
       boilerTimeOnPreviousYear.year != (boilerTimeOnPreviousYear.today/10000)) {
 
-        //No coherency. Variables needs to to init and stored in EEPROM
-        if (debugModeOn) {if (fromSetup) {boardSerialPort.print("\n");}boardSerialPort.println("  [timeOnCountersInit] - No EEPROM coherency. Writting counters in EEPROM");}
+        //No coherency. Variables needs to be initiated and stored in EEPROM
+        if (debugModeOn) {if (fromSetup) {printLog("\n");}printLogln("  [timeOnCountersInit] - No EEPROM coherency. Writting counters in EEPROM");}
 
         //Initialize time on counters
         heaterTimeOnYear.year=year; heaterTimeOnPreviousYear.year=previousYear;
@@ -1122,11 +1674,11 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
         updateEeprom=true;
   }
   else {
-    if (debugModeOn) {if (fromSetup) {boardSerialPort.print("\n");} boardSerialPort.println("  [timeOnCountersInit] - EEPROM variables are coherent. Not writting counters in EEPROM.");}
+    if (debugModeOn) {if (fromSetup) {printLog("\n");} printLogln("  [timeOnCountersInit] - EEPROM variables are coherent. Not writting counters in EEPROM.");}
     if (today==heaterTimeOnYear.today) {
       //Boot same day than date in EEPROM
       //Do nothing. Variables already got from EEPROM
-      if (debugModeOn) boardSerialPort.println("  [timeOnCountersInit] - Date saved in EEPROM is same than today. Do nothing else.");
+      if (debugModeOn) printLogln("  [timeOnCountersInit] - Date saved in EEPROM is same than today. Do nothing else.");
     }
     else {
       //Boot different day than date in EEPROM
@@ -1184,7 +1736,7 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
     EEPROM.put(0x421,heaterTimeOnYear); EEPROM.put(0x465,heaterTimeOnPreviousYear);
     EEPROM.put(0x4A9,boilerTimeOnYear); EEPROM.put(0x4ED,boilerTimeOnPreviousYear);
     EEPROM.commit();
-    if (debugModeOn) boardSerialPort.println("  [timeOnCountersInit] - EEPROM updated with variables and counters");
+    if (debugModeOn) printLogln("  [timeOnCountersInit] - EEPROM updated with variables and counters");
   }
 
   //Update JSON variable
@@ -1220,11 +1772,10 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
 
   //samples.printTo(boardSerialPort); Print out the JSON variable
 
-  if (fromSetup) {
-    if (debugModeOn) {boardSerialPort.println("  [timeOnCountersInit] - Counter variables got from EEPROM.\n  [timeOnCountersInit] - [OK]");}
-    else boardSerialPort.println(" ...... [OK]");
+  if (debugModeOn) {
+    if (fromSetup) {printLogln("  [timeOnCountersInit] - Counter variables got from EEPROM.\n  [timeOnCountersInit] - [OK]");}
+    else printLogln(String(millis())+" [timeOnCountersInit] - [OK]");
   }
-  else boardSerialPort.println(" ...... [OK]");
  
   return error_setup;
 }

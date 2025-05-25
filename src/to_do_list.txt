@@ -1,17 +1,44 @@
 Change Log
 ----------
+v0.9.6  - Error counters save in EEPROM
+        - Added button to reset counters
+        - Added specific counter for resets due to web server failing
+v0.9.5  - New variables for:
+          + Min heap size seen since last boot
+          + debugModeOn => Global logs ON/OFF
+          + serialLogsOn => Serial logs ON/OFF
+          + webLogsOn => Web logs ON/OFF
+          + Web configuration/visualization support
+        - Check connectivity and webserver and restart if needed
+        - Forcing to free up heap memory in the event it's below a thresholds
+          + Switch WiFi OFF/ON, WebServer OFF/ON, etc.
+v0.9.4  - Minor bug fixing
+v0.9.3  - Bug fixing ISS001
+v0.9.2  - Init NTP-dependant modules after NTP initialization during normal execution:
+          + EEPROM Time counters
+        - Init wifi-dependant modules after wifi initialization during normal execution:
+          + NTP, WebServer, WebSocket, MQTT, Upload server
+v0.9.1  - WebSerial for log webconsole
+        - OTA support
+        - Web logs support
+        - Time counters saved in EEPPROM
 v0.9.0  - MQTT improvements
-	  + Time on counters: year, moths, yesterday, today
+	        + Time on counters: year, moths, yesterday, today
 v0.8.9  - First stable version with HA support
-
 
 
 To do list for boiler relay control
 -----------------------------------
-- firmware update from wifi
+- Troubleshooting
+  + ISS002: Unexpected reboot
+  + ISS003: Preventive reset are too often. RCA - seems to be related to the frequent WiFi disconnections due to the weak WiFi signal
+  + ISS004: Web server KO afeter WiFi reconnection
+- Time counters for boiler, similar to the heater ones
+- Track time and last function executed when the Absolute min heap size ever seen is detected
+- Track time and last function executed when the preventive software restart is executed
+- Date in logs in addition to milliseconds
+- Syslog support
 - Led flashing to indicate situations: All good, no WiFi, WiFi connection, Gas detection
-- Save in EEPROM durations of boiler burnings: today, yesterday, month, year
-
 
 Done
 --------
@@ -31,3 +58,33 @@ Done
   + Boot count since last firmware update
   + Uncontrolled reset count
   + Other error counters
+- Save in EEPROM durations of boiler burnings: today, yesterday, month, year
+- Init NTP-dependant modules after NTP initialization during normal execution:
+  + EEPROM Time counters
+- Init wifi-dependant modules after wifi initialization during normal execution:
+  + NTP, WebServer, WebSocket, MQTT, Upload server
+- Variables for:
+  + Min heap size seen since last boot
+  + debugModeOn => Global logs ON/OFF
+  + serialLogsOn => Serial logs ON/OFF
+  + webLogsOn => Web logs ON/OFF
+  + Web configuration/visualization support
+- Check webserver and restart if needed
+  + Init webserver-dependant modules after webserver initialization during normal execution:
+    * WebSocket
+- Forcing to free up heap memory in the event it's below a thresholds
+  + Switch WiFi OFF/ON, WebServer OFF/ON, etc.
+- Troubleshooting
+  + ISS004: GAS interrupt trigered when THERMOSTAT interrupt is trigered too (and viceversa??). Fixed in 0.9.2
+    Fix: it can't be avoided (due to static???), but GAS notificacion is done only if readings taken just right after GAS interrupt show GAS.
+  + ISS001: Wrong info in logs from boot time - v0.9.3
+    *   [printCurrentWiFi] - Signal strength (RSSI): e memory for RF calibration data => Use WiFi.SSID() instead of wifiNet.RSSI ?
+    *   [printCurrentWiFi] - Encryption Type: 3
+    *   [printCurrentWiFi] - WiFi Channel: E (%u) %s: %s: store calibration mac failed(0x%x)
+
+
+  Discarded
+  -------------
+- Load time counters after NTP is synced if it wasn't during bootup.
+  + Sum current time counters (if needed) to EEPROM ones and save them in EEPROM.
+  ==> It's complex as it might impact today's and yesterday's counters, and different month and years.

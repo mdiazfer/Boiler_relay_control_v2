@@ -53,24 +53,31 @@
   //enum wifiStatus {wifiOffStatus,wifi0Status,wifi25Status,wifi50Status,wifi75Status,wifi100Status};
 #endif
 
-extern RTC_DATA_ATTR int errorsWiFiCnt;
 extern RTC_DATA_ATTR enum CloudClockStatus CloudClockCurrentStatus;
 extern RTC_DATA_ATTR enum CloudClockStatus CloudClockLastStatus;
 extern RTC_DATA_ATTR enum CloudSyncStatus CloudSyncCurrentStatus; // 4B
 extern RTC_DATA_ATTR enum CloudSyncStatus CloudSyncLastStatus; // 4B
 extern RTC_DATA_ATTR enum MqttSyncStatus MqttSyncCurrentStatus; // 4B
 extern RTC_DATA_ATTR enum MqttSyncStatus MqttSyncLastStatus; // 4B
-extern RTC_DATA_ATTR int errorsNTPCnt;
+extern RTC_DATA_ATTR uint8_t errorsNTPCnt,errorsWiFiCnt;
 extern RTC_DATA_ATTR struct tm startTimeInfo;
 extern RTC_DATA_ATTR char TZEnvVar[TZ_ENV_VARIABLE_MAX_LENGTH];
 extern RTC_DATA_ATTR uint64_t lastTimeNTPCheck;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
+extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 extern struct tm nowTimeInfo;
-extern boolean NTPResuming,startTimeConfigure;
-extern bool isBeaconAdvertising,ntpSynced;
+extern bool isBeaconAdvertising,ntpSynced,NTPResuming,startTimeConfigure,eepromUpdate;
 
+#ifndef _PRINT_LOG_DEFINITION_
+  extern void printLogln(String logMessage, unsigned char base=10);
+  extern void printLog(String logMessage, unsigned char base=10);
+  extern void printLogln(uint8_t logMessage, unsigned char base=10);
+  extern void printLog(uint8_t logMessage, unsigned char base=10);
+  extern void printLogln(tm * timeinfo, const char *format);
+  extern void printLog(tm * timeinfo, const char *format);
+  #define _PRINT_LOG_DEFINITION_
+#endif
 
-extern HardwareSerial boardSerialPort;
 void printNetData();
 //wifiNetworkInfo * printCurrentWiFi(boolean debugModeOn, int16_t *numberWiFiNetworks);
 uint32_t wifiConnect(boolean debugModeOn,uint8_t* auxLoopCounter,uint8_t* auxCounter);

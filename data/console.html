@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="all" href="styles.css">
+    <link type="text/css" rel="stylesheet" href="tswnavbar.css" title="Side Menu CSS">
+  </head>
+  <body onload="getTime()" style="background-color: #1d2324; color: white;">
+    <div id="tswcontainer">
+      <div id="tswheader">
+        <!-- start of header section: insert your logo, etc, here -->
+        <p style="text-align: center; font-size: 1%; vertical-align: 210px;">
+          <a href="http://the-iotfactory.com" title="The IoT Factory" target="_blank">
+            <img src="The_IoT_Factory.png" alt="The IoT Factory Logo" title="Logo"
+              id="logo" style="width: 215px; height: 45.3204px;">
+          </a>
+        </p>
+        <p>&nbsp;</p>
+        <p style="text-align: right; font-size: smaller;">
+          <font>Boiler control by The IoT Factory ©</font>
+          <font style="color:#3f9bd5;""><label id='currentDate'"></label></font>
+        </p>
+        <script>
+          function getTime() {
+            var now=new Date();
+            document.getElementById("currentDate").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+now.toLocaleDateString()+" - "+now.toLocaleTimeString()+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+            setTimeout(getTime,1000);
+          }
+        </script>
+        <p style="text-align: center; font-size: smaller;"><br>
+        </p>
+      </div>
+      <div id="tswsidecolconsole">
+        <div id="tswsideproper">
+          <!-- start of side column: insert your navigation menu, etc, here -->
+          <!-- start of hamburger menu button -->
+          <script type="text/javascript">
+                function tsw_expand_navmenu( )
+                {
+                  document.getElementById ( 'tswhamburger' ).style.display = 'none' ;
+                  document.getElementById( 'tswcssbuttons' ).style.display = 'block' ;
+                }
+              </script> <button type="button" id="tswhamburger" title="Click to expand menu"
+
+            onclick="tsw_expand_navmenu();">≡</button>
+          <!-- end of hamburger menu button -->
+          <div id="tswcssbuttons">
+            <ul>
+              <li><a href="index.html">Measurements</a></li>
+              <li><a href="graphs.html">Graphs</a></li>
+              <li><a href="info.html">Global Info</a></li>
+              <li><a href="basic.html">Basic configuration</a></li>
+              <li><a href="cloud.html">Cloud configuration</a></li>
+              <li><a href="bluetooth.html">Bluetooth configuration</a></li>
+              <li><a href="console.html">Console logs</a></li>
+              <li><a href="maintenance.html">Maint. & Troubleshoot</a></li>
+            </ul>
+          </div>
+          <!-- end of side column: put your navigation menu, etc, above this line -->
+        </div>
+      </div>
+      <div id="tswcontent">
+        <div id="tswcontproper">
+          <!-- start of content column: insert your content here -->
+          <h1>Console Logs</h1>
+          <p></p>
+          Stop/Resume:&nbsp;&nbsp;&nbsp;      
+            <button type="button" name="stop_resume_logs" id="stop_resume_logs_id"
+                onClick="logButtonClick()">
+              <strong>Stop</strong>
+            </button>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Boot Logs:&nbsp;&nbsp;&nbsp;
+          <button type="button" name="get_boot_logs" id="get_boot_logs_id"
+              onClick="getBootLogsButtonClick()">
+            <strong>Get</strong>
+          </button>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clear Logs:&nbsp;&nbsp;&nbsp;
+          <button type="button" name="clear_logs" id="clear_logs_id"
+              onClick="clearLogsButtonClick()">
+            <strong>Clear</strong>
+          </button>
+          <br>
+          Web Logs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <label for="web_logs_on_id">On</label>
+          <input name="web_logs_enabled" id="web_logs_on_id" value="on" required="required"
+            checked type="radio"> 
+              &nbsp;&nbsp;&nbsp;&nbsp; 
+          <label for="web_logs_off_id">Off</label>
+          <input name="web_logs_enabled" id="web_logs_off_id" value="off" required="required"
+             type="radio">
+          <br><br>
+          <textarea readonly id='logArea' raws='50' cols='340' wrap='off'></textarea>
+          <br>
+          <br>
+
+          <script>
+            var gateway = `ws://${window.location.hostname}/wsconsole`;
+            var websocket;
+            var texAreaId=document.getElementById('logArea');
+            var scrollLogButtonId=document.getElementById('stop_resume_logs_id');
+            var text="";
+            scrollLogButtonId.value="Scrolling";
+
+            // Init web socket when the page loads
+            window.addEventListener('load', onload);
+            const radioButtons = document.querySelectorAll('input[name="web_logs_enabled"]');
+            for(const radioButton of radioButtons){
+                radioButton.addEventListener('change', webLogButtonClick);
+            }
+            
+            var sleep = function(ms){
+              return new Promise(resolve => setTimeout(resolve, ms));
+            };
+
+            function webLogButtonClick() {
+              if (!document.getElementById('web_logs_on_id').checked && 
+                  document.getElementById('web_logs_off_id').checked) {
+                    document.getElementById('stop_resume_logs_id').disabled=true;
+                    document.getElementById('clear_logs_id').disabled=true;
+              }
+              else if (!document.getElementById('web_logs_off_id').checked && 
+                  document.getElementById('web_logs_on_id').checked) {
+                    document.getElementById('stop_resume_logs_id').disabled=false;
+                    document.getElementById('clear_logs_id').disabled=false;
+              }
+            }
+
+            function getBootLogsButtonClick(){
+              document.querySelector('#get_boot_logs_id').innerHTML = '<strong>Retrieving</strong>';
+              websocket.send("getBootLogs");
+              text="";
+              texAreaId.value = text;
+            }
+
+            function clearLogsButtonClick() {
+              text="";
+              texAreaId.value = text;
+            }
+            
+            function logButtonClick() {
+              if (scrollLogButtonId.value=="Scrolling") {document.querySelector('#stop_resume_logs_id').innerHTML = '<strong>Resume</strong>';scrollLogButtonId.value="Stopped";}
+              else  {
+                document.querySelector('#stop_resume_logs_id').innerHTML = '<strong>Stop</strong>';scrollLogButtonId.value="Scrolling";
+
+                texAreaId.value = text; //Print out the pending logs
+                if(texAreaId.selectionStart == texAreaId.selectionEnd) texAreaId.scrollTop = texAreaId.scrollHeight; //Scroll if needed
+              }
+            }
+
+            function onload(event) {
+                initWebSocket();
+            }
+
+            function sendCommand(command){
+                websocket.send(command);
+            }
+
+            function initWebSocket() {
+                console.log('Trying to open a WebSocket connection…');
+                websocket = new WebSocket(gateway);
+                websocket.onopen = onOpen;
+                websocket.onclose = onClose;
+                websocket.onmessage = onMessage;
+
+                //Init variables
+                scrollLogButtonId.value="Scrolling";
+
+                //Disable button if web logs are disabled
+                if (document.getElementById('web_logs_on_id').checked && 
+                  !document.getElementById('web_logs_off_id').checked) {
+                      document.getElementById('stop_resume_logs_id').disabled=false;
+                      document.getElementById('clear_logs_id').disabled=false;
+                }
+                else if (!document.getElementById('web_logs_on_id').checked && 
+                    document.getElementById('web_logs_off_id').checked) {
+                        document.getElementById('stop_resume_logs_id').disabled=true;
+                        document.getElementById('clear_logs_id').disabled=true;
+                }
+            }
+
+            // When websocket is established
+            function onOpen(event) {
+                console.log('Connection opened');
+            }
+
+            function onClose(event) {
+                console.log('Connection closed');
+                setTimeout(initWebSocket, 2000);
+            }
+
+            // Function that receives the message from the ESP32 with the readings
+            function onMessage(event) {
+                //console.log(event.data);
+                /*var myObj = JSON.parse(event.data);
+                var keys = Object.keys(myObj);
+
+                for (var i = 0; i < keys.length; i++){
+                    var key = keys[i];
+                    document.getElementById(key).innerHTML = myObj[key];
+                }*/
+
+                //If web logs are disabled, then return
+                if (!document.getElementById('web_logs_on_id').checked && 
+                    document.getElementById('web_logs_off_id').checked) return;
+
+                //Get the message and print it out
+                text+=event.data;
+                if (scrollLogButtonId.value=="Scrolling") texAreaId.value = text; //Only if logs are not stopped
+
+                if(texAreaId.selectionStart == texAreaId.selectionEnd) {
+                  if (scrollLogButtonId.value=="Scrolling") texAreaId.scrollTop = texAreaId.scrollHeight; //Scroll if needed
+                }
+                document.querySelector('#get_boot_logs_id').innerHTML = '<strong>Get</strong>';
+            }
+          </script>
+
+          
+          <!-- end of content column: put your content above this line --> </div>
+      </div>
+      <div style="clear: both;"></div>
+      <div id="tswfooter">
+        <!-- start of footer section: insert your copyright notice, etc, here -->
+        <p style="font-size: 80%; text-align: center;">The IoT Factory ©</p>
+        <p style="font-size: 55%; text-align: center;"><a href="http://the-iotfactory.com"
+
+            title="The IoT Factory" target="_blank">http://the-iotfactory.com</a></p>
+        <!-- end of footer section: insert your copyright notice, etc, above this line -->
+      </div>
+    </div>
+  </body>
+</html>

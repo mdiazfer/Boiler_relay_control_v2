@@ -15,8 +15,8 @@ void IRAM_ATTR thermostate_change() {
   lastInterruptTime=millis();
   rebounds++;
   thermostateInterrupt=true;
-  //NO Serial coms in interrupt routing, otherwise CORE exception is triggered beacue watchdog timeout - https://stackoverflow.com/questions/71992044/esp32-core-1-paniced-interrupt-wdt-timeout-on-cpu1
-  //if (debugModeOn) {boardSerialPort.println(String(lastInterruptTime)+" - [thermostate_change] - BEGIN, thermostateStatus="+String(thermostateStatus)+", rebounds="+String(rebounds));}
+  //NO Serial coms in interrupt routing, otherwise CORE exception is triggered beacause watchdog timeout - https://stackoverflow.com/questions/71992044/esp32-core-1-paniced-interrupt-wdt-timeout-on-cpu1
+  //if (debugModeOn) {printLogln(String(lastInterruptTime)+" - [thermostate_change] - BEGIN, thermostateStatus="+String(thermostateStatus)+", rebounds="+String(rebounds));}
 }
 
 void IRAM_ATTR gas_probe_triggered() {
@@ -26,9 +26,9 @@ void IRAM_ATTR gas_probe_triggered() {
    Parameters: No parameters
    *****************************************************/
   if (gasClear) gasInterrupt=true; //Only flag the interrupt with clear air
-  gasClear=false;
+  //gasClear=false; No need to update this flag as it's done in main loop
   
-  //NO Serial coms in interrupt routing, otherwise CORE exception is triggered beacue watchdog timeout - https://stackoverflow.com/questions/71992044/esp32-core-1-paniced-interrupt-wdt-timeout-on-cpu1
-  //if (debugModeOn) {boardSerialPort.println(String(millis())+" - [gas_probe_triggered] - BEGIN, gasClear="+String(gasClear));}
+  //NO Serial coms in interrupt routing, otherwise CORE exception is triggered beacause watchdog timeout - https://stackoverflow.com/questions/71992044/esp32-core-1-paniced-interrupt-wdt-timeout-on-cpu1
+  //if (debugModeOn) {printLogln(String(millis())+" - [gas_probe_triggered] - BEGIN, gasClear="+String(gasClear));}
 }
 

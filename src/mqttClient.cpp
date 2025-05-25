@@ -8,7 +8,7 @@ void onMqttConnect(bool sessionPresent) {
   String cmdSubcriptionTopic=String(MQTT_TOPIC_PREFIX+device+"/"+MQTT_TOPIC_CMD_SUFIX_SUBSCRIPTION);
   String packetSwitchId=String(mqttClient.subscribe(cmdSubcriptionTopic.c_str(),0));
 
-  if (debugModeOn) boardSerialPort.println("\n"+String(millis())+" - [onMqttConnect] - MQTT connected to "+mqttServer+". Session present: "+String(sessionPresent)+
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttConnect] - MQTT connected to "+mqttServer+". Session present: "+String(sessionPresent)+
                         "\n  [onMqttConnect] - Subscribing on:"+
                         "\n  [onMqttConnect] - topic "+MQTT_TOPIC_SUBSCRIPTION+", QoS 0, packetId="+packetInfoId+
                         "\n  [onMqttConnect] - topic "+MQTT_HA_B_AND_LWT_TOPIC_PREFIX+", QoS 0, packetId="+packetStatId+ // v1.9.0 - Home Assistant Last Will Testament message (offline)
@@ -17,18 +17,18 @@ void onMqttConnect(bool sessionPresent) {
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-  if (debugModeOn) boardSerialPort.println("\n"+String(millis())+" - [onMqttDisconnect] - MQTT disconnected, reason="+(uint8_t)reason);
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttDisconnect] - MQTT disconnected, reason="+(uint8_t)reason);
   MqttSyncCurrentStatus=MqttSyncOffStatus;
 }
 
 void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
-  if (debugModeOn) boardSerialPort.println("\n"+String(millis())+" - [onMqttSubscribe] - MQTT subscribe acknowledged. packetId="+String(packetId)+", qos="+String(qos));
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttSubscribe] - MQTT subscribe acknowledged. packetId="+String(packetId)+", qos="+String(qos));
 }
 
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
   char aux[len+1];strcpy(aux,payload); aux[len]='\0';
 
-  if (debugModeOn) boardSerialPort.println("\n"+String(millis())+" - [onMqttMessage] - MQTT published message received on topic='"+String(topic)+"', mesage: '"+String(aux)+"', index: "+String(index));
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttMessage] - MQTT published message received on topic='"+String(topic)+"', mesage: '"+String(aux)+"', index: "+String(index));
   
   if (String(topic) == String(MQTT_TOPIC_SUBSCRIPTION)) {
     //Pubish device name
@@ -36,20 +36,23 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
   } else if (String(topic) == String(MQTT_HA_B_AND_LWT_TOPIC_PREFIX)) {
     //Home Assistant server published an availability message. Check on it.
     if ((String(aux).equalsIgnoreCase(String("online"))) && mqttServerEnabled) { //Publish the Discovery message for Home Assistan to detect this device
-      if (debugModeOn) boardSerialPort.println(String(millis())+" - [onMqttMessage] - Topic received '"+String(topic)+"' with message: '"+String(aux)+"'. Home Assistant server available. Publish the Discovery message now.");
+      if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Topic received '"+String(topic)+"' with message: '"+String(aux)+"'. Home Assistant server available. Publish the Discovery message now.");
       mqttClientPublishHADiscovery(mqttTopicPrefix+device,device,WiFi.localIP().toString(),false);
     }
   } else if (String(topic) == String(MQTT_TOPIC_PREFIX+device+"/"+MQTT_TOPIC_CMD_SUFIX_SUBSCRIPTION)) {
-    if (debugModeOn) boardSerialPort.println(String(millis())+" - [onMqttMessage] - Command received: "+String(aux));
+    if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Command received: "+String(aux));
     if (String(aux).equalsIgnoreCase(String("REBOOT"))) {
-      boardSerialPort.println(String(millis())+" - [onMqttMessage] - REBOOT");
+      printLogln(String(millis())+" - [onMqttMessage] - REBOOT");
       //Home Assistant support
       //Publish device is not available
       mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Offline\0"); //Availability message, not retain in the broker. This makes HA to subscribe to the */SENSOR topic if not already done
+      resetSWMqttCount++; //Increase the counter for resets from mqtt
+      EEPROM.write(0x533,resetSWMqttCount);
+      EEPROM.commit();
       ESP.restart(); //Rebooting
     }
     else if (String(aux).equalsIgnoreCase(String("RESET_TIME_COUNTERS"))) {
-      boardSerialPort.println(String(millis())+" - [onMqttMessage] - RESET_TIME_COUNTERS");
+      printLogln(String(millis())+" - [onMqttMessage] - RESET_TIME_COUNTERS");
       //Initialize time on counters
       heaterTimeOnYear.year=year; heaterTimeOnPreviousYear.year=year-1;
       for (int i=0;i<12;i++) {heaterTimeOnYear.counterMonths[i]=0;heaterTimeOnPreviousYear.counterMonths[i]=0;}
@@ -86,44 +89,44 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     if (gasClear) {
       if (String(aux).equalsIgnoreCase(String("R1_ON"))) {
         digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON");
-        boardSerialPort.println(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
+        printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
       }
       else if (String(aux).equalsIgnoreCase(String("R1_OFF"))) {
         digitalWrite(PIN_RL1,HIGH);samples["Relay1"] = String("R1_OFF");
-        boardSerialPort.println(String(millis())+" - [onMqttMessage] - Set Relay1 ON"); //Relay1 is set on to not allow Ext. Thermostat (R1_OFF)
+        printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 ON"); //Relay1 is set on to not allow Ext. Thermostat (R1_OFF)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
       }
       else if (String(aux).equalsIgnoreCase(String("R2_ON"))) {
         digitalWrite(PIN_RL2,HIGH);samples["Relay2"] = String("R2_ON");
         digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON"); //Relay1 is set off to allow Ext. Thermostat (R1_ON) when the Relay2 is set
-        boardSerialPort.println(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
-        boardSerialPort.println(String(millis())+" - [onMqttMessage] - Set Relay2 ON"); //Relay2 is set on to shortcut Ext. Thermostat (R2_ON)
+        printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
+        printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 ON"); //Relay2 is set on to shortcut Ext. Thermostat (R2_ON)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
         //thermostateStatus=true;lastThermostatOnTime=millis(); //Only for testing
       }
       else if (String(aux).equalsIgnoreCase(String("R2_OFF"))) {
         digitalWrite(PIN_RL2,LOW);samples["Relay2"] = String("R2_OFF");
-        boardSerialPort.println(String(millis())+" - [onMqttMessage] - Set Relay2 OFF"); //Relay2 is set off to not shortcut Ext. Thermostat (R2_OFF)
+        printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 OFF"); //Relay2 is set off to not shortcut Ext. Thermostat (R2_OFF)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
         //thermostateStatus=false; //Only for testing
       }
-      else boardSerialPort.println(String(millis())+" - [onMqttMessage] - Unknown command");
+      else printLogln(String(millis())+" - [onMqttMessage] - Unknown command");
     }
-    else boardSerialPort.println(String(millis())+" - [onMqttMessage] - Gas leak situation detected, so no releay activation is allowed for security reasons");
+    else printLogln(String(millis())+" - [onMqttMessage] - Gas leak situation detected, so no releay activation is allowed for security reasons");
   }
   else {
     //Do nothing for other topics
-    if (debugModeOn) boardSerialPort.println(String(millis())+" - [onMqttMessage] - Topic received ("+String(topic)+") and differs from subscriptions: '"+String(MQTT_TOPIC_SUBSCRIPTION)+"', '"+String(MQTT_HA_B_AND_LWT_TOPIC_PREFIX)+"'. Return");
+    if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Topic received ("+String(topic)+") and differs from subscriptions: '"+String(MQTT_TOPIC_SUBSCRIPTION)+"', '"+String(MQTT_HA_B_AND_LWT_TOPIC_PREFIX)+"'. Return");
   }
 }
 
 void onMqttUnsubscribe(uint16_t packetId) {
-  if (debugModeOn) boardSerialPort.println("\n"+String(millis())+" - [onMqttUnsubscribe] - MQTT unsubscribe acknowledged. packetId="+String(packetId));
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttUnsubscribe] - MQTT unsubscribe acknowledged. packetId="+String(packetId));
 }
 
 void onMqttPublish(uint16_t packetId) {
-  if (debugModeOn) boardSerialPort.println("\n"+String(millis())+" - [onMqttPublish] - MQTT publish acknowledged. packetId="+String(packetId));
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttPublish] - MQTT publish acknowledged. packetId="+String(packetId));
 }
 
 void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics) {
@@ -202,6 +205,10 @@ void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ip
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //errorsWiFiCnt  value
     String("{\"name\":\"Device Counter: errorsWiFi\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_errorsWiFiCnt\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['errorsWiFiCnt']}}\"}").c_str()); //Discovery message for errorsWiFiCnt value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_errorsConnectivityCnt/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //errorsConnectivityCnt  value
+    String("{\"name\":\"Device Counter: errorsConnectivity\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_errorsConnectivityCnt\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['errorsConnectivityCnt']}}\"}").c_str()); //Discovery message for errorsConnectivityCnt value, not retain in the broker
   mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_errorsNTPCnt/config";
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //errorsNTPCnt  value
@@ -214,6 +221,10 @@ void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ip
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //errorsMQTTCnt  value
     String("{\"name\":\"Device Counter: errorsMQTT\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_errorsMQTTCnt\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['errorsMQTTCnt']}}\"}").c_str()); //Discovery message for errorsMQTTCnt value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_errorsWebServerCnt/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //errorsWebServerCnt  value
+    String("{\"name\":\"Device Counter: errorsWebServerCnt\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_errorsWebServerCnt\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['errorsWebServerCnt']}}\"}").c_str()); //Discovery message for errorsWebServerCnt value, not retain in the broker
   mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_bootCount/config";
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //bootCount  value
@@ -226,10 +237,30 @@ void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ip
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetPreventiveCount  value
     String("{\"name\":\"Device Boots: preventive resets\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetPreventiveCount\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetPreventiveCount']}}\"}").c_str()); //Discovery message for resetPreventiveCount value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetPreventiveWebServerCount/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetPreventiveWebServerCount  value
+    String("{\"name\":\"Device Boots: preventive  web server resets\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetPreventiveWebServerCount\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetPreventiveWebServerCount']}}\"}").c_str()); //Discovery message for resetPreventiveWebServerCount value, not retain in the broker
   mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetSWCount/config";
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetSWCount  value
-    String("{\"name\":\"Device Boots: sw resets\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetSWCount\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetSWCount']}}\"}").c_str()); //Discovery message for resetSWCount value, not retain in the broker
+    String("{\"name\":\"Device Boots: total sw resets\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetSWCount\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetSWCount']}}\"}").c_str()); //Discovery message for resetSWCount value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetSWWebCount/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetSWWebCount  value
+    String("{\"name\":\"Device Boots: resets from web\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetSWWebCount\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetSWWebCount']}}\"}").c_str()); //Discovery message for resetSWWebCount value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetSWMqttCount/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetSWMqttCount  value
+    String("{\"name\":\"Device Boots: resets from mqtt\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetSWMqttCount\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetSWMqttCount']}}\"}").c_str()); //Discovery message for resetSWMqttCount value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetSWUpgradeCount/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetSWUpgradeCount  value
+    String("{\"name\":\"Device Boots: resets due to firmware update\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetSWUpgradeCount\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetSWUpgradeCount']}}\"}").c_str()); //Discovery message for resetSWUpgradeCount value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetWebServerCnt/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetWebServerCnt  value
+    String("{\"name\":\"Device Boots: resets due to web server KO\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_resetWebServerCnt\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['resetWebServerCnt']}}\"}").c_str()); //Discovery message for resetWebServerCnt value, not retain in the broker
   mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetCount/config";
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //resetCount  value
@@ -239,10 +270,14 @@ void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ip
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //lastHeap  value
     String("{\"name\":\"Device Heap: Heap size\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_lastHeap\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"data_size\",\"unit_of_meas\":\"B\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['lastHeap']}}\"}").c_str()); //Discovery message for lastHeap value, not retain in the broker
-  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_minHeapSeen/config";
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_minHeapSinceBoot/config";
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
-  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //minHeapSeen  value
-    String("{\"name\":\"Device Heap: Min heap seen\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_minHeapSeen\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"data_size\",\"unit_of_meas\":\"B\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['minHeapSeen']}}\"}").c_str()); //Discovery message for minHeapSeen value, not retain in the broker
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //minHeapSinceBoot  value
+    String("{\"name\":\"Device Heap: Min heap since boot\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_minHeapSinceBoot\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"data_size\",\"unit_of_meas\":\"B\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['minHeapSinceBoot']}}\"}").c_str()); //Discovery message for minHeapSinceBoot value, not retain in the broker
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_minHeapSinceUpgrade/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //minHeapSinceUpgrade  value
+    String("{\"name\":\"Device Heap: Min heap since upgrade\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_minHeapSinceUpgrade\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"data_size\",\"unit_of_meas\":\"B\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['minHeapSinceUpgrade']}}\"}").c_str()); //Discovery message for minHeapSinceUpgrade value, not retain in the broker
   mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_resetReason/config";
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //bootCount  value
@@ -605,11 +640,12 @@ void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ip
     String("{\"name\":\"Device  : Reset Time Counters\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\""+mqttTopicName+"/cmnd/RELAY\",\"payload_press\":\"RESET_TIME_COUNTERS\",\"uniq_id\":\""+deviceSufix+"_reset_time_counters\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker
 
   if (removeTopics) {
-    if (debugModeOn) {boardSerialPort.println(String(millis())+" - [mqttClientPublishHADiscovery] - Home Assistant Discovery messages published to remove all the topics");}
+    if (debugModeOn) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery] - Home Assistant Discovery messages published to remove all the topics");}
+    removeTopics=false;
   }
   else {
-    if (debugModeOn) {boardSerialPort.println(String(millis())+" - [mqttClientPublishHADiscovery] - Home Assistant Discovery messages published to publish all the topics");}
+    if (debugModeOn) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery] - Home Assistant Discovery messages published to publish all the topics");}
     mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Online\0"); //Availability message, not retain in the broker
-    if (debugModeOn) {boardSerialPort.println(String(millis())+" - [mqttClientPublishHADiscovery] - Availability message published, mqttTopicName="+mqttTopicName+"/LWT");}
+    if (debugModeOn) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery] - Availability message published, mqttTopicName="+mqttTopicName+"/LWT");}
   }
 }

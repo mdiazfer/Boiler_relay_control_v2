@@ -12,6 +12,15 @@
 #include "Arduino.h"
 #include "Wire.h"
 
+#ifndef _PRINT_LOG_DEFINITION_
+  extern void printLogln(String logMessage, unsigned char base=10);
+  extern void printLog(String logMessage, unsigned char base=10);
+  extern void printLogln(uint8_t logMessage, unsigned char base=10);
+  extern void printLog(uint8_t logMessage, unsigned char base=10);
+  extern void printLogln(tm * timeinfo, const char *format);
+  extern void printLog(tm * timeinfo, const char *format);
+  #define _PRINT_LOG_DEFINITION_
+#endif
 
 #define SHT2x_LIB_VERSION             (F("0.2.0"))
 

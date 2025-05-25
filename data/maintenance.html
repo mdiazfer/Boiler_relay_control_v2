@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!--Version 2.0 with no jquery.min.js support-->
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Basic Configuration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="all" href="styles.css">
+    <link type="text/css" rel="stylesheet" href="tswnavbar.css" title="Side Menu CSS">
+  </head>
+  <body onload="getTime()" style="background-color: #1d2324; color: white;">
+    <div id="tswcontainer">
+      <div id="tswheader">
+        <!-- start of header section: insert your logo, etc, here -->
+        <p style="text-align: center; font-size: 1%; vertical-align: 210px;">
+          <a href="http://the-iotfactory.com" title="The IoT Factory" target="_blank">
+            <img src="The_IoT_Factory.png" alt="The IoT Factory Logo" title="Logo"
+              id="logo" style="width: 215px; height: 45.3204px;">
+          </a>
+        </p>
+        <p>&nbsp;</p>
+        <p style="text-align: right; font-size: smaller;">
+          <font>Boiler control by The IoT Factory ©</font>
+          <font style="color:#3f9bd5;""><label id='currentDate'"></label></font>
+        </p>
+        <script>
+          function getTime() {
+            var now=new Date();
+            document.getElementById("currentDate").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+now.toLocaleDateString()+" - "+now.toLocaleTimeString()+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+            setTimeout(getTime,1000);
+          }
+        </script>
+        <p style="text-align: center; font-size: smaller;"><br></p>
+      </div>
+      <div id="tswsidecolmaint">
+        <div id="tswsideproper">
+          <!-- start of side column: insert your navigation menu, etc, here -->
+          <!-- start of hamburger menu button -->
+          <script type="text/javascript">
+            function tsw_expand_navmenu()
+            {
+              document.getElementById ( 'tswhamburger' ).style.display = 'none' ;
+              document.getElementById( 'tswcssbuttons' ).style.display = 'block' ;
+            }
+          </script>
+          <button type="button" id="tswhamburger" title="Click to expand menu" onclick="tsw_expand_navmenu();">≡</button>
+          <!-- end of hamburger menu button -->
+          <div id="tswcssbuttons">
+            <ul>
+              <li><a href="index.html">Measurements</a></li>
+              <li><a href="graphs.html">Graphs</a></li>
+              <li><a href="info.html">Global Info</a></li>
+              <li><a href="basic.html">Basic configuration</a></li>
+              <li><a href="cloud.html">Cloud configuration</a></li>
+              <li><a href="bluetooth.html">Bluetooth configuration</a></li>
+              <li><a href="console.html">Console logs</a></li>
+              <li><a href="maintenance.html">Maint. & Troubleshoot</a></li>
+            </ul>
+          </div>
+          <!-- end of side column: put your navigation menu, etc, above this line -->
+        </div>
+      </div>
+      <div id="tswcontent">
+        <div id="tswcontproper">
+          <!-- start of content column: insert your content here -->
+          <h1>Maintenance</h1>
+          <p></p>
+          <form action="maintenance_default_values" method="post">
+            Factory Default Configuration:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;      
+            <button type="submit" name="Maintenance_Default_Send" id="Maintenance_Default_id"
+              onClick="return confirm('Configuration of variables will be lost and set to factory values.\n\nAll the network services, including the web access, will be not longer available. You will need to setup WiFi again to recover the network services.\n\nAre you sure to continue?')">
+              <strong>Reset Config</strong>
+            </button>
+          </form>
+          <br><br>
+          <form action="maintenance_device_reset" method="post">
+            Device Reboot:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button type="submit" name="Maintenance_Reset_Send" id="Maintenance_Reset_Send_id"
+              onClick="return confirm('Device will be reset.\n\nAre you sure to continue?')">
+              <strong>Reboot Device</strong>
+            </button>
+          </form>
+          <br><br>
+
+          <fieldset name="OTA_Upgrade_fieldset"> <legend> OTA Upgrade</legend>
+              File Type (Only .bin extension):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <label for="OTA_firmware_id">Firmware</label>	
+              <input name="OTA_upgrade" id="OTA_firmware_id" value="off" required="required" ~OTADISABLED~ type="radio" />
+              &nbsp;&nbsp;
+              <label for="OTA_system_file_id">File System Image</label>
+              <input name="OTA_upgrade" id="OTA_system_file_id" value="on" required="required" ~SPIFFSDISABLED~ ~SPIFFSCHECKED~ type="radio" />
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <br><br>
+              <form method='POST' action='/maintenance_upload_firmware' enctype='multipart/form-data' id='upload_form'>
+                <input type='file' name='select_file' id='select_file_id' style="hidden:visibility" accept=".bin"  ~SELECTFILEBUTTONDISABLED~/>
+                <input type='submit' name='file-upload' id='file-upload_id' style="visibility:hidden" value='Upload File' onClick="return confirm('It mith take a while for the file to upload and to write into the device. Be patient as there is no progress indicator.....\n\nWhen the upload is finished the page will be refreshed and the device will be rebooted.\n\nAre you sure to continue?')">
+                <label id='prg' style="visibility:hidden"></label>
+              </form>
+          </fieldset>
+            
+          <script>            
+            function showHideCheck() {
+
+              if (document.getElementById('select_file_id').value!="") {
+                  document.getElementById('select_file_id').style.visibility = 'hidden';
+                  document.getElementById('prg').style.visibility = 'visible';
+                  document.getElementById('file-upload_id').style.visibility = 'visible';
+                  document.getElementById('OTA_firmware_id').disabled=true;
+                  document.getElementById('OTA_system_file_id').disabled=true;
+              } else {
+                document.getElementById('select_file_id').style.visibility = 'visible';
+                document.getElementById('file-upload_id').style.visibility = 'hidden';
+                document.getElementById('prg').style.visibility = 'hidden';
+                document.getElementById('OTA_firmware_id').disabled=false;
+                document.getElementById('OTA_system_file_id').disabled=false;
+              }
+            }
+
+            document.getElementById("select_file_id").addEventListener("change", function(){
+              var files=document.getElementById("select_file_id").files[0];
+              var filename = files.name;
+
+              /* getting file extenstion eg- .jpg,.png, etc */
+              var extension = filename.substr(filename.lastIndexOf("."));
+              /* define allowed file types */
+              //var allowedExtensionsRegx = /(\.bin|\.bin.gz)$/i;
+              var allowedExtensionsRegx = /(\.bin)$/i;
+              /* testing extension with regular expression */
+              var isAllowed = allowedExtensionsRegx.test(extension);
+              if(isAllowed){
+                  /* file upload logic goes here... */
+                  document.getElementById("prg").innerHTML = filename+" ("+files.size+" B)";
+                  const binAvailableSpace=~MAINTENLEFTBINMEM~;
+                  const spiffsAvailableSpace=~MAINTENLEFTSPIFFSMEM~;
+
+                  //Binary firmware file
+                  if (document.getElementById('OTA_firmware_id').checked) {
+                    if ((binAvailableSpace-files.size)<0) {
+                      alert("Binary File greater than available space ("+binAvailableSpace+" B)");
+                      return false;  
+                    }
+                  }
+                  //SPIFFS system file
+                  else {
+                    if ((spiffsAvailableSpace-files.size)<0) {
+                      alert("System File greater than available space ("+spiffsAvailableSpace+" B)");
+                      return false;  
+                    }
+                  }
+                  showHideCheck();
+              }else{
+                  alert("Only file extension .bin is allowed to be uploaded for either Binary or File Systems.");
+                  return false;
+              }
+            });
+
+            var fileForm=document.getElementById("upload_form");
+            fileForm.addEventListener("formdata", ({ formData }) => {
+              const file = formData.get("select_file");
+              formData.delete("select_file");
+              if (document.getElementById('OTA_firmware_id').checked) formData.append("select_file", file, "firmware.bin");
+              else formData.append("select_file", file, "filesystem.bin");
+            });
+
+            function showTip (tipElement) {
+                return function () {
+                    tipElement.style.display = "inline";
+                };
+            }
+            function hideTip (element, tipElement) {
+                return function () {
+                    if (document.activeElement !== element) {
+                        tipElement.style.display = "none";
+                    }
+                };
+            }
+            function initTipEvents(elementId, tipId) {
+                var el = document.getElementById(elementId),
+                    tip = document.getElementById(tipId),
+                    showHandler = showTip(tip),
+                    hideHandler = hideTip(el, tip);
+                
+                el.onmouseover = showHandler;
+                el.onfocus = showHandler;
+                el.onmouseout = hideHandler;
+                el.onblur = hideHandler;
+                tip.style.display = "none";
+            }
+            function init() {
+                initTipEvents("WIFIERRORS_id", "WIFIERRORS_TIP_id");
+                initTipEvents("CONNECTIVITYERRORS_id", "CONNECTIVITYERRORS_TIP_id");
+                initTipEvents("SAMPLEUPDTERRORS_id", "SAMPLEUPDTERRORS_TIP_id");
+                initTipEvents("MQTTERRORS_id", "MQTTERRORS_TIP_id");
+                initTipEvents("NTPERRORS_id", "NTPERRORS_TIP_id");
+                initTipEvents("WEBSERVERERRORS_id", "WEBSERVERERRORS_TIP_id");
+            }
+            window.onload = init;
+          </script>
+          
+          <p></p>
+          <br><br>
+          <div id="tswerrors">
+            <fieldset name="Errors"> <legend> Counters since last upgrade or counter reset</legend>
+              <p></p>
+              <p>
+                <form action="reset_counters" method="post">
+                  Last boot reason:&nbsp;0x~LASTRESETREASON~&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <button type="submit" name="Reset_Counters_Button" id="Reset_Counters_Button_id"
+                    onClick="return confirm('Counters will be reset.\n\nAre you sure to continue?')">
+                    <strong>Counters Reset</strong>
+                  </button>
+                </form>
+              </p>
+              <p>  
+                Total boots since last upgrade:&nbsp; ~BOOTCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Normal boots (power up):&nbsp; ~NORMALBOOTCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Total boots due to software resets:&nbsp; ~SWRESETCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ User resets from web:&nbsp; ~SWRESETWEBCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ User resets from mqtt:&nbsp; ~SWRESETMQTTCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Resets due to firmware update from web:&nbsp; ~SWRESETFIRMWARECOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Resets due to web server error:&nbsp; ~WEBSERVERRESETCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Preventive resets:&nbsp; ~PREVENTIVERESETCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because absolute min low heap size:&nbsp; ~PREVENTIVEABSOLUTERESETCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because web server min low heap size:&nbsp; ~PREVENTIVEWEBSERVERRESETCOUNT~<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Boots due to uncontrolled resets (crash):&nbsp; ~UNCONTROLLEDRESETCOUNT~
+              </p>
+              <p>Setup Error:&nbsp; ~SETUPERRORS~</p>
+              <p>
+                <span id="WIFIERRORS_id">Connection Errors:&nbsp; ~WIFIERRORS~&nbsp;&nbsp;&nbsp;</span><span id="WIFIERRORS_TIP_id">WiFi disconnections</span><br>
+                <span id="CONNECTIVITYERRORS_id">Connectivity Errors:&nbsp; ~CONNECTIVITYERRORS~&nbsp;&nbsp;&nbsp;</span><span id="CONNECTIVITYERRORS_TIP_id">Connectivity errors being WiFi connected</span><br>
+                <span id="SAMPLEUPDTERRORS_id">Sample Update Errors:&nbsp; ~SAMPLEUPDTERRORS~&nbsp;&nbsp;&nbsp;</span><span id="SAMPLEUPDTERRORS_TIP_id">Errors for uploading samples to cloud (http)</span><br>
+                <span id="MQTTERRORS_id">MQTT Errors:&nbsp; ~MQTTERRORS~&nbsp;&nbsp;&nbsp;</span><span id="MQTTERRORS_TIP_id">Errors for plublishing MQTT messages</span><br>
+                <span id="NTPERRORS_id">NTP Sync Errors:&nbsp; ~NTPERRORS~&nbsp;&nbsp;&nbsp;</span><span id="NTPERRORS_TIP_id">Errors for NTP syncroziations</span><br>
+                <span id="WEBSERVERERRORS_id">Web Server Errors:&nbsp; ~WEBSERVERERRORS~&nbsp;&nbsp;&nbsp;</span><span id="WEBSERVERERRORS_TIP_id">Errors for serving http requests</span>
+              </p>
+              <p>SPIFFS Errors:&nbsp; ~SPIFFSERRORS~</p>
+              <p>
+                <font style="color:#8c9297;"">
+                  Failures to load the BLE module:&nbsp; ~BLENOLOADCOUNTER~<br>
+                  BLE unloads because lack of heap:&nbsp; ~BLEUNLOADCOUNTER~
+                </font>
+              </p>
+              <p>
+                Current heap size:&nbsp; ~CURRENTHEAPSIZE~ (Bytes)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum heap size since last boot:&nbsp; ~MINHEAPSIZE~ (Bytes)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum heap size since last upgrade:&nbsp; ~MINHEAPSIZEUPGRADE~ (Bytes)
+              </p>
+            </fieldset>
+          </div>
+          <!-- end of content column: put your content above this line -->
+        </div>
+      </div>
+      <div style="clear: both;"></div>
+      <div id="tswfooter">
+        <!-- start of footer section: insert your copyright notice, etc, here -->
+        <p style="font-size: 80%; text-align: center;">The IoT Factory ©</p>
+        <p style="font-size: 55%; text-align: center;"><a href="http://the-iotfactory.com"
+
+            title="The IoT Factory" target="_blank">http://the-iotfactory.com</a></p>
+        <!-- end of footer section: insert your copyright notice, etc, above this line -->
+      </div>
+    </div>
+  </body>
+</html>
+                    

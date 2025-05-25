@@ -1,15 +1,15 @@
+#include <Arduino.h>
 #include <HardwareSerial.h>
 #include "global_setup.h"
+#include <ESPAsyncWebServer.h>
+#include <WiFi.h>
 
-extern RTC_DATA_ATTR uint64_t lastInterruptTime;
+extern RTC_DATA_ATTR AsyncWebServer webServer;
+extern RTC_DATA_ATTR AsyncWebSocket webSocket;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
-extern uint16_t rebounds;
-extern bool thermostateStatus,thermostateInterrupt,gasInterrupt,debugModeOn;
-extern bool gasClear;
 
-//Routine to treat the interrupt
-void IRAM_ATTR thermostate_change();
-void IRAM_ATTR gas_probe_triggered();
+extern bool webServerResponding,debugModeOn,webLogsOn;
+extern String bootLogs;
 
 #ifndef _PRINT_LOG_DEFINITION_
   extern void printLogln(String logMessage, unsigned char base=10);
@@ -20,3 +20,8 @@ void IRAM_ATTR gas_probe_triggered();
   extern void printLog(tm * timeinfo, const char *format);
   #define _PRINT_LOG_DEFINITION_
 #endif
+
+void notifyClients(String message);
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+uint32_t initWebSocket();

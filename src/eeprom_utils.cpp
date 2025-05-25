@@ -45,11 +45,25 @@
 //Address 419-41A: iBeacon Minor uint16_t  2 B
 //Address 41B: resetPreventiveCount - Number of controlled preventive resets since last upgrade
 //Address 41C: resetSwCount - Number of software (restart button) resets since last upgrade
-//Address 41D-420: minHeapSeen uint32_t  4 B
+//Address 41D-420: minHeapSinceUpgrade uint32_t  4 B
 //Address 421-464: heaterTimeOnYear struct  68 B
 //Address 465-4A8: heaterTimeOnPreviousYear struct  68 B
 //Address 4A9-4EC: boilerTimeOnYear struct  68 B
 //Address 4ED-530: boilerTimeOnPreviousYear struct  68 B
+//Address 531: resetPreventiveWebServerCount - Number of controlled preventive web server resets since last upgrade
+//Address 532: resetSWWebCount - resets done from the web maintenance page
+//Address 533: resetSWMqttCount - resets done from HA (mqqtt)
+//Address 534: resetSWUpgradeCount - resets done due to firmware upgrade from maintenance web page
+//Address 535: errorsWiFiCnt - Counter for WiFi errors
+//Address 536: errorsNTPCnt -  Counter for NTP sync errors
+//Address 537: errorsHTTPUptsCnt -  Counter for HTTP Cloud uploads errors
+//Address 538: errorsMQTTCnt -  Counter for MQTT errors
+//Address 539: SPIFFSErrors -  Counter for SPIFFS errors
+//Address 53A: errorsConnectivityCnt -  Counter for Connectivity errors (being WiFi connected)
+//Address 53B: errorsWebServerCnt -  Counter for Web Server errors (being WiFi connected but not serving web pages)
+//Address 53C: resetWebServerCnt - resets done due to  Web Server errors (being WiFi connected but not serving web pages)
+
+
 
 
 uint16_t checkSum(byte *addr, uint32_t count) {
@@ -138,7 +152,7 @@ void factoryConfReset() {
   EEPROM.put(0x2E,auxPSSW);wifiCred.wifiPSSWs[0]=auxPSSW;
   EEPROM.put(0x6E,auxSITE);wifiCred.wifiSITEs[0]=auxSITE;
   
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxSSID='"+String(auxSSID)+"', auxPSSW='"+String(auxPSSW)+"', auxSITE='"+String(auxSITE)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxSSID='"+String(auxSSID)+"', auxPSSW='"+String(auxPSSW)+"', auxSITE='"+String(auxSITE)+"'");}
   
   //Set variables for SSID_BK1 or null if no config in global_setup.h file
   memset(auxSSID,'\0',WIFI_MAX_SSID_LENGTH);
@@ -158,7 +172,7 @@ void factoryConfReset() {
   EEPROM.put(0x9A,auxPSSW);wifiCred.wifiPSSWs[1]=auxPSSW;
   EEPROM.put(0xDA,auxSITE);wifiCred.wifiSITEs[1]=auxSITE;
   
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxSSID='"+String(auxSSID)+"', auxPSSW='"+String(auxPSSW)+"', auxSITE='"+String(auxSITE)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxSSID='"+String(auxSSID)+"', auxPSSW='"+String(auxPSSW)+"', auxSITE='"+String(auxSITE)+"'");}
   
   //Set variables for SSID_BK2 or null if no config in global_setup.h file
   memset(auxSSID,'\0',WIFI_MAX_SSID_LENGTH);
@@ -178,7 +192,7 @@ void factoryConfReset() {
   EEPROM.put(0x106,auxPSSW);wifiCred.wifiPSSWs[2]=auxPSSW;
   EEPROM.put(0x146,auxSITE);wifiCred.wifiSITEs[2]=auxSITE;
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxSSID='"+String(auxSSID)+"', auxPSSW='"+String(auxPSSW)+"', auxSITE='"+String(auxSITE)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxSSID='"+String(auxSSID)+"', auxPSSW='"+String(auxPSSW)+"', auxSITE='"+String(auxSITE)+"'");}
 
   memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
   #ifdef NTP_SERVER
@@ -187,7 +201,7 @@ void factoryConfReset() {
   //Write varialbes in EEPROM to be available the next boots up
   EEPROM.put(0x151,auxNTP);ntpServers[0]=auxNTP;
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
 
   memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
   #ifdef NTP_SERVER2
@@ -196,7 +210,7 @@ void factoryConfReset() {
   //Write varialbes in EEPROM to be available the next boots up
   EEPROM.put(0x191,auxNTP);ntpServers[1]=auxNTP;
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
 
   memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
   #ifdef NTP_SERVER3
@@ -205,7 +219,7 @@ void factoryConfReset() {
   //Write varialbes in EEPROM to be available the next boots up
   EEPROM.put(0x1D1,auxNTP);ntpServers[2]=auxNTP;
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
 
   memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
   #ifdef NTP_SERVER4
@@ -214,7 +228,7 @@ void factoryConfReset() {
   //Write varialbes in EEPROM to be available the next boots up
   EEPROM.put(0x211,auxNTP);ntpServers[3]=auxNTP;
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxNTP='"+String(auxNTP)+"'");}
 
   memset(auxTZEnvVar,'\0',TZ_ENV_VARIABLE_MAX_LENGTH);
   memset(auxTZName,'\0',TZ_ENV_NAME_MAX_LENGTH);
@@ -226,7 +240,7 @@ void factoryConfReset() {
   EEPROM.put(0x251,auxTZEnvVar);TZEnvVariable=String(auxTZEnvVar);
   EEPROM.put(0x28A,auxTZName);TZName=String(auxTZName);
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxTZEnvVar='"+String(auxTZEnvVar)+"', auxTZName='"+String(auxTZName)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxTZEnvVar='"+String(auxTZEnvVar)+"', auxTZName='"+String(auxTZName)+"'");}
 
   //Write Web User Credential-related variables
   char auxUserName[WEB_USER_CREDENTIAL_LENGTH],auxUserPssw[WEB_PW_CREDENTIAL_LENGTH];
@@ -243,7 +257,7 @@ void factoryConfReset() {
   EEPROM.put(0x2A8,auxUserName);userName=auxUserName;
   EEPROM.put(0x2B3,auxUserPssw);userPssw=auxUserPssw;
   
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote auxUserName='"+String(auxUserName)+"', auxUserPssw='"+String(auxUserPssw)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote auxUserName='"+String(auxUserName)+"', auxUserPssw='"+String(auxUserPssw)+"'");}
   
   //Now initialize wifiCred.SiteAllow variables
   configVariables=0x0; //Bit 0, notFirstRun=true
@@ -292,7 +306,7 @@ void factoryConfReset() {
    //Write varialbes in EEPROM to be available the next boots up
   EEPROM.put(0x315,auxMqttTopicPrefix);
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote mqttServer='"+String(auxMQTT)+"', mqttTopicPrefix='"+String(auxMqttTopicPrefix)+"', mqttUserName='"+String(auxUserName)+"', mqttUserPssw='"+String(auxUserPssw)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote mqttServer='"+String(auxMQTT)+"', mqttTopicPrefix='"+String(auxMqttTopicPrefix)+"', mqttUserName='"+String(auxUserName)+"', mqttUserPssw='"+String(auxUserPssw)+"'");}
 
   //Set iBeacon Proximity
   char auxBLEProximityUUID[BLE_BEACON_UUID_LENGH];
@@ -303,31 +317,55 @@ void factoryConfReset() {
   //Write varialbes in EEPROM to be available the next boots up
   EEPROM.put(0x3E0,auxBLEProximityUUID);
 
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote BLEProximityUUID='"+String(auxBLEProximityUUID)+"'");}
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote BLEProximityUUID='"+String(auxBLEProximityUUID)+"'");}
 
   //Set iBeacon Major and Minor
   byte mac[6];WiFi.macAddress(mac);
   uint16_t aux=(mac[2]<<8)|mac[3];
   EEPROM.writeUShort(0x417,aux);
-  if (debugModeOn) {boardSerialPort.print("  [factoryConfReset] - Wrote BLE Major=0x"+String(aux,HEX));}
+  if (debugModeOn) {printLog("  [factoryConfReset] - Wrote BLE Major=0x"+String(aux,HEX));}
   aux=(mac[4]<<8)|mac[5];
   EEPROM.writeUShort(0x419,aux);
 
-  if (debugModeOn) {boardSerialPort.println(" and BLE Minor=0x"+String(aux,HEX));}
+  if (debugModeOn) {printLogln(" and BLE Minor=0x"+String(aux,HEX));}
   
   //Set minHeap
-  EEPROM.writeInt(0x41D,minHeapSeen);
-  if (debugModeOn) {boardSerialPort.println("  [factoryConfReset] - Wrote Min Heap Seen=0x"+String(minHeapSeen,HEX));}
+  EEPROM.writeInt(0x41D,minHeapSinceUpgrade);
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote Min Heap Seen=0x"+String(minHeapSinceUpgrade,HEX));}
   
   //Initialize bootCount variable
   bootCount=1;
   EEPROM.write(0x3DE,bootCount); 
 
-  //Initialize reset counters
+  //Initialize reset and error counters
   resetCount=0; //uncontrolled resets
   EEPROM.write(0x3DF,resetCount); 
   resetPreventiveCount=0; //preventive resets (mainly becuase low heap situation)
   EEPROM.write(0x41B,resetPreventiveCount);
   resetSWCount=0; //reset from the HA restart button
   EEPROM.write(0x41C,resetSWCount);
+  resetPreventiveWebServerCount=0;
+  EEPROM.write(0x531,resetPreventiveWebServerCount); //preventive web server resets (mainly becuase low heap situation)
+  resetSWWebCount=0;
+  EEPROM.write(0x532,resetSWWebCount); //resets done from the web maintenance page
+  resetSWMqttCount=0;
+  EEPROM.write(0x533,resetSWMqttCount); //resets done from the HA (mqqtt) page
+  resetSWUpgradeCount=0;
+  EEPROM.write(0x534,resetSWUpgradeCount); //resets done due to firmware upgrade from maintenance web page
+  resetWebServerCnt=0;
+  EEPROM.write(0x53C,resetWebServerCnt); //resets done due to Web Server errors (being WiFi connected but not serving web pages)
+  errorsWiFiCnt=0;
+  EEPROM.write(0x535,errorsWiFiCnt); //Counter for WiFi errors
+  errorsNTPCnt=0;
+  EEPROM.write(0x536,errorsNTPCnt); // Counter for NTP sync errors
+  errorsHTTPUptsCnt=0;
+  EEPROM.write(0x537,errorsHTTPUptsCnt); // Counter for HTTP Cloud uploads errors
+  errorsMQTTCnt=0;
+  EEPROM.write(0x538,errorsMQTTCnt); //Counter for MQTT errors
+  SPIFFSErrors=0;
+  EEPROM.write(0x539,SPIFFSErrors); //Counter for SPIFFS errors
+  errorsConnectivityCnt=0;
+  EEPROM.write(0x53A,errorsConnectivityCnt); //Counter for Connectivity errors (being WiFi connected)
+  errorsWebServerCnt=0;
+  EEPROM.write(0x53B,errorsWebServerCnt); //Counter for Web Server errors (being WiFi connected but not serving web pages)
 }

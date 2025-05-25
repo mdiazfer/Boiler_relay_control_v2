@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "0.9.0"
+#define VERSION "0.9.6"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -83,21 +83,84 @@
 #define WIFI_MAX_SITE_LENGTH  11 //10 CHAR + NULL
 
 //WEB SERVER Stuff
-#define COOKIE_SIZE 54 //32 Chars + null
-#define WEBSERVER_ENABLED false
+#define WEBSERVER_ENABLED true
+#define WEBSERVER_MIN_HEAP_SIZE  20000 //95000  //Based on guess. Below this, the web server will be reset
+#define WEBSERVER_SEND_DELAY 800  //milliseconds - Delay to allow stop BLE Advertisings before sending HTTP Answer
+#define WEBSERVER_PORT 80
+#define WEBSERVER_CHECK_PERIOD 240000  //milliseconds - Check webServer responsiveness every 4 min
+#define WEBSERVER_CSSSTYLES_PAGE "/styles.css"
+#define WEBSERVER_CSSNAVBAR_PAGE "/tswnavbar.css"
+#define WEBSERVER_LOGO_ICON "/The_IoT_Factory.png"
+#define WEBSERVER_INDEX_PAGE "/index.html"
+#define WEBSERVER_GRAPHS_PAGE "/graphs.html"
+#define WEBSERVER_INFO_PAGE "/info.html"
+#define WEBSERVER_BASICCONFIG_PAGE "/basic.html"
+#define WEBSERVER_CLOUDCONFIG_PAGE "/cloud.html"
+#define WEBSERVER_BLUETOOTHCONFIG_PAGE "/bluetooth.html"
+#define WEBSERVER_MAINTENANCE_PAGE "/maintenance.html"
+#define WEBSERVER_CONTAINER_PAGE "/container.html"
+#define WEBSERVER_TEST_PAGE "/test.html"
+#define WEBSERVER_CONSOLE_PAGE "/console.html"
+//#define WEBSERVER_APINDEX_PAGE "/apindex.html"
+//#define WEBSERVER_APCONTAINER_PAGE "/apcontainer.html"
+#define WEBSERVER_UPLOADFILE_PAGE "/maintenance_upload_firmware"
+#define WEBSERVER_FAVICON_ICON "/favicon.ico"
+//#define WEBSERVER_JQUERY_JS "/jquery.min.js"
+#define WEBSERVER_FILE_EXTENSION ".bin"
+#define WEBSERVER_DEFAULTCONF_PAGE "/maintenance_default_values"
+#define WEBSERVER_DEVICERESET_PAGE "/maintenance_device_reset"
+#define WEBSERVER_COUNTERRESET_PAGE "/reset_counters"
+#define WEBSERVER_SAMPLES_EVENT "/sampleEvents"
+#define WEBSERVER_SAMPLES_PAGE "/samples"
+//#define WEBSERVER_GAUGESCRIPT_PAGE "/gauge.min.js"
+//#define WEBSERVER_RESULTSCRIPT_PAGE "/result_script.js"
+#define WEBSOCKET_CONSOLE_URI "/wsconsole"
+#define COOKIE_SIZE sizeof(DEVICE_NAME_PREFIX)+44 //54 //32 Chars + null
+#define CLOUD_SERVICES_URL  "http://the-iotfactory.com/lar-boil/"
 
 //Error stuff
-#define NO_ERROR                      0x00000000
-#define ERROR_SENSOR_TEMP_HUM_SETUP   0x00000002
-#define ERROR_WIFI_SETUP              0x00000010
-#define ERROR_SSID_CONNECTION         0x00000040
-#define ERROR_NTP_SERVER              0x00000080
-#define ERROR_CLOUD_SERVER            0x00000100
-#define ERROR_MQTT_SERVER             0x00040000
-#define ERROR_EEPROM_VARIABLES_INIT   0x00080000
+#define NO_ERROR                      0x00000000  //00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 
+#define ERROR_SENSOR_TEMP_HUM_SETUP   0x00000002  //00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010 
+#define ERROR_WIFI_SETUP              0x00000010  //00000000 00000000 00000000 00000000 00000000 00000000 00000000 00010000
+#define ERROR_SSID_CONNECTION         0x00000040  //00000000 00000000 00000000 00000000 00000000 00000000 00000000 01000000
+#define ERROR_NTP_SERVER              0x00000080  //00000000 00000000 00000000 00000000 00000000 00000000 00000000 10000000
+#define ERROR_CLOUD_SERVER            0x00000100  //00000000 00000000 00000000 00000000 00000000 00000000 00000001 00000000
+#define ERROR_BREAK_WEB_SETUP         0x00008000  //00000000 00000000 00000000 00000000 00000000 00000000 10000000 00000000 
+#define ERROR_SPIFFS_SETUP            0x00010000  //00000000 00000000 00000000 00000000 00000000 00000001 00000000 00000000 
+#define ERROR_WEB_SERVER              0x00020000  //00000000 00000000 00000000 00000000 00000000 00000010 00000000 00000000 
+#define ERROR_MQTT_SERVER             0x00040000  //00000000 00000000 00000000 00000000 00000000 00000100 00000000 00000000 
+#define ERROR_EEPROM_VARIABLES_INIT   0x00080000  //00000000 00000000 00000000 00000000 00000000 00001000 00000000 00000000 
+#define ERROR_WEB_SOCKET              0x00100000  //00000000 00000000 00000000 00000000 00000000 00010000 00000000 00000000 
+#define ERROR_UPLOAD_FILE_NOERROR           0x00  //00000000
+#define ERROR_UPLOAD_FILE_EXTENSION         0x01  //00000001
+#define ERROR_UPLOAD_FILE_UPDATE_BEGIN      0x02  //00000010
+#define ERROR_UPLOAD_FILE_UPDATE_WRITE      0x03  //00000011
+#define ERROR_UPLOAD_FILE_UPDATE_END        0x04  //00000100
+#define ERROR_UPLOAD_FILE_POST_PRM_NAME     0x05  //00000101
+#define ERROR_UPLOAD_FILE_POST_PRM_NUMBER   0x06  //00000110
+#define ERROR_UPLOAD_FILE_MD5_CHECKSUM      0x07  //00000111
+#define ERROR_UPLOAD_FILE_SIZE              0x08  //00001000
+#define ERROR_UPLOAD_FILE_NOFILE            0x09  //00001001
+#define ERROR_UPLOAD_FILE_NOAUTH            0x0A  //00001010
+#define ERROR_UPLOAD_FILE_WRONG_FILE_NAME   0x0B  //00001011
+#define ERROR_UPLOAD_FILE_NOFLASHSPACE_LEFT 0x0C  //00001100
+#define ERROR_UPLOAD_FILE_NOSPIFFSPACE_LEFT 0x0D  //00001101
+#define ERROR_UPLOAD_FILE_NOBIN_FILE        0x0E  //00001110
+#define ERROR_UPLOAD_FILE_NOSPIFFS_FILE     0x0F  //00001111
+#define ERROR_UPLOAD_FILE_NOSPIFFS_FILE_NOSAFE 0x10  //00010000
+#define ERROR_UPLOAD_FILE_NOCOOKIE          0x11  //00010001
+#define ERROR_UPLOAD_FILE_BADCOOKIE_FORMAT  0x12  //00010010
+#define ERROR_UPLOAD_FILE_UPLOAD_ONGOING    0x13  //00010011
+#define ERROR_UPLOAD_FILE_BADCOOKIE         0x14  //00010100
+#define ERROR_WEBSERVER_NO_RESPOND          0X20  //00100000
+#define ERROR_BLE_NO_LOAD                   0X21  //00100001
+#define ERROR_BLE_UNLOAD                    0x22  //00100010
+#define ERROR_MIN_HEAP                      0x23  //00100011
+#define ERROR_NO_CONNECTIVITY               0x24  //00101000
 
 //Timers and Global stuff
 #define INITIAL_BOOTIME X  //milliseconds - Time to bootup as per board measurements
+#define BOOT_LOGS_TIME 120000  //milliseconds - 2 min - Time to save the logs after boot time
 #define uS_TO_S_FACTOR  1000000
 #define ONE_SECOND_PERIOD 1000  //Millisenconds - 1 second
 #define TIME_COUNTERS_EEPROM_UPDATE_PERIOD 3600000  //Millisenconds - 1 hour
@@ -112,7 +175,20 @@
 #define THERMOSTATE_INTERRUPT_DELAY  300 //Milliseconds - Time to stabilize the interrupt
 #define MQTT_CHECK_PERIOD  20000 //Millisecons - Interval between checks on the MQTT server
 #define SAMPLE_PERIOD  20000 //Millisecons - Interval between gas/temp/hum samples
+#define CONNECTIVITY_CHECK_PERIOD 240000 //Millisecons - Interval between connectiviy checks
 #define ADC_SAMPLES 100
+
+//Binary header stuff
+//https://github.com/espressif/esp-idf/blob/8fbb63c2a701c22ccf4ce249f43aded73e134a34/components/bootloader_support/include/esp_image_format.h#L58
+#define BINARY_HD_MAGIC_NUMBER       0xE9 //Magic number as per https://docs.espressif.com/projects/esptool/en/latest/esp32/advanced-topics/firmware-image-format.html
+#define BINARY_HD_MAGIC_NUMBER_ADDR  0x00 //Address
+#define BINARY_HD_MAGIC_WORD         0xABCD5432 //Magic word as per //https://github.com/espressif/esp-idf/blob/8fbb63c2a701c22ccf4ce249f43aded73e134a34/components/bootloader_support/include/esp_image_format.h#L58
+#define BINARY_HD_MAGIC_WORD_ADDR    0x20 //Address - 32 = 0x20
+
+//SPIFFS stuff
+#define SPIFFS_CFG_LOG_BLOCK_SZ  4096 //Bytes - Size of Logical SPIFFS Blocks
+#define SPIFFS_CFG_LOG_PAGE_SZ  256 //Bytes - Size of Logical SPIFFS Pages
+#define SPIFFS_MAGIC_ADDR SPIFFS_CFG_LOG_PAGE_SZ-4 //Bytes - Address for the magic number to confirm it's SPIFFS partition
 
 //WEB and MQTT credentials
 #ifndef WEB_USER_CREDENTIAL
@@ -155,7 +231,7 @@
 //BLE stuff
 #define BLE_ENABLED  false
 #define BLE_MIN_HEAP_SIZE  95000  //Based on tests
-#define ABSULUTE_MIN_HEAP_THRESHOLD  15000  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
+#define ABSULUTE_MIN_HEAP_THRESHOLD  7000  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define MIN_HEAP_SEEN_THRESHOLD        700  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define BLE_BEACON_UUID           "F7826DA6-4FA2-4E98-8024-BC5B71E0893E"  //Kontakt proximity
 #define BLE_BEACON_UUID_REV       "3E89E071-5BBC-2480-984E-A24FA66D82F7" //Kontakt proximity reverse

@@ -25,15 +25,15 @@ void wifi_reconnect_period(bool debugModeOn) {
    *****************************************************/
 
   if (debugModeOn) {
-    boardSerialPort.println(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - nowTimeGlobal-lastTimeWifiReconnectionCheck >= wifiReconnectPeriod ("+String(nowTimeGlobal-lastTimeWifiReconnectionCheck)+" >= "+String(wifiReconnectPeriod/1000)+" s)");
-    boardSerialPort.println("           + lastTimeWifiReconnectionCheck="+String(lastTimeWifiReconnectionCheck));
-    boardSerialPort.println("           + forceWifiReconnect="+String(forceWifiReconnect));
-    boardSerialPort.println("           + forceWebServerInit="+String(forceWebServerInit));
-    boardSerialPort.println("           + !firstBoot="+String(!firstBoot));
-    boardSerialPort.println("           + wifiCurrentStatus="+String(wifiCurrentStatus)+", wifiOffStatus=0");
-    boardSerialPort.println("           + WiFi.status()="+String(WiFi.status())+", WL_CONNECTED=3");
+    printLogln(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - nowTimeGlobal-lastTimeWifiReconnectionCheck >= wifiReconnectPeriod ("+String(nowTimeGlobal-lastTimeWifiReconnectionCheck)+" >= "+String(wifiReconnectPeriod/1000)+" s)");
+    printLogln("           + lastTimeWifiReconnectionCheck="+String(lastTimeWifiReconnectionCheck));
+    printLogln("           + forceWifiReconnect="+String(forceWifiReconnect));
+    printLogln("           + forceWebServerInit="+String(forceWebServerInit));
+    printLogln("           + !firstBoot="+String(!firstBoot));
+    printLogln("           + wifiCurrentStatus="+String(wifiCurrentStatus)+", wifiOffStatus=0");
+    printLogln("           + WiFi.status()="+String(WiFi.status())+", WL_CONNECTED=3");
   }
-  else boardSerialPort.println(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - wifiCurrentStatus="+String(wifiCurrentStatus));
+  else printLogln(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - wifiCurrentStatus="+String(wifiCurrentStatus));
 
   //Update at begining to prevent accumulating delays in CHECK periods as this code might take long
   if (!wifiResuming) lastTimeWifiReconnectionCheck=nowTimeGlobal; //Only if the WiFi reconnection didn't ABORT or BREAK in the previous interaction
@@ -50,7 +50,7 @@ void wifi_reconnect_period(bool debugModeOn) {
   //WiFi.status() gets the WiFi status inmediatly. No need to scann WiFi networks
 
   //WiFi Reconnection
-  if (debugModeOn) {boardSerialPort.println("           + auxLoopCounter="+String(auxLoopCounter)+", auxCounter="+String(auxCounter));}
+  if (debugModeOn) {printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - auxLoopCounter="+String(auxLoopCounter)+", auxCounter="+String(auxCounter));}
   
   forceWEBTestCheck=false; //If WiFi reconnection is successfull, then check CLOUD server to update ICON. Decision is done below, if NO_ERROR
   switch(wifiConnect(false,&auxLoopCounter,&auxCounter)) {
@@ -59,7 +59,7 @@ void wifi_reconnect_period(bool debugModeOn) {
       wifiCurrentStatus=wifiOffStatus;
       forceWifiReconnect=false;
       wifiResuming=false;
-      if (debugModeOn) {boardSerialPort.println(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiConnect() finish with ERROR_WIFI_SETUP. wifiCurrentStatus="+String(wifiCurrentStatus)+", forceWifiReconnect="+String(forceWifiReconnect));}
+      if (debugModeOn) {printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiConnect() finish with ERROR_WIFI_SETUP. wifiCurrentStatus="+String(wifiCurrentStatus)+", forceWifiReconnect="+String(forceWifiReconnect));}
     break;
     case NO_ERROR:
     default:
@@ -75,7 +75,7 @@ void wifi_reconnect_period(bool debugModeOn) {
       // The request updates CloudSyncCurrentStatus
       forceWEBTestCheck=true; //Will check CLOUD server in the next loop() interaction
       forceNTPCheck=true; //v1.4.1 - Force NTP sync after WiFi Connection
-      if (debugModeOn) {boardSerialPort.println(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiConnect() finish with NO_ERROR. wifiCurrentStatus="+String(wifiCurrentStatus)+", forceWEBTestCheck="+String(forceWEBTestCheck));}
+      if (debugModeOn) {printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiConnect() finish with NO_ERROR. wifiCurrentStatus="+String(wifiCurrentStatus)+", forceWEBTestCheck="+String(forceWEBTestCheck));}
     break;
   } 
 
@@ -86,31 +86,8 @@ void wifi_reconnect_period(bool debugModeOn) {
     lastTimeMQTTCheck=nowTimeGlobal-MQTT_CHECK_PERIOD;
   }
 
-  //After getting WiFi connection re-init the web server if needed
-  //forceWebServerInit==true if:
-  // 1) wake up from sleep, including hibernate (either by pressing buttons or timer)
-  // 2) WiFi set ON from the config menu
-  // 3) after heap size was below ABSULUTE_MIN_HEAP_THRESHOLD
-  // 4) Webserver detected down.
-  /*if (wifiEnabled && webServerEnabled && WiFi.status()==WL_CONNECTED && forceWebServerInit) { //v0.9.9 - Re-init the built-in WebServer after waking up from sleep
-    if (debugModeOn) boardSerialPort.println("    - After leaving wifiReconnectPeriod entering to re-init the Web Server");    
-    if(SPIFFS.begin(true)) {
-      if (debugModeOn) boardSerialPort.println("    - wifiConnect()  - SPIFFS.begin() OK, SPIFFSErrors="+String(SPIFFSErrors));
-      initWebServer();
-      forceWebServerInit=false;
-      if (debugModeOn) boardSerialPort.println("    - wifiConnect()  - initWebServer");
-      
-      fileSystemSize = SPIFFS.totalBytes();
-      fileSystemUsed = SPIFFS.usedBytes();
-    }
-    else {
-      SPIFFSErrors++;
-      if (debugModeOn) boardSerialPort.println("    - wifiConnect()  - SPIFFS.begin() KO, SPIFFSErrors="+String(SPIFFSErrors));
-    }
-  }*/
-
-  if (debugModeOn) {boardSerialPort.println(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiReconnectPeriod - exit, lastTimeWifiReconnectionCheck="+String(lastTimeWifiReconnectionCheck));}
-  else boardSerialPort.println(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - Exit. wifiCurrentStatus="+String(wifiCurrentStatus));
+  if (debugModeOn) {printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiReconnectPeriod - exit, lastTimeWifiReconnectionCheck="+String(lastTimeWifiReconnectionCheck));}
+  else printLogln(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - Exit. wifiCurrentStatus="+String(wifiCurrentStatus));
 }
 
 void ntp_ko_check_period(bool debugModeOn) {
@@ -125,8 +102,8 @@ void ntp_ko_check_period(bool debugModeOn) {
     debugModeOn: Print out the logs or not
    *****************************************************/
 
-  if (debugModeOn) {boardSerialPort.println(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - Last lastTimeNTPCheck="+String(lastTimeNTPCheck)+", NTPResuming="+String(NTPResuming)+", auxLoopCounter2="+String(auxLoopCounter2)+", whileLoopTimeLeft="+String(whileLoopTimeLeft));}
-  else boardSerialPort.print(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));
+  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - Last lastTimeNTPCheck="+String(lastTimeNTPCheck)+", NTPResuming="+String(NTPResuming)+", auxLoopCounter2="+String(auxLoopCounter2)+", whileLoopTimeLeft="+String(whileLoopTimeLeft));}
+  else printLog(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));
     
   //Update at begining to prevent accumulating delays in CHECK periods as this code might take long
   if (!NTPResuming) lastTimeNTPCheck=nowTimeGlobal; //Only if the NTP reconnection didn't ABORT or BREAK in the previous interaction
@@ -144,46 +121,47 @@ void ntp_ko_check_period(bool debugModeOn) {
   if( wifiCurrentStatus!=wifiOffStatus && wifiEnabled && 
       (auxRandom <2 || CloudClockCurrentStatus==CloudClockOffStatus || forceNTPCheck ) ) {
     if (debugModeOn) {
-      boardSerialPort.println("           + setupNTPConfig() for NTP Sync");
-      if (CloudClockCurrentStatus==CloudClockOffStatus) boardSerialPort.println("           + Reason: CloudClockCurrentStatus==CloudClockOffStatus");
-      if (forceNTPCheck) boardSerialPort.println("           + Reason: forceNTPCheck");
-      if (auxRandom<2) boardSerialPort.println("           + Reason: auxRandom(="+String(auxRandom)+")<2");
+      printLogln("           + setupNTPConfig() for NTP Sync");
+      if (CloudClockCurrentStatus==CloudClockOffStatus) printLogln("           + Reason: CloudClockCurrentStatus==CloudClockOffStatus");
+      if (forceNTPCheck) printLogln("           + Reason: forceNTPCheck");
+      if (auxRandom<2) printLogln("           + Reason: auxRandom(="+String(auxRandom)+")<2");
     }
     forceNTPCheck=false;
     if (CloudClockCurrentStatus!=CloudClockSendStatus) CloudClockLastStatus=CloudClockCurrentStatus; //To enter in DISPLAY_ICONS_REFRESH_TIMEOUT in the next loop cycle
-    switch(setupNTPConfig(false,false,&auxLoopCounter2,&whileLoopTimeLeft)) { //NTP Sync and CloudClockCurrentStatus update
+    CloudClockCurrentStatus=CloudClockSendStatus;
+    switch(setupNTPConfig(debugModeOn,false,&auxLoopCounter2,&whileLoopTimeLeft)) { //NTP Sync and CloudClockCurrentStatus update
       case ERROR_NTP_SERVER:
         forceNTPCheck=false;
         NTPResuming=false;
         previousCloudClockCurrentStatus=CloudClockOffStatus; //CloudClock Status to be back after DISPLAY_ICONS_REFRESH_TIMEOUT
-        CloudClockCurrentStatus=CloudClockSendStatus;
-        if (debugModeOn) {boardSerialPort.println(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - setupNTPConfig() finish with ERROR_NTP_SERVER. CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", forceNTPCheck="+String(forceNTPCheck));}
+        //CloudClockCurrentStatus=CloudClockOffStatus;
+        if (debugModeOn) {printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - setupNTPConfig() finish with ERROR_NTP_SERVER. CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", forceNTPCheck="+String(forceNTPCheck));}
       break;
       case NO_ERROR:
         forceNTPCheck=false;
         NTPResuming=false;
         previousCloudClockCurrentStatus=CloudClockOnStatus; //CloudClock Status to be back after DISPLAY_ICONS_REFRESH_TIMEOUT
-        CloudClockCurrentStatus=CloudClockSendStatus;
-        if (debugModeOn) {boardSerialPort.println(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - setupNTPConfig() finish with NO_ERROR. CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", forceNTPCheck="+String(forceNTPCheck));}
+        //CloudClockCurrentStatus=CloudClockOnStatus;
+        if (debugModeOn) {printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - setupNTPConfig() finish with NO_ERROR. CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", forceNTPCheck="+String(forceNTPCheck));}
       break;
     }
     lastCloudClockChangeCheck=nowTimeGlobal; //Reset Cloud Clock Change Timeout
 
     getLocalTime(&nowTimeInfo);
     if (debugModeOn) {
-      //boardSerialPort.println(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - errorsNTPCnt="+String(errorsNTPCnt)+", CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck));
-      boardSerialPort.print("        [loop - NTP_KO_CHECK_PERIOD] ");boardSerialPort.println(&nowTimeInfo,"- NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S");
+      //printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - errorsNTPCnt="+String(errorsNTPCnt)+", CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck));
+      printLog("        [loop - NTP_KO_CHECK_PERIOD] - "+String(ntpServers[ntpServerIndex])+" - ");printLogln(&nowTimeInfo,"- NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S"); //boardSerialPort.println(&nowTimeInfo,"- NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S");
     }
-    else {boardSerialPort.print(&nowTimeInfo," - NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S. ");boardSerialPort.println("CloudClockCurrentStatus="+String(CloudClockCurrentStatus));}
+    else {printLog(&nowTimeInfo," - NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S. ");printLogln(" - "+String(ntpServers[ntpServerIndex])+" - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));}
   }
   else {
     if( wifiCurrentStatus==wifiOffStatus || !wifiEnabled) if (forceNTPCheck) forceNTPCheck=false; //v0.9.9 If no WiFi, don't enter in NTP_KO_CHECK_PERIOD even if it was BREAK or ABORT in previous intercation
     getLocalTime(&nowTimeInfo);
     if (debugModeOn) {
-      ///boardSerialPort.println(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - errorsNTPCnt="+String(errorsNTPCnt)+", CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck));
-      boardSerialPort.print("        [loop - NTP_KO_CHECK_PERIOD] ");boardSerialPort.println(&nowTimeInfo,"- No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S");
+      ///printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - errorsNTPCnt="+String(errorsNTPCnt)+", CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck));
+      printLog("        [loop - NTP_KO_CHECK_PERIOD] - "+String(ntpServers[ntpServerIndex])+" - ");printLogln(&nowTimeInfo,"- No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S");
     }
-    else {boardSerialPort.print(&nowTimeInfo," - No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S. "); boardSerialPort.println("CloudClockCurrentStatus="+String(CloudClockCurrentStatus));}
+    else {printLog(&nowTimeInfo," - No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S. "); printLogln(" - "+String(ntpServers[ntpServerIndex])+" - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));}
   }
 }
 
@@ -199,15 +177,15 @@ int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String ht
    Return: status
   *****************************************************/ 
 
-  if (fromSetup) boardSerialPort.print(String(millis())+" -"); //no from Setup
-  else boardSerialPort.print("       "); //from setup
-  boardSerialPort.print("[loop - sendHttpRequest] - Sending HTTP request");
-  if (!fromSetup) boardSerialPort.println("");
-  else boardSerialPort.println(" '"+httpRequest+"', server="+IpAddress2String(server));
+  if (fromSetup) printLog(String(millis())+" -"); //no from Setup
+  else printLog("       "); //from setup
+  printLog("[loop - sendHttpRequest] - Sending HTTP request");
+  if (!fromSetup) printLogln("");
+  else printLogln(" '"+httpRequest+"', server="+IpAddress2String(server));
 
   if (httpCloudEnabled && wifiCurrentStatus!=wifiOffStatus && wifiEnabled) {  //Only if HTTP Cloud is enabled and WiFi is connected
     if (client.connect(server, port)) {
-      if (debugModeOn) {boardSerialPort.println("       [loop - sendHttpRequest] - connected to web server");}
+      if (debugModeOn) {printLogln("       [loop - sendHttpRequest] - connected to web server");}
       // Send a HTTP request:
       client.println(httpRequest);
       client.print("Host: "); client.println(IpAddress2String(server));
@@ -217,8 +195,8 @@ int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String ht
       client.println();
     }
     else {
-      errorsHTTPUptsCnt++;  //Something went wrong. Update error counter for stats
-      if (debugModeOn) {boardSerialPort.println("       [loop - sendHttpRequest] - Not connected, errorsSampleUpts="+String(errorsHTTPUptsCnt));}
+      errorsHTTPUptsCnt++;EEPROM.write(0x537,errorsHTTPUptsCnt);eepromUpdate=true;  //Something went wrong. Update error counter for stats
+      if (debugModeOn) {printLogln("       [loop - sendHttpRequest] - Not connected, errorsSampleUpts="+String(errorsHTTPUptsCnt));}
       return (ERROR_CLOUD_SERVER);
     }
 
@@ -231,34 +209,34 @@ int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String ht
       if (nowMilliseconds>=lastMilliseconds+HTTP_ANSWER_TIMEOUT) {
         //Too long with no server answer. Something was wrong. Changing icon
         CloudSyncCurrentStatus=CloudSyncOffStatus;
-        if (debugModeOn && fromSetup) {boardSerialPort.println("       NO Server answer\n       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");}
+        if (debugModeOn && fromSetup) {printLogln("       NO Server answer\n       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");}
         break;
       }
     }; //wait till there is server answer
 
     if (CloudSyncCurrentStatus==CloudSyncOnStatus) {
-      if (debugModeOn && fromSetup) {boardSerialPort.print("       Server answer\n       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n       ");}
+      if (debugModeOn && fromSetup) {printLog("       Server answer\n       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n       ");}
       while (client.available()) {
         char c = client.read();
-        if (debugModeOn && fromSetup) {if (c=='\n') boardSerialPort.print("\n       "); else boardSerialPort.write(c);}
+        if (debugModeOn && fromSetup) {if (c=='\n') printLog("\n       "); else printLog(String(c));}
       }
-      if (debugModeOn && fromSetup) {boardSerialPort.println("\n       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");}
+      if (debugModeOn && fromSetup) {printLogln("\n       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");}
     }
     else {
-      errorsHTTPUptsCnt++;  //Something went wrong. Update error counter for stats
+      errorsHTTPUptsCnt++; EEPROM.write(0x537,errorsHTTPUptsCnt); eepromUpdate=true; //Something went wrong. Update error counter for stats
       return (ERROR_CLOUD_SERVER);
     }
 
     // if the server's disconnected, stop the client:
     if (!client.connected()) {
-      if (debugModeOn && fromSetup) {boardSerialPort.println("       [loop - sendHttpRequest] - Disconnecting from server. Bye!");}
+      if (debugModeOn && fromSetup) {printLogln("       [loop - sendHttpRequest] - Disconnecting from server. Bye!");}
       client.stop();
     }
 
     return (NO_ERROR);
   }
   else {
-    if (debugModeOn) {boardSerialPort.println("       [loop - sendHttpRequest] - No WiFi or HTTP Cloud updates are disabled.");}
+    if (debugModeOn) {printLogln("       [loop - sendHttpRequest] - No WiFi or HTTP Cloud updates are disabled.");}
     return (ERROR_CLOUD_SERVER);
   }
 }
@@ -271,46 +249,57 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
    Parameters:
     debugModeOn: Print out the logs or not
    *****************************************************/ 
-  int thermostatInterrupt=digitalRead(PIN_THERMOSTATE);
+  int auxThermostatInterrupt=digitalRead(PIN_THERMOSTATE);
   String auxStatus,httpRequest=String(GET_REQUEST_TO_UPLOAD_SAMPLES);
   thermostateInterrupt=false;
   int32_t auxRebounds; //int32 instead of uint16 because auxRebouds might have negaative values. To construct the http request
+  bool updateCloudServer=false;
   
   if (thermostateStatus) {auxStatus="ON";} else {auxStatus="OFF";}
-  boardSerialPort.println(String(millis())+" - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate="+String(thermostatInterrupt)+" Status (thermostateStatus) was="+auxStatus);
+  printLogln(String(millis())+" - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate="+String(auxThermostatInterrupt)+" Status (thermostateStatus) was="+auxStatus);
   
   //Update rebouds according to the current status
-  if (thermostatInterrupt==1) {
+  if (auxThermostatInterrupt==1) {
     auxRebounds=rebounds;
     if (thermostateStatus) {
-      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
+      if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
     }
     else {
       thermostateStatus=true; auxStatus="ON"; lastThermostatOnTime=millis();
-      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}
+      if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}
       rebounds=0;
+      updateCloudServer=true;
     }
   }
   else {
     auxRebounds=-rebounds;
     if (thermostateStatus) {
       thermostateStatus=false; auxStatus="OFF";
-      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}  
+      if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}  
       rebounds=0;
+      updateCloudServer=true;
     }
     else {
-      if (debugModeOn) {boardSerialPort.println("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
+      if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
     }
   }
 
+  //if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - updateCloudServer="+String(updateCloudServer)+", httpCloudEnabled="+String(httpCloudEnabled)+", CloudSyncCurrentStatus="+String(CloudSyncCurrentStatus)+" (0=CloudSyncOnStatus, 1=CloudSyncSendStatus, 2=CloudSyncOffStatus), wifiCred.activeIndex="+String(wifiCred.activeIndex));}
+  //if (debugModeOn) {for (int i=0; i<=2; i++) printLogln("          [loop - thermostate_interrupt_triggered] - wifiCred.wifiSSIDs["+String(i)+"]="+String(wifiCred.wifiSSIDs[i])+", wifiCred.wifiSITEs["+String(i)+"]="+String(wifiCred.wifiSITEs[i])+", wifiCred.SiteAllow["+String(i)+"]="+String(wifiCred.SiteAllow[i]));}
+  
   //Send the http cloud update
-  /*
-    Thermostat ON  - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=1&counts=101 HTTP/1.0"
-    Thermostat OFF - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=0&counts=-1737 HTTP/1.0"
-  */
-  httpRequest=httpRequest+"device="+device+"&local_ip_address="+IpAddress2String(WiFi.localIP())+
-    "&relay_status="+String(thermostatInterrupt)+"&counts="+String(auxRebounds/2)+" HTTP/1.1";
-  sendHttpRequest(debugModeOn,serverToUploadSamplesIPAddress,SERVER_UPLOAD_PORT,httpRequest,false); //Send http update
+  if (updateCloudServer && httpCloudEnabled && (CloudSyncCurrentStatus==CloudSyncOnStatus) && wifiCred.SiteAllow[wifiCred.activeIndex]) {
+    /*
+      Thermostat ON  - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=1&counts=101 HTTP/1.0"
+      Thermostat OFF - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=0&counts=-1737 HTTP/1.0"
+    */
+    httpRequest=httpRequest+"device="+device+"&local_ip_address="+IpAddress2String(WiFi.localIP())+
+      "&relay_status="+String(auxThermostatInterrupt)+"&counts="+String(auxRebounds/2)+" HTTP/1.1";
+    error_setup&=!ERROR_CLOUD_SERVER;
+    error_setup|=sendHttpRequest(debugModeOn,serverToUploadSamplesIPAddress,SERVER_UPLOAD_PORT,httpRequest,false); //Send http update
+    //CloudSyncCurrentStatus is updated in sendHttpRequest()
+    lastTimeHTTPClouCheck=millis();
+  }
 }
 
 void gas_sample(bool debugModeOn) {
@@ -322,14 +311,15 @@ void gas_sample(bool debugModeOn) {
    *****************************************************/ 
 
   float h2_ppm=0,lpg_ppm=0,ch4_ppm=0,co_ppm=0,alcohol_ppm=0;
-  boardSerialPort.print(String(nowTimeGlobal)+" - [loop - SAMPLE_PERIOD] - Taking GAS samples. - ");
+  String logMessage=String(nowTimeGlobal)+" - [loop - SAMPLE_PERIOD] - Taking GAS samples. - ";
+  printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_PERIOD] - Taking GAS samples. - ");
   
   //calculate_R0(); //This is to calculate R0 when the MQ5 sensor is replaced. Don't use it for regular working
   gasRatioSample=get_resistence_ratio(debugModeOn); //This is the current ratio RS/R0 - 6.5 for clean air
   if (gasRatioSample>4.5) {
     gasClear=1;
-    if (debugModeOn) boardSerialPort.println("\n         [loop - SAMPLE_PERIOD] - Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
-    else boardSerialPort.println("Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
+    if (debugModeOn) printLogln("\n         [loop - SAMPLE_PERIOD] - Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
+    else printLogln("Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
   }
   else {
     gasClear=0;
@@ -348,24 +338,24 @@ void gas_sample(bool debugModeOn) {
     co_ppm=(gasRatioSample-CO_B)/CO_A; if (co_ppm<0) co_ppm=0; else if (co_ppm>=200 && co_ppm<10000) gasTypes|=0x08; else gasTypes|=0x20;
     alcohol_ppm=(gasRatioSample-ALCOHOL_B)/ALCOHOL_A; if (alcohol_ppm<0) alcohol_ppm=0; else if (alcohol_ppm>=200 && alcohol_ppm<10000) gasTypes|=0x10; else gasTypes|=0x20;
 
-    boardSerialPort.println(""); //Just print new line
+    printLogln(""); //Just print new line
     if (gasTypes > 0 && gasTypes != 0x20) {
-      boardSerialPort.println("         [loop - SAMPLE_PERIOD] - GAS detected. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
-      if ((gasTypes & 0x1) > 0) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    H2="+String(h2_ppm)+" ppm");
-      if ((gasTypes & 0x2) > 0) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    LPG="+String(lpg_ppm)+" ppm");
-      if ((gasTypes & 0x4) > 0) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    CH4="+String(ch4_ppm)+" ppm");
-      if ((gasTypes & 0x8) > 0) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    CO="+String(co_ppm)+" ppm");
-      if ((gasTypes & 0x10) > 0) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    ALCOHOL="+String(alcohol_ppm)+" ppm");
+      printLogln("         [loop - SAMPLE_PERIOD] - GAS detected. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
+      if ((gasTypes & 0x1) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    H2="+String(h2_ppm)+" ppm");
+      if ((gasTypes & 0x2) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    LPG="+String(lpg_ppm)+" ppm");
+      if ((gasTypes & 0x4) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    CH4="+String(ch4_ppm)+" ppm");
+      if ((gasTypes & 0x8) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    CO="+String(co_ppm)+" ppm");
+      if ((gasTypes & 0x10) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    ALCOHOL="+String(alcohol_ppm)+" ppm");
     }
     if (gasTypes > 0x20)
-      {boardSerialPort.println("         [loop - SAMPLE_PERIOD] - Other GASes detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
+      {printLogln("         [loop - SAMPLE_PERIOD] - Other GASes detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
     else if (gasTypes == 0x20)
-      {boardSerialPort.println("         [loop - SAMPLE_PERIOD] - GAS detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
-    if ((h2_ppm>0 && h2_ppm<200) || h2_ppm>10000) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    H2="+String(h2_ppm)+" ppm. Discard that value.");
-    if ((lpg_ppm>0 && lpg_ppm<200) || lpg_ppm>10000) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    LPG="+String(lpg_ppm)+" ppm. Discard that value.");
-    if ((ch4_ppm>0 && ch4_ppm<200) || ch4_ppm>10000) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    CH4="+String(ch4_ppm)+" ppm. Discard that value.");
-    if ((co_ppm>0 && co_ppm<200) || co_ppm>10000) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    CO="+String(co_ppm)+" ppm. Discard that value.");
-    if ((alcohol_ppm>0 && alcohol_ppm<200) || alcohol_ppm>10000) boardSerialPort.println("         [loop - SAMPLE_PERIOD] -    ALCOHOL="+String(alcohol_ppm)+" ppm. Discard that value.");
+      {printLogln("         [loop - SAMPLE_PERIOD] - GAS detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
+    if ((h2_ppm>0 && h2_ppm<200) || h2_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    H2="+String(h2_ppm)+" ppm. Discard that value.");
+    if ((lpg_ppm>0 && lpg_ppm<200) || lpg_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    LPG="+String(lpg_ppm)+" ppm. Discard that value.");
+    if ((ch4_ppm>0 && ch4_ppm<200) || ch4_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    CH4="+String(ch4_ppm)+" ppm. Discard that value.");
+    if ((co_ppm>0 && co_ppm<200) || co_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    CO="+String(co_ppm)+" ppm. Discard that value.");
+    if ((alcohol_ppm>0 && alcohol_ppm<200) || alcohol_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    ALCOHOL="+String(alcohol_ppm)+" ppm. Discard that value.");
   }
 
   //Updating JSON object with samples
@@ -495,16 +485,24 @@ void gas_sample(bool debugModeOn) {
   samples["Relay1"] = digitalRead(PIN_RL1)==0?String("R1_ON"):String("R1_OFF"); //ON = External Thermostate Not Allowed (OFF)
   samples["Relay2"] = digitalRead(PIN_RL2)==1?String("R2_ON"):String("R2_OFF"); //ON = External Thermostate shortcut (ON)
   samples["errorsWiFiCnt"] = String(errorsWiFiCnt);
+  samples["errorsConnectivityCnt"] = String(errorsConnectivityCnt);
   samples["errorsNTPCnt"] = String(errorsNTPCnt);
   samples["errorsHTTPUptsCnt"] = String(errorsHTTPUptsCnt);
   samples["errorsMQTTCnt"] = String(errorsMQTTCnt);
+  samples["errorsWebServerCnt"] = String(errorsWebServerCnt);
   samples["bootCount"] = String(bootCount); //Total since last update
-  samples["resetNormalCount"] = String(bootCount-resetPreventiveCount-resetSWCount-resetCount); //Normal resets
-  samples["resetPreventiveCount"] = String(resetPreventiveCount); //Preventive resets (low heap situation)
-  samples["resetSWCount"] = String(resetSWCount); //Reset due to Restart HA Button
+  samples["resetNormalCount"] = String(bootCount-resetSWCount-resetCount); //Normal resets - resetSWCount includes preventive Counts
+  samples["resetSWCount"] = String(resetSWCount); //Reset due to Restart HA Button, web reset, preventive reset, etc (all ESP.restart cases)
+  samples["resetSWWebCount"] = String(resetSWWebCount); //resets done from the web maintenance page
+  samples["resetSWMqttCount"] = String(resetSWMqttCount); //resets done from the HA (mqqtt) page
+  samples["resetSWUpgradeCount"] = String(resetSWUpgradeCount); //resets done due to firmware upgrade from maintenance web page
+  samples["resetWebServerCount"] = String(resetWebServerCnt); //resets due to web server not serving web pages
+  samples["resetPreventiveCount"] = String(resetPreventiveCount); //Preventive resets (low heap situation) different than web server low heap
+  samples["resetPreventiveWebServerCount"] = String(resetPreventiveWebServerCount); //Preventive web server resets (low heap situation)
   samples["resetCount"] = String(resetCount); //uncontrolled resets
   samples["lastHeap"] = String(esp_get_free_heap_size());
-  samples["minHeapSeen"] = String(minHeapSeen);
+  samples["minHeapSinceBoot"] = String(minHeapSinceBoot);
+  samples["minHeapSinceUpgrade"] = String(minHeapSinceUpgrade);
   samples["reboot"] = String("online");
   samples["reset_time_counters"] = String("online");
   
@@ -547,7 +545,7 @@ void temperature_sample(bool debugModeOn) {
     debugModeOn: Print out the logs or not
    *****************************************************/ 
 
-  boardSerialPort.print(String(millis())+" - [loop - temperature_sample] - Taking Temp & Hum samples.");
+  printLog(String(millis())+" - [loop - temperature_sample] - Taking Temp & Hum samples.");
   
   tempHumSensor.read();
    
@@ -556,8 +554,8 @@ void temperature_sample(bool debugModeOn) {
   valueT=0.9944*tempHumSensor.getTemperature()-0.8073; //Calibrated value from IoT_Co2_Sensor
 
   if (valueT < -50.0) valueT=-50;  //Discarding potential wrong values
-  //if (debugModeOn) {boardSerialPort.println("         [loop - temperature_sample] - valueT="+String(valueT)+", valueHum="+String(valueHum));}
-  boardSerialPort.println(" Temp="+String(valueT)+"ºC, Hum="+String(valueHum)+"%");
+  //if (debugModeOn) {printLogln("         [loop - temperature_sample] - valueT="+String(valueT)+", valueHum="+String(valueHum));}
+  printLogln(" Temp="+String(valueT)+"ºC, Hum="+String(valueHum)+"%");
 
   //Updating JSON object with samples
   samples["tempSensor"] = String(tempSensor); //Non-calibrated temp
@@ -578,7 +576,7 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
 
   struct tm nowTimeInfo; //36 B
   char s[100];
-  boardSerialPort.println(String(millis())+" - [loop - mqtt_publish_samples] - Publishing samples.");
+  printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Publishing samples.");
   
   if (wifiEnabled && mqttServerEnabled && WiFi.status()==WL_CONNECTED) {
     MqttSyncCurrentStatus=MqttSyncSendStatus;
@@ -618,15 +616,19 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
       mqttClient.publish(String(mqttTopicName+"/Relay1").c_str(), 0, false, JSON.stringify(samples["Relay1"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/Relay2").c_str(), 0, false, JSON.stringify(samples["Relay2"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsWiFiCnt").c_str(), 0, false, JSON.stringify(samples["errorsWiFiCnt"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/errorsConnectivityCnt").c_str(), 0, false, JSON.stringify(samples["errorsConnectivityCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsNTPCnt").c_str(), 0, false, JSON.stringify(samples["errorsNTPCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsHTTPUptsCnt").c_str(), 0, false, JSON.stringify(samples["errorsHTTPUptsCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/errorsMQTTCnt").c_str(), 0, false, JSON.stringify(samples["errorsMQTTCnt"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/errorsWebServerCnt").c_str(), 0, false, JSON.stringify(samples["errorsWebServerCnt"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/bootCount").c_str(), 0, false, JSON.stringify(samples["bootCount"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/resetNormalCount").c_str(), 0, false, JSON.stringify(samples["resetNormalCount"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/resetPreventiveCount").c_str(), 0, false, JSON.stringify(samples["resetPreventiveCount"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/resetPreventiveWebServerCount").c_str(), 0, false, JSON.stringify(samples["resetPreventiveWebServerCount"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/resetSWCount").c_str(), 0, false, JSON.stringify(samples["resetSWCount"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/resetCount").c_str(), 0, false, JSON.stringify(samples["resetCount"]).c_str());
-      mqttClient.publish(String(mqttTopicName+"/minHeapSeen").c_str(), 0, false, JSON.stringify(samples["minHeapSeen"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/minHeapSinceBoot").c_str(), 0, false, JSON.stringify(samples["minHeapSinceBoot"]).c_str());
+      mqttClient.publish(String(mqttTopicName+"/minHeapSinceUpgrade").c_str(), 0, false, JSON.stringify(samples["minHeapSinceUpgrade"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/lastHeap").c_str(), 0, false, JSON.stringify(samples["lastHeap"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/resetReason").c_str(), 0, false, JSON.stringify(samples["resetReason"]).c_str());
       mqttClient.publish(String(mqttTopicName+"/reboot").c_str(), 0, false, JSON.stringify(samples["reboot"]).c_str());
@@ -670,7 +672,7 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
       String message=String("{\"Time\":\""+String(s)+"\",\"SAMPLES\":"+JSON.stringify(samples)+"}");
       mqttClient.publish(String(mqttTopicName+"/SENSOR").c_str(), 0, false, message.c_str());
 
-      if (debugModeOn) boardSerialPort.println(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages published");
+      if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages published");
 
       //Publish HA Discovery messages at random basis to make sure HA always recives the Discovery Packet
       // even if it didn't receive it after it rebooted due to network issues or whatever - v1.9.2
@@ -685,9 +687,9 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
     else {
       //MQTT Client disconnected
       //Connect to MQTT broker
-      if (debugModeOn) boardSerialPort.println(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages can't be published as MQTT broker is disconnected. Trying to get connected again...\n             MqttSyncLastStatus("+String(MqttSyncLastStatus)+")!=MqttSyncCurrentStatus("+String(MqttSyncCurrentStatus)+")");
+      if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages can't be published as MQTT broker is disconnected. Trying to get connected again...\n             MqttSyncLastStatus("+String(MqttSyncLastStatus)+")!=MqttSyncCurrentStatus("+String(MqttSyncCurrentStatus)+")");
       MqttSyncCurrentStatus=MqttSyncOffStatus;
-      errorsMQTTCnt++;
+      errorsMQTTCnt++;EEPROM.write(0x538,errorsMQTTCnt);eepromUpdate=true;
     }
   }
 }
@@ -725,7 +727,7 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
 */
   
 
-  if (debugModeOn) {boardSerialPort.println(String(nowTimeGlobal)+" - [loop - ONE_SECOND_PERIOD] - Doing actions every second.");}
+  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - ONE_SECOND_PERIOD] - Doing actions every second.");}
 
   //At this point the variables already updated, even right after boot time.
   if (ntpSynced) {
@@ -804,12 +806,161 @@ void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTime
     EEPROM.put(0x421,heaterTimeOnYear); EEPROM.put(0x465,heaterTimeOnPreviousYear);
     EEPROM.put(0x4A9,boilerTimeOnYear); EEPROM.put(0x4ED,boilerTimeOnPreviousYear);
     EEPROM.commit();
-    if (debugModeOn) boardSerialPort.println(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - EEPROM updated with variables and counters");
+    if (debugModeOn) printLogln(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - EEPROM updated with variables and counters");
     timersEepromUpdate=false;
   }
   else {
-    if (debugModeOn) boardSerialPort.println(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - No need to update EEPROM with variables and counters");
+    if (debugModeOn) printLogln(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - No need to update EEPROM with variables and counters");
   }
 
   lastTimeTimerEepromUpdateCheck=nowTimeGlobal;
+}
+
+uint32_t checkURL(boolean debugModeOn,boolean fromSetup,uint32_t error_setup,IPAddress server,uint16_t port,String httpRequest) {
+  /******************************************************
+   Function checkURL
+   Target: Check URL by sending httpRequest
+   Parameters:
+    debugModeOn: Print out the logs or not
+    fromSetup: where the function was called from. Diferent prints out are done base on its value
+    error_setup: error during setup
+    server: IP address of the HTTP server where to send the HTTP Request to
+    port: HTTP Server's Port number
+    httpRequest: HTTP request with no HTTP headers. They are set in here.
+   Returns: ERROR type or NO_ERROR
+   *****************************************************/
+  uint64_t timeLeft=0;
+  
+  if (debugModeOn) {printLogln(String(millis())+" - [checkURL] - Trying connection to "+String(IpAddress2String(server))+" to send httpRequest: '"+httpRequest+"'");}
+
+  if (client.connect(server, port)) {
+    if (debugModeOn) {printLogln("      [checkURL] - connected");}
+    // Send a HTTP request:
+    client.println(httpRequest);
+    client.print("Host: "); client.println(IpAddress2String(server));
+    client.println("User-Agent: Arduino/1.0");
+    client.println("Accept-Language: es-es");
+    client.println("Connection: close");
+    client.println();
+  }
+  else {
+    if (debugModeOn) {printLog("      [checkURL] - No server connection. ERROR_WEB_SERVER - Exit - Time: ");getLocalTime(&nowTimeInfo);printLogln(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");}
+    return(ERROR_WEB_SERVER); //No WEB server connection
+  }
+
+  if (debugModeOn) {printLogln("      [checkURL] - waiting for HTTP client.available()");}
+  timeLeft=HTTP_ANSWER_TIMEOUT;
+  while ( !client.available() && timeLeft>0) {
+    delay(50);
+    timeLeft-=50;
+    if (timeLeft>HTTP_ANSWER_TIMEOUT) timeLeft=0; //Negative value
+  } //end while() loop
+
+  if (timeLeft==0) { //Case if while() loop timeout.
+    //Too long with no server answer. Something was wrong
+    if (!client.connected()) client.stop();
+    if (debugModeOn) {printLog("      [checkURL] - No server connection. ERROR_WEB_SERVER - Exit - Time: ");getLocalTime(&nowTimeInfo);printLogln(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");}
+    return(ERROR_WEB_SERVER); //No WEB server connection
+  }
+  else { 
+    //End of while() due to successful WEB sync
+    if (debugModeOn) {printLogln("      [checkURL] Server answer\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");}
+    while (client.available()) {//Should be very fast.
+      char c = client.read();
+      if (debugModeOn) {if (c=='\n') printLog("\n       "); else printLog(String(c));}
+    }
+    if (debugModeOn) {printLogln("\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");}
+  }
+
+  //This point is reached everthing is right
+  
+  // if the server's disconnected, stop the client:
+  if (!client.connected()) {
+    if (debugModeOn) {printLogln("      [checkURL] - Disconnecting from server. Bye!");}
+    client.stop();
+  }
+
+  if (debugModeOn) {printLog(String("      [checkURL] - GOT URL. NO_ERROR - Exit - Time: "));getLocalTime(&nowTimeInfo);printLogln(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");}
+  return(NO_ERROR); //WEB server connection fine
+}
+
+uint32_t connectiviy_check_period(bool debugModeOn, uint64_t nowTimeGlobal) {
+  /******************************************************
+   Function connectiviy_check_period
+   Target: Regular actions every CONNECTIVITY_CHECK_PERIOD seconds.
+    Check connectivity and reset it if needed, if:
+      WiFi.status()==WL_CONNECTED && no FQDN resolved and error in sample_upload && mqttClient not connected and error in checkURL and no GW ping
+      NTP status is not check as NTP checks take time (random period) and forcing NTP in here is avoided (as it may take several loop cycles = complexity)
+   Parameters:
+    debugModeOn: Print out the logs or not
+    nowTimeGlobal: current time the function was called in milliseconds
+   Returns: Nothing
+   *****************************************************/
+
+  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - CONNECTIVITY_CHECK_PERIOD] - Checking connectivity.");}
+  
+  IPAddress auxServer;
+  bool connectivityOK=true, webServerOK=true;
+
+  //First try ping to the gateway
+  if (Ping.ping(WiFi.gatewayIP(),1)) {
+    //Success, so connectivity is right
+    //Nothing to do - exit
+    if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Default GW Ping received. Connectivity is OK");}
+  }
+  else if (WiFi.hostByName(FQDN_TO_CHECK, auxServer)) {
+    //Success, so connectivity is right
+    //Nothing to do - exit
+    if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - "+String(FQDN_TO_CHECK)+"="+auxServer.toString()+". FQDN resoled. Connectivity is OK");}
+  }
+  else if (mqttClient.connected() && mqttServerEnabled) {
+    //Success, so connectivity is right
+    //Nothing to do - exit
+    if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connection to the MQTT server is OK. Connectivity is OK");}
+  }
+  else if (!(error_setup & ERROR_CLOUD_SERVER) && httpCloudEnabled) {
+    //Success, so connectivity is right
+    //Nothing to do - exit
+    if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connection to the Cloud server is OK. Connectivity is OK");}
+  }
+  else {
+      //Check external URL
+      if (WiFi.hostByName(SERVER_TO_CHECK, auxServer)) {
+        //FQDN resolution is OK
+        //auxServer is SERVER_TO_CHECK's IPAddress
+      }
+      else {
+        //Even if FQDN fails, we'll try the URL check to the server
+        IPAddress auxServer2=IPAddress(40,112,243,49); //It's SERVER_TO_CHECK's IP address - connectivity.office.com
+        auxServer=auxServer2;
+      }
+
+      //Now let's check the SERVER_TO_CHECK web site
+      if (checkURL(debugModeOn,false,0,auxServer,80,String("GET /"))==ERROR_WEB_SERVER) {
+        //Connectivity KO
+        errorsConnectivityCnt++;EEPROM.write(0x53A,errorsConnectivityCnt);eepromUpdate=true; //Stats
+        connectivityOK=false;
+      }
+  }
+
+  if (connectivityOK) {
+    //Check local web server
+    if (checkURL(debugModeOn,false,0,WiFi.localIP(),80,String("GET ")+String(WEBSERVER_TEST_PAGE))==ERROR_WEB_SERVER) {
+        //Local web server KO
+        errorsWebServerCnt++; //Stats - Variable is written in EEPROM in the main loop
+        webServerOK=false;
+        if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connectivity is OK, but web server is KO.  Reinit network services, heap="+String(esp_get_free_heap_size()));}
+    }
+    else {
+      if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connectivity and web server are OK, heap="+String(esp_get_free_heap_size()));}
+    }
+  }
+  else {
+    if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - All network checks are KO. Reinit network services, heap="+String(esp_get_free_heap_size()));}
+  }
+  
+  lastTimeConnectiviyCheck=nowTimeGlobal;
+  if (!webServerOK) return ERROR_WEB_SERVER;
+  else if (!connectivityOK) return ERROR_NO_CONNECTIVITY;
+  else return (NO_ERROR);
 }

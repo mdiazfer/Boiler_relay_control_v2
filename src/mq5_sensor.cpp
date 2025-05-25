@@ -23,9 +23,9 @@ void calculate_R0() {
   R0Calibrated=RS_airCalibrated/6.5; // The ratio of RS/R0 is 6.5 in a clear air as per datasheet
 
   if (debugModeOn) {
-    boardSerialPort.println("         [calculate_R0] - GAS Samples taken.");
-    boardSerialPort.println("                            gasSample="+String(gasSample)+", gasVolt="+String(gasVolt)+"v, RS_air="+String(RS_air)+", R0="+String(R0));
-    boardSerialPort.println("                            gasSample="+String(gasSample)+", gasVoltCalibrated="+String(gasVoltCalibrated)+"mv, RS_airCalibrated="+String(RS_airCalibrated)+", R0Calibrated="+String(R0Calibrated));
+    printLogln("         [calculate_R0] - GAS Samples taken.");
+    printLogln("                            gasSample="+String(gasSample)+", gasVolt="+String(gasVolt)+"v, RS_air="+String(RS_air)+", R0="+String(R0));
+    printLogln("                            gasSample="+String(gasSample)+", gasVoltCalibrated="+String(gasVoltCalibrated)+"mv, RS_airCalibrated="+String(RS_airCalibrated)+", R0Calibrated="+String(R0Calibrated));
   }
 }
 
@@ -43,8 +43,8 @@ float get_resistence_ratio(boolean debugModeOn) {
   RS_CurrentCalibrated=(3300-gasVoltCalibrated)/gasVoltCalibrated;
   ratio=RS_CurrentCalibrated/R0_CALIBRATED;
   if (debugModeOn) {
-    boardSerialPort.println("\n         [get_resistence_ratio] - GAS Samples taken.");
-    boardSerialPort.println("              gasVoltCalibrated="+String(gasVoltCalibrated)+"mv, RS_CurrentCalibrated="+String(RS_CurrentCalibrated)+", R0_CALIBRATED="+String(R0_CALIBRATED)+", ratio RS_CurrentCalibrated/R0_CALIBRATED="+String(ratio));
+    printLogln("\n         [get_resistence_ratio] - GAS Samples taken.");
+    printLog("              gasVoltCalibrated="+String(gasVoltCalibrated)+"mv, RS_CurrentCalibrated="+String(RS_CurrentCalibrated)+", R0_CALIBRATED="+String(R0_CALIBRATED)+", ratio RS_CurrentCalibrated/R0_CALIBRATED="+String(ratio));
   }
   return ratio;
 }
