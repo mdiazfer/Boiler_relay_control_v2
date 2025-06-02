@@ -1,5 +1,8 @@
 Change Log
 ----------
+v0.9.7  - Added Dasboard web page
+          + Web Event for sample update
+          + Web Socket for toogle the Relay switches
 v0.9.6  - Error counters save in EEPROM
         - Added button to reset counters
         - Added specific counter for resets due to web server failing
@@ -29,10 +32,8 @@ v0.8.9  - First stable version with HA support
 
 To do list for boiler relay control
 -----------------------------------
+- Remove year from the MQTT topic for both previous and current years
 - Troubleshooting
-  + ISS002: Unexpected reboot
-  + ISS003: Preventive reset are too often. RCA - seems to be related to the frequent WiFi disconnections due to the weak WiFi signal
-  + ISS004: Web server KO afeter WiFi reconnection
 - Time counters for boiler, similar to the heater ones
 - Track time and last function executed when the Absolute min heap size ever seen is detected
 - Track time and last function executed when the preventive software restart is executed
@@ -81,6 +82,15 @@ Done
     *   [printCurrentWiFi] - Signal strength (RSSI): e memory for RF calibration data => Use WiFi.SSID() instead of wifiNet.RSSI ?
     *   [printCurrentWiFi] - Encryption Type: 3
     *   [printCurrentWiFi] - WiFi Channel: E (%u) %s: %s: store calibration mac failed(0x%x)
+  + ISS002: Unexpected reboot
+    * Fixed in v0.9.6. Not delete webServer nor webSocket objects
+  + ISS003: Preventive reset are too often. RCA - seems to be related to the frequent WiFi disconnections due to the weak WiFi signal
+    * Fixed in v0.9.6. Decreased WEBSERVER_MIN_HEAP_SIZE threshold 
+  + ISS005: Web server KO after WiFi reconnection
+    * Fixed in v0.9.6. Not delete webServer nor webSocket objects
+  + ISS006: Side Col height for Graphs, Global Info, Basic Configuration, Console html pages
+  + ISS007: HA takes doesn't refresh quickly Heater Status/Icon after IoT restart (ie. firmware upgred)
+    * Fixed in v0.9.7 - MQTT HADiscovery packets are sent several times after bootup
 
 
   Discarded

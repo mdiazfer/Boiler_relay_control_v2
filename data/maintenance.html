@@ -24,6 +24,7 @@
           <font style="color:#3f9bd5;""><label id='currentDate'"></label></font>
         </p>
         <script>
+          getTime();
           function getTime() {
             var now=new Date();
             document.getElementById("currentDate").innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+now.toLocaleDateString()+" - "+now.toLocaleTimeString()+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -31,7 +32,7 @@
           }
         </script>
         <p style="text-align: center; font-size: smaller;"><br></p>
-      </div>
+      </div> <!--tswheader-->
       <div id="tswsidecolmaint">
         <div id="tswsideproper">
           <!-- start of side column: insert your navigation menu, etc, here -->
@@ -47,7 +48,7 @@
           <!-- end of hamburger menu button -->
           <div id="tswcssbuttons">
             <ul>
-              <li><a href="index.html">Measurements</a></li>
+              <li><a href="index.html">Dashboard</a></li>
               <li><a href="graphs.html">Graphs</a></li>
               <li><a href="info.html">Global Info</a></li>
               <li><a href="basic.html">Basic configuration</a></li>

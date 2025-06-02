@@ -1078,7 +1078,7 @@ void variablesInit() {
 
       //bool
       debugModeOn=DEBUG_MODE_ON;logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
-      thermostateStatus=false;thermostateInterrupt=false;gasClear=false;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
+      boilerStatus=false;thermostateStatus=false;thermostateInterrupt=false;gasClear=false;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
       webLogsOn=false;eepromUpdate=false;
       //webLogsOn=false;
       //uint8_t
@@ -1389,6 +1389,7 @@ uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean s
           
           //Publish HA Discovery messages - v1.9
           mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),true); //Remove the topics first
+          sleep(1); //wait 1 sec.
           mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Update the topics then
         }
 

@@ -91,11 +91,13 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
         digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON");
         printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
       }
       else if (String(aux).equalsIgnoreCase(String("R1_OFF"))) {
         digitalWrite(PIN_RL1,HIGH);samples["Relay1"] = String("R1_OFF");
         printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 ON"); //Relay1 is set on to not allow Ext. Thermostat (R1_OFF)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
       }
       else if (String(aux).equalsIgnoreCase(String("R2_ON"))) {
         digitalWrite(PIN_RL2,HIGH);samples["Relay2"] = String("R2_ON");
@@ -103,12 +105,14 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
         printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
         printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 ON"); //Relay2 is set on to shortcut Ext. Thermostat (R2_ON)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
         //thermostateStatus=true;lastThermostatOnTime=millis(); //Only for testing
       }
       else if (String(aux).equalsIgnoreCase(String("R2_OFF"))) {
         digitalWrite(PIN_RL2,LOW);samples["Relay2"] = String("R2_OFF");
         printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 OFF"); //Relay2 is set off to not shortcut Ext. Thermostat (R2_OFF)
         forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
         //thermostateStatus=false; //Only for testing
       }
       else printLogln(String(millis())+" - [onMqttMessage] - Unknown command");

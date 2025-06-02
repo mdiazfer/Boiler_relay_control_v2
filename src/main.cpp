@@ -34,7 +34,7 @@ RTC_DATA_ATTR char TZEnvVar[TZ_ENV_VARIABLE_MAX_LENGTH];
 RTC_DATA_ATTR uint32_t error_setup=NO_ERROR,minHeapSinceUpgrade=0xFFFFFFFF,minHeapSinceBoot=0xFFFFFFFF; //1*4=4B
 RTC_DATA_ATTR uint8_t bootCount=255,resetCount=0,resetPreventiveCount=0,resetPreventiveWebServerCount=0,resetSWCount=0,resetSWWebCount=0,resetSWMqttCount=0,resetSWUpgradeCount=0,resetWebServerCnt=0,
                       errorsWiFiCnt=0,errorsNTPCnt=0,errorsHTTPUptsCnt=0,errorsMQTTCnt=0,SPIFFSErrors=0,errorsWebServerCnt=0,errorsConnectivityCnt=0;
-RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestCheck=false,forceWebServerInit=false,forceMQTTpublish=false,
+RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestCheck=false,forceWebServerInit=false,forceMQTTpublish=false,forceWebEvent=false,
                       ntpEnabled=true,httpCloudEnabled=true,forceNTPCheck=false,ntpSynced=false,
                       mqttServerEnabled=true,forceMQTTConnect=false,secureMqttEnabled=false,bluetoothEnabled=false,webServerEnabled=false,timersEepromUpdate=false,
                       updateHADiscovery=false,deviceReset=false,factoryReset=false,logTagged=false,reconnectWifiAndRestartWebServer=false,resyncNTPServer=false;
@@ -52,7 +52,7 @@ RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,bo
 //RTC_DATA_ATTR AsyncWebSocket *webSocket=nullptr; // Create a WebSocket object for the web console (send logs and receive commands)
 RTC_DATA_ATTR AsyncWebServer webServer(WEBSERVER_PORT); //1*84=84B
 RTC_DATA_ATTR AsyncWebSocket webSocket(WEBSOCKET_CONSOLE_URI); // Create a WebSocket object for the web console (send logs and receive commands)
-//RTC_DATA_ATTR AsyncEventSource webEvents(WEBSERVER_SAMPLES_EVENT); //1*104=104B
+RTC_DATA_ATTR AsyncEventSource webEvents(WEBSERVER_SAMPLES_EVENT); //1*104=104B
 RTC_DATA_ATTR HardwareSerial boardSerialPort(0); // Serial port is using UART0
 RTC_DATA_ATTR String bootLogs; // Initial logs at boot time
 
@@ -60,7 +60,7 @@ RTC_DATA_ATTR String bootLogs; // Initial logs at boot time
 
 //Global variable definitions stored in regular RAM. 520 KB Max
 bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logMessageTRL2_ON=false,logMessageGAP_OFF=false,
-      thermostateStatus=false,thermostateInterrupt=false,gasClear=false,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
+      boilerStatus=false,thermostateStatus=false,thermostateInterrupt=false,gasClear=false,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
       webLogsOn=false,serialLogsOn=debugModeOn,eepromUpdate=false;
 boolean NTPResuming,startTimeConfigure,wifiResuming;
 uint8_t ntpServerIndex,configVariables,auxLoopCounter=0,auxLoopCounter2=0,auxCounter=0,fileUpdateError=0,errorOnActiveCookie=0,errorOnWrongCookie=0;
@@ -287,8 +287,9 @@ void loop() {
     if (tempHumSensor.isConnected()) temperature_sample(false);  //Get Temp & Hum samples
 
     //JSON object is updated just right after taking the samples.
-    //Publish MQTT message with the new samples
+    //Publish MQTT message and webEvent with the new samples
     forceMQTTpublish=true;
+    forceWebEvent=true;
     lastGasSample=nowTimeGlobal;
   }
 
@@ -327,6 +328,7 @@ void loop() {
     if (!gasClear) {
       if (debugModeOn) {printLogln(String(millis())+"  - [loop] - GAS detected after getting readings. MQTT message to be sent");}
       forceMQTTpublish=true;
+      forceWebEvent=true;
     }
     else {
       if (debugModeOn) {printLogln(String(millis())+"  - [loop] - GAS clear after getting readings, so GAS interrupt was wrong, probably cause thermostast interrupt. Don't send MQTT message.");}
@@ -345,9 +347,17 @@ void loop() {
   //Situations for forceMQTTpublish=true:
   // - every SAMPLE_PERIOD
   // - Relays ON/OFF from HA (message received in topic: the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY)
+  nowTimeGlobal=millis();
   if (forceMQTTpublish) {
     mqtt_publish_samples(wifiEnabled,mqttServerEnabled,secureMqttEnabled,false);
     forceMQTTpublish=false;
+  }
+
+  if (forceWebEvent && wifiEnabled && webServerEnabled && WiFi.status()==WL_CONNECTED && webEvents.count()>0) {
+    webEvents.send("ping",NULL,nowTimeGlobal);
+    webEvents.send(JSON.stringify(samples).c_str(),"new_samples",nowTimeGlobal);
+    if (debugModeOn) {printLogln(String(millis())+" - [loop] - new_samples event sent to web clients.");}
+    forceWebEvent=false;
   }
 
   if (eepromUpdate) {EEPROM.commit(); eepromUpdate=false;}

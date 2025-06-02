@@ -30,7 +30,7 @@ extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPrevious
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
 extern bool debugModeOn,logMessageTOFF,logMessageTRL1_ON,logMessageTRL2_ON,logMessageGAP_OFF,
-  thermostateStatus,thermostateInterrupt,gasClear,gasInterrupt,isBeaconAdvertising,webServerResponding,
+  boilerStatus,thermostateStatus,thermostateInterrupt,gasClear,gasInterrupt,isBeaconAdvertising,webServerResponding,
   webLogsOn,serialLogsOn,eepromUpdate;
 extern char activeCookie[COOKIE_SIZE],currentSetCookie[COOKIE_SIZE],firmwareVersion[VERSION_CHAR_LENGTH+1];
 extern uint8_t ntpServerIndex,auxLoopCounter,auxLoopCounter2,auxCounter,configVariables,fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;

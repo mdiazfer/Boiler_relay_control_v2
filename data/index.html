@@ -8,7 +8,7 @@
     <link type="text/css" rel="stylesheet" href="tswnavbar.css" title="Side Menu CSS">
     <script src="gauge.min.js"></script>
   </head>
-  <body onload="getTime()" style="background-color: #1d2324; color: white;">
+  <body onload="getTime()" style="background-color: #1d2324; color: white;">  
     <div id="tswcontainerindex">
       <div id="tswheader">
         <!-- start of header section: insert your logo, etc, here -->
@@ -48,7 +48,7 @@
           <!-- end of hamburger menu button -->
           <div id="tswcssbuttons">
             <ul>
-              <li><a href="index.html">Measurements</a></li>
+              <li><a href="index.html">Dashboard</a></li>
               <li><a href="graphs.html">Graphs</a></li>
               <li><a href="info.html">Global Info</a></li>
               <li><a href="basic.html">Basic configuration</a></li>
@@ -65,29 +65,111 @@
         <div id="tswcontproper">
           <!-- start of content column: insert your content here -->
           <div id="tswmeasurementstitle">
-            <font size="6">Measurements</font>
+            <font size="6">Dashboard</font>
+            <div id="tswcontrols"">
+              <div id="tswcontrols_text"; class="dasboard_text"; style="height: 80%; width: 70%;">
+                  <p><label id='AllowThermostId'>Allow Thermost.</label></p>
+                  <p><label id='ForceHeaterId'>Force Heater</label></p>
+              </div>
+              <div id="tswcontrols_switch";>
+                <p><label class="switch"><input id="thermostatSwitch"; type="checkbox" ~THERMOSTATCHECKED~ onclick="switchThermClicked()"><span class="slider round"></span></input></label></p>
+                <p><label class="switch"><input id="forceSwitch"; type="checkbox" ~FORCEHEATERCHECKED~ onclick="switchForceClicked()"><span class="slider round"></span></input></label></p>
+              </div>
+            </div>    <!--tswcontrols--> <!--*-->
           </div>
+
           <div id="tswupdateheader">
-            <!--<font size="2"; style="font-family:verdana; color:#b69249;"><label>Latest update:</label></font>-->
-            <font size="2"; style="font-family:verdana; color:~INDEX_Text_Update_Color~;"><label>~INDEX_calibrationState~</label></font>
-          </div>
-          <div id="tswupdate">
-            <font size="2"; style="font-family:verdana; color:#FFAB00;"><label id='latestUpdate'></label></font>
-          </div>
-          <p>&nbsp;</p>
+            <div><!--<font size="2"; style="font-family:verdana; color:#b69249;"><label>Latest update:</label></font>-->
+              <font size="2"; style="font-family:verdana; padding-left: 45%; color:~INDEX_Text_Update_Color~;"><label>~INDEX_calibrationState~</label></font>
+            </div>
+            <div id="tswupdate">
+              <font size="2"; style="font-family:verdana; color:#FFAB00;"><label id='latestUpdate'></label></font>
+            </div>
+            <div id="tswcontrols"; style="margin-top: 17%; margin-left: 5%; padding-left: 0%;">
+              <div id="tswcontrols_text"; class="dasboard_text"; style="width: 70%; height: 80%;">
+                <!-- <font size="4"; style="font-family:verdana; color:#bebcbe; float: left;"> -->
+                  <p><label id='boilerStatusId'>Boiler Status:</label></p>
+                  <p><label id='heaterStatusId'>Heater Status:</label></p>
+                <!-- </font> -->
+              </div>
+              <div id="tswcontrols_icons";">
+                <img src="~BOILERICON~" alt="Boiler Status" title="Boiler Status Logo"
+                      id="boilerStatusIcon" style="margin-top: -10%; float: none; width: 50px; height: 50px;">
+                <img src="~HEATERICON~" alt="Heater Status" title="Heater Status Logo"
+                      id="heaterStatusIcon" style="margin-top: -35%; float: none; width: 50px; height: 50px;">
+              </div>
+            </div> <!--tswcontrols--> <!--*-->  
+          </div>  <!--tswupdateheader--> <!--*-->
+
+          <div id="tswboilertimeon">
+            <div id="tswtimeon_title">
+              <font size="3"; style="font-family:verdana; color:#78B0FF; float: none;">Boiler Time On (min)</font>
+            </div>
+            <div id="tswtimeon_col">
+              <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
+                Year: ~BOILERTIMEONYEAR~<br>Month: ~BOILERTIMEONMONTH~
+              </font>
+            </div>
+            <div id="tswtimeon_col">
+              <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
+                Yesterday: ~BOILERTIMEONYESTERDAY~<br>Today: ~BOILERTIMEONTODAY~
+              </font>
+            </div>
+          </div> <!-- tswtimeoncounters -->
+          <div id="tswheatertimeon">
+            <div id="tswtimeon_title">
+              <font size="3"; style="font-family:verdana; color:#78B0FF; float: none;">Heater Time On (min)</font>
+            </div>
+            <div id="tswtimeon_col">
+              <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
+                Year: ~HEATERTIMEONYEAR~<br>Month: ~HEATERTIMEONMONTH~
+              </font>
+            </div>
+            <div id="tswtimeon_col">
+              <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
+                Yesterday: ~HEATERTIMEONYESTERDAY~<br>Today: ~HEATERTIMEONTODAY~
+              </font>
+            </div>
+        </div> <!-- tswtimeoncounters -->
+
           <div id="tswmeasurements">
             <div class="card-content">
-              <div class="card-grid" id="id-card-grid">
-                <div class="card" id="id-card-CO2">
-                  <p class="card-title" id="id-card-title-CO2" style="text-align: center;">CO2</p>
-                  <div id="id-canvas-CO2" style="text-align: center;"> <canvas id="gauge-CO2"></canvas> </div>
+              <div class="card-grid2" id="id-card-grid2">
+                <div class="card-grid" id="id-card-grid">
+                  <div class="card" id="id-card-GAS">
+                    <p class="card-title" id="id-card-title-GAS" style="text-align: center; color: ~CLEANAIRCOLOR~">~CLEANAIRTEXT~</p>
+                    <!--<div id="id-canvas-GAS" style="text-align: center;"> <canvas id="gauge-GAS"></canvas> </div>
+                    -->
+                    <img src="~CLEANAIRICON~" alt="~CLEANAIRTEXT~" title="Clean Air Logo"
+                      id="cleanair" style="margin-top: -4%; width: 122px; height: 122px;">
+                  </div>
+                  <div class="card" id="id-card-LPG">
+                    <p class="card-title" id="id-card-title-LPG" style="text-align: center; color:#78B0FF">LPG</p>
+                    <div id="id-canvas-LPG" style="text-align: center;"> <canvas id="gauge-LPG"></canvas> </div>
+                  </div>
+                  <div class="card" id="id-card-CO">
+                    <p class="card-title" id="id-card-title-CO" style="text-align: center; color:#78B0FF">CO</p>
+                    <div id="id-canvas-CO" style="text-align: center;"> <canvas id="gauge-CO"></canvas> </div>
+                  </div>
+                  <div class="card" id="id-card-ALCOHOL">
+                    <p class="card-title" id="id-card-title-ALCOHOL" style="text-align: center; color:#78B0FF">ALCOHOL</p>
+                    <div id="id-canvas-ALCOHOL" style="text-align: center;"> <canvas id="gauge-ALCOHOL"></canvas> </div>
+                  </div>
+                  <div class="card" id="id-card-CH4">
+                    <p class="card-title" id="id-card-title-CH4" style="text-align: center; color:#78B0FF">CH4</p>
+                    <div id="id-canvas-CH4" style="text-align: center;"> <canvas id="gauge-CH4"></canvas> </div>
+                  </div>
+                  <div class="card" id="id-card-H2">
+                    <p class="card-title" id="id-card-title-H2" style="text-align: center; color:#78B0FF">H2</p>
+                    <div id="id-canvas-H2" style="text-align: center;"> <canvas id="gauge-H2"></canvas> </div>
+                  </div>
                 </div>
-                <div class="card" id="id-card-temperature">
-                  <p class="card-title" id="id-card-title-temperature" style="text-align: center;">Temperat.</p>
+                <div class="card2" id="id-card-temperature">
+                  <p class="card-title2" id="id-card-title-temperature" style="text-align: center;">Temperat.</p>
                   <div id="id-canvas-temperature" style="text-align: center;"> <canvas id="gauge-temperature"></canvas> </div>
                 </div>
-                <div class="card" id="id-card-humidity">
-                  <p class="card-title" id="id-card-title-humidity" style="text-align: center;">Humidity</p>
+                <div class="card2" id="id-card-humidity">
+                  <p class="card-title2" id="id-card-title-humidity" style="text-align: center;">Humidity</p>
                   <div id="id-canvas-humidity" style="text-align: center;"> <canvas id="gauge-humidity"></canvas> </div>
                 </div>
               </div>
@@ -95,18 +177,18 @@
             <script src="result_script.js"></script>
           </div> <!--tswmeasurements--> <!--*-->
           <p></p>
-          <!-- end of content column: put your content above this line --> </div>
+          <!-- end of content column: put your content above this line -->
         </div> <!--tswcontproper-->
-        <div style="clear: both;"></div>
-        <div id="tswfooter">
-          <!-- start of footer section: insert your copyright notice, etc, here -->
-          <p style="font-size: 80%; text-align: center;">The IoT Factory ©</p>
-          <p style="font-size: 55%; text-align: center;">
-            <a href="http://the-iotfactory.com" title="The IoT Factory" target="_blank">http://the-iotfactory.com</a>
-          </p>
-          <!-- end of footer section: insert your copyright notice, etc, above this line -->
-        </div> <!--tswfooter-->
       </div>  <!--tswcontent-->
+      <div style="clear: both;"></div>
+      <div id="tswfooter">
+        <!-- start of footer section: insert your copyright notice, etc, here -->
+        <p style="font-size: 80%; text-align: center;">The IoT Factory ©</p>
+        <p style="font-size: 55%; text-align: center;">
+          <a href="http://the-iotfactory.com" title="The IoT Factory" target="_blank">http://the-iotfactory.com</a>
+        </p>
+        <!-- end of footer section: insert your copyright notice, etc, above this line -->
+      </div> <!--tswfooter-->
     </div> <!--tswcontainer-->
   </body>
 </html>

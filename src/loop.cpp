@@ -379,6 +379,8 @@ void gas_sample(bool debugModeOn) {
   samples["upTimeSeconds"] =  String(nowInSeconds);
   samples["device_name"] = device;
   samples["version"] = String(VERSION);
+  samples["ipAddress"] = WiFi.localIP().toString();
+  samples["boilerStatus"] = boilerStatus==1?"ON":"OFF";
   samples["H2"] = String(h2_ppm);
   samples["LPG"] = String(lpg_ppm);
   samples["CH4"] = String(ch4_ppm);
@@ -389,7 +391,7 @@ void gas_sample(bool debugModeOn) {
   iconGasInterrupt=gasInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
   samples["Thermostate_interrupt"] = thermostateInterrupt==1?"ON":"OFF";
   iconThermInterrupt=thermostateInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
-  samples["Thermostate_status"] = thermostateStatus==1?"ON":"OFF";
+  samples["Thermostate_status"] = thermostateStatus==true?"ON":"OFF";
   if (thermostateStatus) iconThermStatus=String("mdi:radiator");
   else {if (digitalRead(PIN_RL1) && !digitalRead(PIN_RL2)) iconThermStatus=String("mdi:radiator-off"); else iconThermStatus=String("mdi:radiator-disabled");}
   samples["SSID"] = WiFi.SSID();
@@ -676,8 +678,9 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
 
       //Publish HA Discovery messages at random basis to make sure HA always recives the Discovery Packet
       // even if it didn't receive it after it rebooted due to network issues or whatever - v1.9.2
-      if ((random(0,33) < 2) || updateHADiscovery) { //random < 2 ==> probability ~3%, ==> ~1 every 10 min (at samples/20s rate)) v1.9.2
+      if ((random(0,33) < 2) || (millis()<HA_ADVST_WINDOW) || updateHADiscovery) { //random < 2 ==> probability ~3%, ==> ~1 every 10 min (at samples/20s rate))
                                                     //updateHADiscovery: True if year changed. Update Timer Counters Year in HA MQTT
+                                                    //HADiscovery is sent several times (HA_ADVST_WINDOW) after boot up to make sure all the topics are processed - v0.9.7 - ISS007
         mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); 
         if (updateHADiscovery) updateHADiscovery=false;
       }

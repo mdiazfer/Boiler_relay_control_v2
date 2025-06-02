@@ -35,7 +35,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t id) {
     
     if (debugModeOn) {printLogln(String(millis())+" - [handleWebSocketMessage] - Data received over the web socket");}
     
-    //Check if the message is "stop"
+    //Check the messages and do actions
     if (strcmp((char*)data, "getBootLogs") == 0) {
       if (debugModeOn) {printLogln(String("        [handleWebSocketMessage] - 'getBootLogs' message received"));}
       //Do something here
@@ -51,6 +51,39 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t id) {
       if (debugModeOn) {printLogln(String("        [handleWebSocketMessage] - 'switchWebLogsOff' message received"));}
       //Do something here
       webLogsOn=false;
+    }
+    else if (strcmp((char*)data, "R1_ON") == 0) {
+      if (debugModeOn) {printLogln(String("        [handleWebSocketMessage] - 'R1_ON' message received. Set Relay1 OFF"));}
+      //Do something here
+      digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON");
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+      webSocket.close(id,1000,"Relay1 set ON successfully");
+    }
+    else if (strcmp((char*)data, "R1_OFF") == 0) {
+      if (debugModeOn) {printLogln(String("        [handleWebSocketMessage] - 'R1_OFF' message received. Set Relay1 ON"));}
+      //Do something here
+      digitalWrite(PIN_RL1,HIGH);samples["Relay1"] = String("R1_OFF");
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+      webSocket.close(id,1000,"Relay1 set OFF successfully");
+    }
+    else if (strcmp((char*)data, "R2_ON") == 0) {
+      if (debugModeOn) {printLogln(String("        [handleWebSocketMessage] - 'R2_ON' message received. Set Relay2 ON and Relay1 OFF"));}
+      //Do something here
+      digitalWrite(PIN_RL2,HIGH);samples["Relay2"] = String("R2_ON");
+      digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON"); //Relay1 is set off to allow Ext. Thermostat (R1_ON) when the Relay2 is set
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+      webSocket.close(id,1000,"Relay2 set ON successfully");
+    }
+    else if (strcmp((char*)data, "R2_OFF") == 0) {
+      if (debugModeOn) {printLogln(String("        [handleWebSocketMessage] - 'R2_OFF' message received. Set Relay2 ON and Relay1 OFF"));}
+      //Do something here
+      digitalWrite(PIN_RL2,LOW);samples["Relay2"] = String("R2_OFF");//Relay2 is set off to not shortcut Ext. Thermostat (R2_OFF)
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+      webSocket.close(id,1000,"Relay1 set OFF successfully");
     }
   }
   webServerResponding=false; //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed againAwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -84,6 +117,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     case WS_EVT_DATA:
       handleWebSocketMessage(arg, data, len, client->id());
       break;
+    case WS_EVT_PING:
+      if (debugModeOn) {printLogln(String(millis())+" - [onEvent] - WebSocket PING event, client #"+String(client->id()));}
+      //Do something
+      break;
     case WS_EVT_PONG:
       if (debugModeOn) {printLogln(String(millis())+" - [onEvent] - WebSocket PONG event, client #"+String(client->id()));}
       //Do something
@@ -91,7 +128,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     case WS_EVT_ERROR:
       if (debugModeOn) {printLogln(String(millis())+" - [onEvent] - WebSocket ERROR event, client #"+String(client->id()));}
       //Do something
-      break;
+      break;  
   }
   webServerResponding=false; //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed again
 }

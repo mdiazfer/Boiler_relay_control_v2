@@ -19,6 +19,7 @@ extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot;
 extern RTC_DATA_ATTR uint64_t nowTimeGlobal,lastTimeHTTPClouCheck;
 extern RTC_DATA_ATTR float valueT,valueHum;
 extern RTC_DATA_ATTR AsyncWebServer webServer;
+extern RTC_DATA_ATTR AsyncEventSource webEvents;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 extern RTC_DATA_ATTR char BLEProximityUUID[];
 extern RTC_DATA_ATTR AsyncMqttClient mqttClient;
@@ -28,8 +29,9 @@ extern RTC_DATA_ATTR enum MqttSyncStatus MqttSyncCurrentStatus;
 extern RTC_DATA_ATTR String tempHumSensorType;
 extern RTC_DATA_ATTR enum CloudClockStatus CloudClockCurrentStatus;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
+extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,boilerTimeOnYear;
 
-extern bool webServerResponding,debugModeOn;
+extern bool webServerResponding,debugModeOn,boilerStatus,thermostateStatus,gasClear;
 extern char activeCookie[],currentSetCookie[];
 extern uint8_t fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
 extern int updateCommand;

@@ -29,7 +29,7 @@ extern RTC_DATA_ATTR struct tm startTimeInfo;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
-extern bool thermostateStatus,thermostateInterrupt,gasInterrupt,gasClear,httpCloudEnabled,mqttServerEnabled,debugModeOn,webLogsOn,eepromUpdate;
+extern bool boilerStatus,thermostateStatus,thermostateInterrupt,gasInterrupt,gasClear,httpCloudEnabled,mqttServerEnabled,debugModeOn,webLogsOn,eepromUpdate;
 extern uint8_t auxLoopCounter,auxLoopCounter2,auxCounter;
 extern enum CloudClockStatus previousCloudClockCurrentStatus;
 extern uint16_t rebounds;

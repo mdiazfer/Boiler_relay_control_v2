@@ -112,8 +112,8 @@
 #define WEBSERVER_COUNTERRESET_PAGE "/reset_counters"
 #define WEBSERVER_SAMPLES_EVENT "/sampleEvents"
 #define WEBSERVER_SAMPLES_PAGE "/samples"
-//#define WEBSERVER_GAUGESCRIPT_PAGE "/gauge.min.js"
-//#define WEBSERVER_RESULTSCRIPT_PAGE "/result_script.js"
+#define WEBSERVER_GAUGESCRIPT_PAGE "/gauge.min.js"
+#define WEBSERVER_RESULTSCRIPT_PAGE "/result_script.js"
 #define WEBSOCKET_CONSOLE_URI "/wsconsole"
 #define COOKIE_SIZE sizeof(DEVICE_NAME_PREFIX)+44 //54 //32 Chars + null
 #define CLOUD_SERVICES_URL  "http://the-iotfactory.com/lar-boil/"
@@ -177,6 +177,7 @@
 #define SAMPLE_PERIOD  20000 //Millisecons - Interval between gas/temp/hum samples
 #define CONNECTIVITY_CHECK_PERIOD 240000 //Millisecons - Interval between connectiviy checks
 #define ADC_SAMPLES 100
+#define HA_ADVST_WINDOW 90000 //Milliseconds - Time gap to send MQTT HA messages since bootup to make sure all the topics are processed - v0.9.7
 
 //Binary header stuff
 //https://github.com/espressif/esp-idf/blob/8fbb63c2a701c22ccf4ce249f43aded73e134a34/components/bootloader_support/include/esp_image_format.h#L58

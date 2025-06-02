@@ -15,11 +15,76 @@ String processorIndex(const String& var){
    *****************************************************/ 
 
   log_v(">> processorIndex");
-  if(var == "INDEX_Text_Update_Color") {
-    return String("#e4f94a");  //Yellowish color
-  }
   if(var == "INDEX_calibrationState") {
-    return String("#b69249"); //Orange color
+    return String("Latest update:");
+  }
+  if(var == "THERMOSTATCHECKED") {
+    if (!digitalRead(PIN_RL1)) return String("checked"); //RL1 ON
+    else return String();  //RL1 OFF
+  }
+  if(var == "FORCEHEATERCHECKED") {
+    if (digitalRead(PIN_RL2)) return String("checked"); //RL2 ON
+    else return String();  //RL2 OFF
+  }
+  if(var == "BOILERICON") {
+    if (boilerStatus) return String("boiler-orange.png");
+    else return String("boiler-blue.png");
+  }
+  if(var == "HEATERICON") {
+    if (thermostateStatus) return String("radiator-orange.png");
+    else return String("radiator-blue.png");
+  }
+  if(var == "CLEANAIRCOLOR") {
+    if (gasClear) return String("#6ED81A"); //green
+    else return String("#C30016"); //red
+  }
+  if(var == "CLEANAIRTEXT") {
+    if (gasClear) return String("Clean AIR");
+    else return String("GAS leak");
+  }
+  if(var == "CLEANAIRICON") {
+    if (gasClear) return String("leaf-circle-green.png");
+    else return String("leaf-circle-red.png");
+  }
+  /*
+  struct timeOnCounters {
+      uint16_t year;                 //Year of the counters. i.e.: 2025
+      uint32_t today;               //Current day of the today counter. i.e.: 20250427
+      uint32_t yesterday;           //Current day of the yesterday counter. i.e.: 20250426
+      uint32_t counterMonths[12];   //Total time on (seconds) of the month. Months 0-11
+      uint32_t counterYesterday;    //Total time on (seconds) of yesterday
+      uint32_t counterToday;        //Total time on (seconds) of today
+    }; //68 B
+  */
+  if(var == "BOILERTIMEONYEAR") {
+    uint32_t total=0;for (int i=0;i<12;i++) total+=boilerTimeOnYear.counterMonths[i];
+    return String(total/60); //minutes
+  }
+  if(var == "BOILERTIMEONMONTH") {
+    uint32_t aux1=boilerTimeOnYear.today/10000;
+    uint32_t month=(boilerTimeOnYear.today-aux1*10000)/100;
+    return String(boilerTimeOnYear.counterMonths[month-1]/60);
+  }
+  if(var == "BOILERTIMEONYESTERDAY") {
+    return String(boilerTimeOnYear.counterYesterday/60);
+  }
+  if(var == "BOILERTIMEONTODAY") {
+    return String(boilerTimeOnYear.counterToday/60);
+  }
+  if(var == "HEATERTIMEONYEAR") {
+    uint32_t total=0;for (int i=0;i<12;i++) total+=heaterTimeOnYear.counterMonths[i];
+    return String(total/60); //minutes
+  }
+  if(var == "HEATERTIMEONMONTH") {
+    uint32_t aux1=heaterTimeOnYear.today/10000;
+    uint32_t month=(heaterTimeOnYear.today-aux1*10000)/100;
+    return String(heaterTimeOnYear.counterMonths[month-1]/60);
+  }
+  if(var == "HEATERTIMEONYESTERDAY") {
+    return String(heaterTimeOnYear.counterYesterday/60);
+  }
+  if(var == "HEATERTIMEONTODAY") {
+    return String(heaterTimeOnYear.counterToday/60);
   }
   else {
     return String();
@@ -812,6 +877,81 @@ uint32_t initWebServer() {
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(200, "application/json", JSON.stringify(samples));
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  // Route to gauge.min.js file
+  webServer.on(WEBSERVER_GAUGESCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_GAUGESCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+  
+  // Route to resutl_script.js file
+  webServer.on(WEBSERVER_RESULTSCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_RESULTSCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  // Route to resutl_script.js file
+  webServer.on(WEBSERVER_RESULTSCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_RESULTSCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+  
+  webServer.on("/boiler-blue.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/boiler-blue.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  webServer.on("/boiler-orange.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/boiler-orange.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  webServer.on("/leaf-circle-green.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/leaf-circle-green.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  webServer.on("/leaf-circle-red.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/leaf-circle-red.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+  
+  webServer.on("/radiator-blue.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/radiator-blue.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+  
+  webServer.on("/radiator-orange.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/radiator-orange.png", "image/png");
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -1766,7 +1906,6 @@ uint32_t initWebServer() {
   });
 
   // Handle Web Server Events
-  /*
   webEvents.onConnect([](AsyncEventSourceClient *client){
     if (debugModeOn) printLogln(String(millis())+" - [webEvents.onConnect] - Client reconnected! Last message ID that it got is: "+String(client->lastId()));
     if (debugModeOn) printLogln(String(millis())+" - [webEvents.onConnect] - Client reconnected! client->client()->remoteIP()="+client->client()->remoteIP().toString());
@@ -1780,7 +1919,6 @@ uint32_t initWebServer() {
     client->send("hello!", NULL, millis(), 10000);
   });
   webServer.addHandler(&webEvents);
-  */
   
   // Start web server
   if (debugModeOn) {printLogln(String(millis())+" - [initWebServer] - Begin webServer");}
