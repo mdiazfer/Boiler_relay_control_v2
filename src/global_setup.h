@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "0.9.6"
+#define VERSION "0.9.8"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -93,6 +93,7 @@
 #define WEBSERVER_LOGO_ICON "/The_IoT_Factory.png"
 #define WEBSERVER_INDEX_PAGE "/index.html"
 #define WEBSERVER_GRAPHS_PAGE "/graphs.html"
+#define WEBSERVER_STATS_PAGE "/stats.html"
 #define WEBSERVER_INFO_PAGE "/info.html"
 #define WEBSERVER_BASICCONFIG_PAGE "/basic.html"
 #define WEBSERVER_CLOUDCONFIG_PAGE "/cloud.html"

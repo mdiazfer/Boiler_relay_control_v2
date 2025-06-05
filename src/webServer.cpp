@@ -91,6 +91,121 @@ String processorIndex(const String& var){
   }
 } //processorIndex
 
+String processorStats(const String& var){
+  /******************************************************
+   Function processorStats
+   Target: Serve the stats web page
+   Parameters:
+    String var: It's the tag found in the html page. i.e.: ~INDEX_Text_Update_Color~
+   Returns:
+    (String) File content
+   *****************************************************/ 
+
+  log_v(">> processorStats");
+  
+  /*
+  struct timeOnCounters {
+      uint16_t year;                 //Year of the counters. i.e.: 2025
+      uint32_t today;               //Current day of the today counter. i.e.: 20250427
+      uint32_t yesterday;           //Current day of the yesterday counter. i.e.: 20250426
+      uint32_t counterMonths[12];   //Total time on (seconds) of the month. Months 0-11
+      uint32_t counterYesterday;    //Total time on (seconds) of yesterday
+      uint32_t counterToday;        //Total time on (seconds) of today
+    } boilerTimeOnYear,heaterTimeOnYear;
+  */
+  if(var == "BOILERTIMEONJAN") {
+    return String ("<td align=left>&nbsp;January</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[0]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[0]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONFEB") {
+    return String ("<td align=left>&nbsp;February</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[1]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[1]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONMAR") {
+    return String ("<td align=left>&nbsp;March</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[2]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[2]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONAPR") {
+    return String ("<td align=left>&nbsp;April</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[3]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[3]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONMAY") {
+    return String ("<td align=left>&nbsp;May</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[4]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[4]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONJUN") {
+    return String ("<td align=left>&nbsp;June</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[5]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[5]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONJUL") {
+    return String ("<td align=left>&nbsp;July</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[6]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[6]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONAUG") {
+    return String ("<td align=left>&nbsp;August</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[7]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[7]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONSEP") {
+    return String ("<td align=left>&nbsp;Septem.</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[8]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[8]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONOCT") {
+    return String ("<td align=left>&nbsp;October</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[9]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[9]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONNOV") {
+    return String ("<td align=left>&nbsp;Novem.</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[10]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[10]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONDEC") {
+    return String ("<td align=left>&nbsp;Decem.</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[11]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[11]/3600,1)+"</td>");
+  }
+  if(var == "BOILERTIMEONYEAR") {
+    uint8_t auxPrev=0,aux=0;
+    uint32_t totalPrev=0;for (int i=0;i<12;i++) {if (boilerTimeOnPreviousYear.counterMonths[i]!=0) auxPrev++; totalPrev+=boilerTimeOnPreviousYear.counterMonths[i];}
+    uint32_t total=0;for (int i=0;i<12;i++) {if (boilerTimeOnYear.counterMonths[i]!=0) aux++; total+=boilerTimeOnYear.counterMonths[i];}
+    if (auxPrev==0) auxPrev=1; if (aux==0) aux=1; //To avoid dividing by zero exception
+    return String ("<td align=left>&nbsp;TOTAL</td><td class=\"column-grey\" align=center>"+String((float) totalPrev/(108000*auxPrev),1)+"</td><td align=center>"+String((float) totalPrev/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) total/(108000*aux),1)+"</td><td align=center>"+String((float) total/3600,1)+"</td>");
+  }
+
+  if(var == "HEATERTIMEONJAN") {
+    return String ("<td align=left>&nbsp;January</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[0]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[0]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONFEB") {
+    return String ("<td align=left>&nbsp;February</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[1]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[1]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONMAR") {
+    return String ("<td align=left>&nbsp;March</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[2]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[2]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONAPR") {
+    return String ("<td align=left>&nbsp;April</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[3]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[3]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONMAY") {
+    return String ("<td align=left>&nbsp;May</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[4]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[4]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONJUN") {
+    return String ("<td align=left>&nbsp;June</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[5]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[5]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONJUL") {
+    return String ("<td align=left>&nbsp;July</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[6]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[6]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONAUG") {
+    return String ("<td align=left>&nbsp;August</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[7]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[7]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONSEP") {
+    return String ("<td align=left>&nbsp;Septem.</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[8]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[8]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONOCT") {
+    return String ("<td align=left>&nbsp;October</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[9]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[9]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONNOV") {
+    return String ("<td align=left>&nbsp;Novem.</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[10]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[10]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONDEC") {
+    return String ("<td align=left>&nbsp;Decem.</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[11]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[11]/3600,1)+"</td>");
+  }
+  if(var == "HEATERTIMEONYEAR") {
+    uint8_t auxPrev=0,aux=0;
+    uint32_t totalPrev=0;for (int i=0;i<12;i++) {if (heaterTimeOnPreviousYear.counterMonths[i]!=0) auxPrev++; totalPrev+=heaterTimeOnPreviousYear.counterMonths[i];}
+    uint32_t total=0;for (int i=0;i<12;i++) {if (heaterTimeOnYear.counterMonths[i]!=0) aux++; total+=heaterTimeOnYear.counterMonths[i];}
+    if (auxPrev==0) auxPrev=1; if (aux==0) aux=1; //To avoid dividing by zero exception
+    return String ("<td align=left>&nbsp;TOTAL</td><td class=\"column-grey\" align=center>"+String((float) totalPrev/(108000*auxPrev),1)+"</td><td align=center>"+String((float) totalPrev/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) total/(108000*aux),1)+"</td><td align=center>"+String((float) total/3600,1)+"</td>");
+  }
+  else {
+    return String();
+  }
+} //processorStats
+
+
 String processorTest(const String& var){
   /******************************************************
    Function processorTest
@@ -755,6 +870,14 @@ uint32_t initWebServer() {
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_GRAPHS_PAGE, String(), false, processorGraphs);
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  webServer.on(WEBSERVER_STATS_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_STATS_PAGE, String(), false, processorStats);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   

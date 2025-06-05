@@ -1,5 +1,6 @@
 Change Log
 ----------
+v0.9.8  - Added Stats web page
 v0.9.7  - Added Dasboard web page
           + Web Event for sample update
           + Web Socket for toogle the Relay switches

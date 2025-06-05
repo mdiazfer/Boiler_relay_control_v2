@@ -64,6 +64,17 @@ div#tswsidecolindex {
   background-color: #34383b;
 }
 
+div#tswsidecolstats {
+  /*float: right;*/
+  float: left;
+  margin: auto auto auto 0%;
+  padding-top: 1%;
+  width: 27%;
+  height: 571px;
+  color: white;
+  background-color: #34383b;
+}
+
 div#tswsidecolgraphs {
   float: left;
   margin: 0% 3% 0% 0%;
@@ -165,6 +176,46 @@ div#tswmeasurementstitle {
   border-color: #a2ee31;
 }
 
+div#tswstatsstitle {
+  float: left;
+  width: 45%;
+  color: white;
+  background-color: #34383b;
+  padding-left: 1%;
+
+  border-style: none;
+  border-width: 1px;
+  border-color: #a2ee31;
+}
+
+div#tswstats {
+  float: left;
+  width: 100%;
+  
+  border-style: none;
+  border-width: 1px;
+  border-color: #e2a0e1;
+}
+
+div#tswstatsboiler {
+  float: left;
+  width: 49%;
+
+  border-style: none;
+  border-width: 1px;
+  border-color: #99ee31;
+
+}
+
+div#tswstatsheater {
+  float: right;
+  width: 49%;
+
+  border-style: none;
+  border-width: 1px;
+  border-color: #31e4ee;
+}
+
 div#tswupdateheader {
   float: right;
   width: 45%;
@@ -236,6 +287,15 @@ div#tswboilertimeon {
   border-color: #31eee1;
 }
 
+div#tswheatertimeon {
+  float:left;
+  padding: 0% 0% 0% 1%;
+  width: 45%;
+  border-style: none;
+  border-width: 1px;
+  border-color: #31eee1;
+}
+
 div#tswtimeon_title {
   float:left;
   padding: 0% 0% 0% 0%;
@@ -293,6 +353,12 @@ div#tswcontainer {
 }
 
 div#tswcontainerindex {
+  width: 800px;
+  margin: auto;
+  background-color: #1d2324;
+}
+
+div#tswcontainerstats {
   width: 800px;
   margin: auto;
   background-color: #1d2324;
@@ -536,6 +602,52 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+.styled-table {
+  margin: 10% 0% 3.5% 2%;
+  width: 97%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.9em;
+  font-family: sans-serif;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+.styled-table thead tr {
+  /* background-color: #1E81F0; */
+  background-color: #3772d0;
+  color: #ffffff;
+  text-align: left;
+}
+.column-grey {
+  color: #a0a1a4;
+}
+.styled-table th,
+.styled-table td {
+    padding: 2.25% 0% 2.25% 0%;
+    width: 10px;
+}
+.styled-table tbody tr {
+  /* background-color: #f4f4fa; 
+  color: #1E81F0; */
+  background-color: #ffffff;
+  color: #3a3a3c;
+  border-bottom: 1px none #dddddd;
+}
+.styled-table tbody tr:nth-of-type(even) {
+  /* background-color: #89C0Fe; 
+  color: #e9e9ff; */
+  background-color: #cbc7c7;
+  
+  color: #3a3a3c;;
+
+}
+.styled-table tbody tr:last-of-type {
+  /*border-bottom: 2px none #009879;*/
+  border-bottom: 2px none #1E81F0;
+  color: #3772d0;
+  font-weight: bold;
+}
+
+
 @media only screen and ( max-width : 629px ) {
   div#tswcontainer {
     float: none;
@@ -708,7 +820,7 @@ input:checked + .slider:before {
     border-width: 1px;
     border-color: #1adacd;
   }
-  div#tswboilertimeon {
+  div#tswheatertimeon {
     float: left;
     margin: 27.5% 0% 0% -37%;
     padding: 0% 0% 0% 0%;

@@ -29,7 +29,7 @@ extern RTC_DATA_ATTR enum MqttSyncStatus MqttSyncCurrentStatus;
 extern RTC_DATA_ATTR String tempHumSensorType;
 extern RTC_DATA_ATTR enum CloudClockStatus CloudClockCurrentStatus;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
-extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,boilerTimeOnYear;
+extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,boilerTimeOnYear,boilerTimeOnPreviousYear,heaterTimeOnPreviousYear;
 
 extern bool webServerResponding,debugModeOn,boilerStatus,thermostateStatus,gasClear;
 extern char activeCookie[],currentSetCookie[];
