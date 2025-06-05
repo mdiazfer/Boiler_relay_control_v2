@@ -1,5 +1,6 @@
 Change Log
 ----------
+v0.9.9  - Remove year from the MQTT topic for both previous and current years
 v0.9.8  - Added Stats web page
 v0.9.7  - Added Dasboard web page
           + Web Event for sample update
@@ -33,7 +34,6 @@ v0.8.9  - First stable version with HA support
 
 To do list for boiler relay control
 -----------------------------------
-- Remove year from the MQTT topic for both previous and current years
 - Troubleshooting
 - Time counters for boiler, similar to the heater ones
 - Track time and last function executed when the Absolute min heap size ever seen is detected
@@ -92,6 +92,7 @@ Done
   + ISS006: Side Col height for Graphs, Global Info, Basic Configuration, Console html pages
   + ISS007: HA takes doesn't refresh quickly Heater Status/Icon after IoT restart (ie. firmware upgred)
     * Fixed in v0.9.7 - MQTT HADiscovery packets are sent several times after bootup
+- Remove year from the MQTT topic for both previous and current years - v0.9.9
 
 
   Discarded
