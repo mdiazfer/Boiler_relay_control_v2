@@ -62,6 +62,9 @@
 //Address 53A: errorsConnectivityCnt -  Counter for Connectivity errors (being WiFi connected)
 //Address 53B: errorsWebServerCnt -  Counter for Web Server errors (being WiFi connected but not serving web pages)
 //Address 53C: resetWebServerCnt - resets done due to  Web Server errors (being WiFi connected but not serving web pages)
+//Address 53D-605: powerMqttTopic - MQTT Power Topic name char []* (200 B+null=201 B)
+//Address 606: Stores Config variable flags
+//  - Bit 0: powerMeasureEnabled - 1=true, 0=false
 
 
 
@@ -117,6 +120,7 @@ void factoryConfReset() {
   webServerEnabled=WEBSERVER_ENABLED;
   mqttServerEnabled=MQTTSERVER_ENABLED;
   secureMqttEnabled=SECURE_MQTT_ENABLED;
+  powerMeasureEnabled=MQTT_POWER_MEASURE_ENABLED;
   
   //Now initialize configVariables
   configVariables=0x01; //Bit 0, notFirstRun=true
@@ -127,9 +131,16 @@ void factoryConfReset() {
   if (webServerEnabled) configVariables|=0x20; //Bit 5: webServerEnabled
   if (mqttServerEnabled) configVariables|=0x40; //Bit 6: mqttServerEnabled
   if (secureMqttEnabled) configVariables|=0x80; //Bit 7: secureMqttEnabled
-
+  
   //Write variables in EEPROM to be available the next boots up
   EEPROM.write(0x08,configVariables);
+
+  configVariables=0x0; 
+  if (powerMeasureEnabled) configVariables|=0x01; //Bit 0, powerMeasureEnabled=false
+  
+  //Write variables in EEPROM to be available the next boots up
+  EEPROM.write(0x606,configVariables);
+
   
   //Write WiFi Credential-related variables
   char auxSSID[WIFI_MAX_SSID_LENGTH],auxPSSW[WIFI_MAX_PSSW_LENGTH],auxSITE[WIFI_MAX_SITE_LENGTH],
@@ -292,10 +303,11 @@ void factoryConfReset() {
   //Set variables for MQTT Topic or null if no config in global_setup.h file
   char auxMqttTopicPrefix[MQTT_TOPIC_NAME_MAX_LENGTH];
   memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
+  uint8_t auxLength;
   #ifdef MQTT_TOPIC_PREFIX
     mqttTopicPrefix=MQTT_TOPIC_PREFIX;
     if (mqttTopicPrefix.charAt(mqttTopicPrefix.length()-1)!='/') mqttTopicPrefix+="/"; //Adding slash at the end if needed
-    uint8_t auxLength=mqttTopicPrefix.length()+1;
+    auxLength=mqttTopicPrefix.length()+1;
     if (auxLength>MQTT_TOPIC_NAME_MAX_LENGTH-1) { //Substring if greater that max length
       auxLength=MQTT_TOPIC_NAME_MAX_LENGTH-1;
       mqttTopicPrefix=mqttTopicPrefix.substring(0,auxLength);
@@ -307,6 +319,23 @@ void factoryConfReset() {
   EEPROM.put(0x315,auxMqttTopicPrefix);
 
   if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote mqttServer='"+String(auxMQTT)+"', mqttTopicPrefix='"+String(auxMqttTopicPrefix)+"', mqttUserName='"+String(auxUserName)+"', mqttUserPssw='"+String(auxUserPssw)+"'");}
+
+  //Write MQTT Power Topic Name variable
+  //Set variables for MQTT Topic or null if no config in global_setup.h file
+  memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
+  #ifdef MQTT_POWER_TOPIC
+    powerMqttTopic=MQTT_POWER_TOPIC;
+    auxLength=powerMqttTopic.length()+1;
+    if (auxLength>MQTT_TOPIC_NAME_MAX_LENGTH-1) { //Substring if greater that max length
+      auxLength=MQTT_TOPIC_NAME_MAX_LENGTH-1;
+      powerMqttTopic=powerMqttTopic.substring(0,auxLength);
+    }
+    powerMqttTopic.toCharArray(auxMqttTopicPrefix,powerMqttTopic.length()+1);
+  #else
+    powerMqttTopic=auxMqttTopicPrefix;
+  #endif
+   //Write varialbes in EEPROM to be available the next boots up
+  EEPROM.put(0x53D,auxMqttTopicPrefix);
 
   //Set iBeacon Proximity
   char auxBLEProximityUUID[BLE_BEACON_UUID_LENGH];

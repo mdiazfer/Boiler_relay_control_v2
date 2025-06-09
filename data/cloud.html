@@ -112,14 +112,23 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="MQTT_off_id">Off</label>
                 <input name="MQTT_enabled" id="MQTT_off_id" value="off" required="required" ~MQTT_OFF_CHECKED~ type="radio">
-                <br><br>
+                <br>
                 Secure MQTT Service:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="Secure_MQTT_on_id">On</label>
                 <input name="Secure_MQTT_enabled" id="Secure_MQTT_on_id" value="on" required="required" ~Secure_MQTT_ON_CHECKED~ type="radio">
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="Secure_MQTT_off_id">Off</label>
                 <input name="Secure_MQTT_enabled" id="Secure_MQTT_off_id" value="off" required="required" ~Secure_MQTT_OFF_CHECKED~ type="radio">
+                <br><br>
+                Enable MQTT Power Measurements:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="MQTT_Power_on_id">On</label>
+                <input name="MQTT_Power_enabled" id="MQTT_Power_on_id" value="on" required="required" ~MQTT_POWER_ON_CHECKED~ type="radio" ~MQTT_POWER_DISABLED~>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="MQTT_Power_off_id">Off</label>
+                <input name="MQTT_Power_enabled" id="MQTT_Power_off_id" value="off" required="required" ~MQTT_POWER_OFF_CHECKED~ type="radio" ~MQTT_POWER_DISABLED~>
                 <br>
+                <label for="MQTTPOWERTOPIC">MQTT Power Topic:&nbsp;</label>
+                <input id="MQTTPOWERTOPIC_id" name="MQTTPOWERTOPIC" size="25" placeholder=~MQTTPOWERTOPIC~ type="text" pattern="^[^\/].+\/*" ~MQTTPOWERREQUIRED~ value="~MQTTPOWERTOPIC~" ~MQTT_POWER_DISABLED~>
               </fieldset>
               <br><br>
               <fieldset name="AdminUser" form="AdminUser_Form">

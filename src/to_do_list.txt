@@ -1,6 +1,8 @@
 Change Log
 ----------
 v0.9.9  - Remove year from the MQTT topic for both previous and current years
+        - Added support for MQTT Power Topic subscription
+        - Added boiler activity info (on and burning gas) in the index web page
 v0.9.8  - Added Stats web page
 v0.9.7  - Added Dasboard web page
           + Web Event for sample update
@@ -35,12 +37,14 @@ v0.8.9  - First stable version with HA support
 To do list for boiler relay control
 -----------------------------------
 - Troubleshooting
-- Time counters for boiler, similar to the heater ones
-- Track time and last function executed when the Absolute min heap size ever seen is detected
-- Track time and last function executed when the preventive software restart is executed
+  + ISS008: Crash from time to time (heap getting off ??)
+  + ISS009: Web server not available from time to time (connectivty lost ??)
+- Get and Show Smart Plug's IP address in web page with link to it
+- Get Energy values on gas_sample periods and at boot time to update the index web page accordingly
+- Color grey Web boiler icon and Energy info if not powerMeasureEnabled
+- New boiler icon if it's burning gas (boilerOn or thermostateOn)
+- Increase period to send readings (??)
 - Date in logs in addition to milliseconds
-- Syslog support
-- Led flashing to indicate situations: All good, no WiFi, WiFi connection, Gas detection
 
 Done
 --------
@@ -93,7 +97,8 @@ Done
   + ISS007: HA takes doesn't refresh quickly Heater Status/Icon after IoT restart (ie. firmware upgred)
     * Fixed in v0.9.7 - MQTT HADiscovery packets are sent several times after bootup
 - Remove year from the MQTT topic for both previous and current years - v0.9.9
-
+- Time counters for boiler, similar to the heater ones - v0.9.9
+- Show Current Power (and Energy ?) in the index page - v0.9.9
 
   Discarded
   -------------

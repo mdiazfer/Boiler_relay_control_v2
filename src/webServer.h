@@ -12,7 +12,7 @@
 
 extern RTC_DATA_ATTR boolean deviceReset,factoryReset,OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,httpCloudEnabled,
                       mqttServerEnabled,secureMqttEnabled,forceMQTTConnect,forceWifiReconnect,forceNTPCheck,
-                      bluetoothEnabled,wifiEnabled,reconnectWifiAndRestartWebServer,resyncNTPServer;
+                      bluetoothEnabled,wifiEnabled,reconnectWifiAndRestartWebServer,resyncNTPServer,powerMeasureEnabled;
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
                               errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
 extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot;
@@ -34,10 +34,12 @@ extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,boilerTimeOnYear,boi
 extern bool webServerResponding,debugModeOn,boilerStatus,thermostateStatus,gasClear;
 extern char activeCookie[],currentSetCookie[];
 extern uint8_t fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
+extern uint16_t voltage,power;
 extern int updateCommand;
+extern float current,energyToday,energyYesterday,energyTotal;
 extern size_t fileUpdateSize,OTAAvailableSize,SPIFFSAvailableSize;
 extern String device,lastURI,fileUpdateName,userName,userPssw,mqttTopicPrefix,mqttTopicName,mqttServer,mqttUserName,mqttUserPssw,
-              TZEnvVariable,TZName,ntpServers[4];
+              TZEnvVariable,TZName,ntpServers[4],powerMqttTopic;
 extern JSONVar samples;
 extern wifiCredentials wifiCred;
 extern IPAddress serverToUploadSamplesIPAddress;

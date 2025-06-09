@@ -37,13 +37,13 @@ RTC_DATA_ATTR uint8_t bootCount=255,resetCount=0,resetPreventiveCount=0,resetPre
 RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestCheck=false,forceWebServerInit=false,forceMQTTpublish=false,forceWebEvent=false,
                       ntpEnabled=true,httpCloudEnabled=true,forceNTPCheck=false,ntpSynced=false,
                       mqttServerEnabled=true,forceMQTTConnect=false,secureMqttEnabled=false,bluetoothEnabled=false,webServerEnabled=false,timersEepromUpdate=false,
-                      updateHADiscovery=false,deviceReset=false,factoryReset=false,logTagged=false,reconnectWifiAndRestartWebServer=false,resyncNTPServer=false;
+                      updateHADiscovery=false,deviceReset=false,factoryReset=false,logTagged=false,reconnectWifiAndRestartWebServer=false,resyncNTPServer=false,powerMeasureEnabled=false;
 RTC_DATA_ATTR byte mac[6];
 RTC_DATA_ATTR uint64_t nowTimeGlobal=0,firstLoopTime=0,lastCheckTime=0,lastTimeWifiReconnectionCheck=0,lastTimeHTTPClouCheck=0,lastTimeNTPCheck=0,
                       lastCloudClockChangeCheck=0,lastInterruptTime=0,lastGasSample=0,lastTimeMQTTCheck=0,lastTimeConnectiviyCheck=0,
                       lastMQTTChangeCheck=0,lastTimeSecondCheck=0,lastThermostatOnTime=0,lastBoilerOnTime=0,lastTimeTimerEepromUpdateCheck=0;
 RTC_DATA_ATTR ulong wifiReconnectPeriod=WIFI_RECONNECT_PERIOD;
-RTC_DATA_ATTR String tempHumSensorType=String(TEMP_HUM_SENSOR_TYPE); //16 B
+RTC_DATA_ATTR String tempHumSensorType=String(TEMP_HUM_SENSOR_TYPE);
 RTC_DATA_ATTR float valueHum=0,tempSensor=0,valueT=0;
 RTC_DATA_ATTR AsyncMqttClient mqttClient;
 RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear; //61 B each varialbe (heaterTimeOn or boilerTimeOn) - Time in seconds that the heater signal has been on (thermostat or Relay2)
@@ -60,21 +60,23 @@ RTC_DATA_ATTR String bootLogs; // Initial logs at boot time
 
 //Global variable definitions stored in regular RAM. 520 KB Max
 bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logMessageTRL2_ON=false,logMessageGAP_OFF=false,
-      boilerStatus=false,thermostateStatus=false,thermostateInterrupt=false,gasClear=false,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
+      thermostateInterrupt=false,gasClear=false,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
       webLogsOn=false,serialLogsOn=debugModeOn,eepromUpdate=false;
+bool boilerStatus=false,boilerOn=false, //boilerStatus => Power > Threshold, boilerOn => Burning gas (flame), either due to hot water or heater
+      thermostateStatus=false,thermostateOn=false; //thermostateStatus => Thermostate is active (or relay active), thermostateOn => Burning gas
 boolean NTPResuming,startTimeConfigure,wifiResuming;
 uint8_t ntpServerIndex,configVariables,auxLoopCounter=0,auxLoopCounter2=0,auxCounter=0,fileUpdateError=0,errorOnActiveCookie=0,errorOnWrongCookie=0;
-uint16_t rebounds=0;
+uint16_t rebounds=0,voltage=0,power=0;
 uint32_t lastHeap=0,flashSize=ESP.getFlashChipSize(),programSize=ESP.getSketchSize(),fileSystemSize=0,fileSystemUsed=0;;
 uint64_t whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
 int updateCommand;
-float gasSample=0,gasVoltCalibrated=0,RS_airCalibrated=0,RS_CurrentCalibrated=0,gasRatioSample=0;
+float gasSample=0,gasVoltCalibrated=0,RS_airCalibrated=0,RS_CurrentCalibrated=0,gasRatioSample=0,current=0,energyToday=0,energyYesterday=0,energyTotal=0;
 size_t fileUpdateSize=0,OTAAvailableSize=0,SPIFFSAvailableSize=0;
 struct tm nowTimeInfo;
 String TZEnvVariable(NTP_TZ_ENV_VARIABLE),TZName(NTP_TZ_NAME),device(DEVICE_NAME_PREFIX),serverToUploadSamplesString(SERVER_UPLOAD_SAMPLES),
         mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,userName,userPssw,
         iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus,
-        ntpServers[4],lastURI,fileUpdateName;
+        ntpServers[4],lastURI,fileUpdateName,powerMqttTopic;
 wifiNetworkInfo wifiNet;
 wifiCredentials wifiCred;
 enum CloudClockStatus previousCloudClockCurrentStatus;
@@ -170,6 +172,9 @@ void loop() {
     attachInterrupt(digitalPinToInterrupt(PIN_THERMOSTATE), thermostate_change, CHANGE);
     if (digitalRead(PIN_THERMOSTATE)==1) {thermostateStatus=true;} else {thermostateStatus=false;};
     if (debugModeOn) printLogln(String(millis())+" - [loop] - Interrupt set for GPIO pin "+String(PIN_THERMOSTATE)+", thermostateStatus="+String(thermostateStatus));
+
+    //Get readings for the index.html page to be up-to-date
+    gas_sample(false);   //Get GAS samples
   }
 
   //Rest of loop interactions

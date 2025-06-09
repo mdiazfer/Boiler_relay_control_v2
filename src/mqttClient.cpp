@@ -7,12 +7,15 @@ void onMqttConnect(bool sessionPresent) {
   //Subcribe to the-iot-factory/boiler-relay-controlv2-E02940/cmnd/RELAY
   String cmdSubcriptionTopic=String(MQTT_TOPIC_PREFIX+device+"/"+MQTT_TOPIC_CMD_SUFIX_SUBSCRIPTION);
   String packetSwitchId=String(mqttClient.subscribe(cmdSubcriptionTopic.c_str(),0));
+  String powerMeasureId;
+  if (powerMeasureEnabled) powerMeasureId=String(mqttClient.subscribe(powerMqttTopic.c_str(),0));
 
   if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttConnect] - MQTT connected to "+mqttServer+". Session present: "+String(sessionPresent)+
                         "\n  [onMqttConnect] - Subscribing on:"+
                         "\n  [onMqttConnect] - topic "+MQTT_TOPIC_SUBSCRIPTION+", QoS 0, packetId="+packetInfoId+
                         "\n  [onMqttConnect] - topic "+MQTT_HA_B_AND_LWT_TOPIC_PREFIX+", QoS 0, packetId="+packetStatId+ // v1.9.0 - Home Assistant Last Will Testament message (offline)
                         "\n  [onMqttConnect] - topic "+cmdSubcriptionTopic+", QoS 0, packetId="+packetSwitchId); // Relay ON/OFF
+  if (debugModeOn && powerMeasureEnabled) printLogln("  [onMqttConnect] - topic "+powerMqttTopic+", QoS 0, packetId="+powerMeasureId);
   MqttSyncCurrentStatus=MqttSyncOnStatus;
 }
 
@@ -118,6 +121,92 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       else printLogln(String(millis())+" - [onMqttMessage] - Unknown command");
     }
     else printLogln(String(millis())+" - [onMqttMessage] - Gas leak situation detected, so no releay activation is allowed for security reasons");
+  }
+  else if (String(topic) == powerMqttTopic) {
+    printLogln(String(millis())+" - [onMqttMessage] - "+powerMqttTopic);
+    /*
+    {"Time":"2025-06-08T10:16:25","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":0.484,"Yesterday":0.241,"Today":0.088,"Power": 8,"ApparentPower":23,"ReactivePower":22,"Factor":0.36,"Voltage":328,"Current":0.071}}
+    */
+    JSONVar auxEnergyJson=JSON.parse(aux);
+    if (JSON.typeof(auxEnergyJson) == "undefined") {
+      printLogln(String(millis())+" - [onMqttMessage] - Parsing input failed!");
+    }
+    else {
+      /*printLogln(String(millis())+" - [onMqttMessage] - Time="+JSON.stringify(auxEnergyJson["Time"])+
+                                "\n                           Voltage="+JSON.stringify(auxEnergyJson["ENERGY"]["Voltage"])+" V"+
+                                "\n                           Current="+JSON.stringify(auxEnergyJson["ENERGY"]["Current"])+" A"+
+                                "\n                           Power="+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+" W"+
+                                "\n                           Energy Today="+JSON.stringify(auxEnergyJson["ENERGY"]["Today"])+" KWh"+
+                                "\n                           Energy Yesterday="+JSON.stringify(auxEnergyJson["ENERGY"]["Yesterday"])+" KWh"+
+                                "\n                           Energy Total="+JSON.stringify(auxEnergyJson["ENERGY"]["Total"])+" KWh");
+      */
+      if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= BOILER_FLAME_ON_POWER_THRESHOLD) {
+        //Boiler is burning gas (flame) due to heater (thermostateOn=true) or hot water (boilerOn=true)
+        // and so it's active (boilerStatus=true)
+        /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Flame detected: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+") >= BOILER_FLAME_ON_POWER_THRESHOLD ("+String(BOILER_FLAME_ON_POWER_THRESHOLD));*/  //----->
+        boilerStatus=true;
+        if (thermostateStatus) { //thermostateStatus is updated in thermostate_interrupt_triggered()
+          //If thermostate is active, let's assume it's burning gas due to the heater and not the hot water
+          
+          //Start counting seconds
+          if (!thermostateOn) {
+            lastThermostatOnTime=millis();
+            /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Start Heater Time On Counter. lastThermostatOnTime="+String(lastThermostatOnTime));*/  //----->
+          }
+          thermostateOn=true; boilerOn=false;
+        } 
+        else {
+          //Start counting seconds
+          if (!boilerOn) {
+            lastBoilerOnTime=millis();
+            /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Start Boiler Time On Counter. lastBoilerOnTime="+String(lastBoilerOnTime));*/  //----->
+          }
+          thermostateOn=false; boilerOn=true;
+        }
+      }
+      else if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= BOILER_STATUS_ON_POWER_THRESHOLD) {
+        //Boiler is active (water flowing due to either heater or hot water) but it isn't burning gas
+        boilerStatus=true; thermostateOn=false; boilerOn=false; //No flame and thermostateStatus is updated in thermostate_interrupt_triggered()
+        /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler is active with no flame: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+") >= BOILER_STATUS_ON_POWER_THRESHOLD ("+String(BOILER_STATUS_ON_POWER_THRESHOLD));*/  //----->
+      }
+      else {
+        //Boiler isn't active
+        if (boilerStatus || thermostateStatus) {
+          //Coming from active status
+          boilerStatus=false;
+          /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler is stopped: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+")");*/  //----->
+        }
+        else {
+          //Coming from inactive status
+          boilerStatus=true; 
+          /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler got active with no flame: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+")");*/  //----->
+        }
+        thermostateOn=false; boilerOn=false; //No flame and thermostateStatus is updated in thermostate_interrupt_triggered()
+      }
+
+      //Variables update
+      voltage=JSON.stringify(auxEnergyJson["ENERGY"]["Voltage"]).toInt();
+      current=JSON.stringify(auxEnergyJson["ENERGY"]["Current"]).toFloat();
+      power=JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt();
+      energyToday=JSON.stringify(auxEnergyJson["ENERGY"]["Today"]).toFloat();
+      energyYesterday=JSON.stringify(auxEnergyJson["ENERGY"]["Yesterday"]).toFloat();
+      energyTotal=JSON.stringify(auxEnergyJson["ENERGY"]["Total"]).toFloat();
+      samples["Voltage"]=voltage;
+      samples["Current"]=current;
+      samples["Power"]=power;
+      samples["EnergyToday"]=energyToday;
+      samples["EnergyYesterday"]=energyYesterday;
+      samples["EnergyTotal"]=energyTotal;
+      samples["Thermostate_status"] = thermostateStatus==true?"ON":"OFF";
+      samples["Thermostate_on"] = thermostateOn==true?"ON":"OFF";
+      samples["boilerStatus"] = boilerStatus==true?"ON":"OFF";
+      samples["boilerOn"] = boilerOn==true?"ON":"OFF";
+
+      //Update web and mqtt
+      forceMQTTpublish=true;
+      forceWebEvent=true;
+      /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Exit - boilerStatus="+String(boilerStatus)+", thermostateStatus="+String(thermostateStatus)+", boilerOn="+String(boilerOn)+", thermostateOn="+String(thermostateOn));*/  //----->
+    }
   }
   else {
     //Do nothing for other topics
@@ -619,6 +708,11 @@ void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ip
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //Clean_air value
     String("{\"name\":\"Environment: Gas Detection\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_Clean_air\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"gas\",\"ic\":\"mdi:meter-gas\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Clean_air']}}\"}").c_str()); //Discovery message for Clean_air value, not retain in the broker
+  
+  mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_boilerStatus/config";
+  if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
+  else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //boilerStatus value
+    String("{\"name\":\"Environment: Boiler Active\",\"stat_t\":\""+mqttTopicName+"/SENSOR\",\"avty_t\":\""+mqttTopicName+"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\""+deviceSufix+"_boilerStatus\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"ic\":\""+iconThermStatus+"\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['boilerStatus']}}\"}").c_str()); //Discovery message for boilerStatus value, not retain in the broker
   mqttSensorTopicHAName=mqttSensorTopicHAPrefixName+"_Thermostate_status/config";
   if (removeTopics) mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false); //Send topic with no payload
   else mqttClient.publish(String(mqttSensorTopicHAName).c_str(), 0, false, //Thermostate_status value

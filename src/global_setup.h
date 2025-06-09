@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "0.9.8"
+#define VERSION "0.9.9"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -229,6 +229,14 @@
 #define MQTT_HA_BUTTON_TOPIC_PREFIX "homeassistant/button"
 #define MQTT_HA_SWITCH_TOPIC_PREFIX "homeassistant/switch"
 #define MQTT_HA_B_AND_LWT_TOPIC_PREFIX "homeassistant/status"
+#define MQTT_POWER_MEASURE_ENABLED false
+#ifndef MQTT_POWER_TOPIC
+  #define MQTT_POWER_TOPIC "tele/tasmota_2EDC69/SENSOR"
+#endif
+
+//POWER stuff
+#define BOILER_STATUS_ON_POWER_THRESHOLD 50  //Watts - Power threshold to decide whether the boiler is active (not necessarily burning gas)
+#define BOILER_FLAME_ON_POWER_THRESHOLD 238  //Watts - Power threshold to decide whether the boiler is burning gas or not due to either hot water or heater
 
 //BLE stuff
 #define BLE_ENABLED  false

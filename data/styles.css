@@ -59,7 +59,7 @@ div#tswsidecolindex {
   margin: auto auto auto 0%;
   padding-top: 1%;
   width: 27%;
-  height: 937px;
+  height: 1022px;
   color: white;
   background-color: #34383b;
 }
@@ -111,7 +111,7 @@ div#tswsidecolcloud {
   margin: 0% 3% 0% 0%;
   padding-top: 1%;
   width: 27%;
-  height: 610px;
+  height: 647px;
   color: white;
   background-color: #34383b;
 }
@@ -276,6 +276,51 @@ div#tswcontrols_icons {
   border-style: none;
   border-width: 1px;
   border-color: #1adacd;
+}
+
+div#tswboilerenergy {
+  float:left;
+  padding: 0% 0% 0% 1%;
+  width: 45%;
+  border-style: none;
+  border-width: 1px;
+  border-color: #31eee1;
+}
+
+div#tswenergy_title {
+  float:left;
+  padding: 0% 0% 0% 0%;
+  width: 98%;
+  border-style: none;
+  border-width: 1px;
+  border-color: #eeeb31;
+}
+
+div#tswenergy_col {
+  float:left;
+  padding: 3% 0% 0% 2%;
+  width: 46%;
+  border-style: none;
+  border-width: 1px;
+  border-color: #eeeb31;
+}
+
+div#tswboilerpower {
+  float:left;
+  padding: 0% 0% 5% 3%;
+  width: 45%;
+  border-style: none;
+  border-width: 1px;
+  border-color: #31eee1;
+}
+
+div#tswpower_title {
+  float:left;
+  padding: 0% 0% 0% 0%;
+  width: 98%;
+  border-style: none;
+  border-width: 1px;
+  border-color: #eeeb31;
 }
 
 div#tswboilertimeon {
@@ -729,7 +774,7 @@ input:checked + .slider:before {
     float: none;
     width: 100%;
     /*max-width : 529px*/
-    height: 950px;
+    height: 1020px;
 
     border-style: none;
     border-width: 1px;
@@ -820,9 +865,67 @@ input:checked + .slider:before {
     border-width: 1px;
     border-color: #1adacd;
   }
+  div#tswboilerenergy {
+    float: left;
+    margin: 27% 0% 0% -41%;
+    padding: 0% 0% 0% 1%;
+    width: 44%;
+    border-style: none;
+    border-width: 1px;
+    border-color: #31eee1;
+  }
+  
+  div#tswenergy_title {
+    float:left;
+    padding: 0% 0% 0% 0%;
+    width: 98%;
+    border-style: none;
+    border-width: 1px;
+    border-color: #eeeb31;
+  }
+  
+  div#tswenergy_col {
+    float:left;
+    padding: 3% 0% 0% 2%;
+    width: 46%;
+    border-style: none;
+    border-width: 1px;
+    border-color: #eeeb31;
+  }
+  
+  div#tswboilerpower {
+    float: left;
+    margin: 1.25% 0% 0% 5%;
+    padding: 0% 0% 0% 0%;
+    width: 44%;
+    border-style: none;
+    border-width: 1px;
+    border-color: #31eee1;
+  }
+  
+  div#tswpower_title {
+    float:left;
+    padding: 0% 0% 0% 0%;
+    width: 98%;
+    border-style: none;
+    border-width: 1px;
+    border-color: #eeeb31;
+  }
+  
+  div#tswboilertimeon {
+    float: left;
+    margin: 15% 0% 0% -94%;
+    padding: 0% 0% 0% 1%;
+    width: 44%;
+    
+    border-style: none;
+    border-width: 1px;
+    border-color: #31eee1;
+  }
+  
   div#tswheatertimeon {
     float: left;
-    margin: 27.5% 0% 0% -37%;
+    margin: 2% 0% 0% 5%;
     padding: 0% 0% 0% 0%;
     width: 44%;
     
@@ -850,16 +953,6 @@ input:checked + .slider:before {
     border-color: #eeeb31;
   }
   
-  div#tswheatertimeon {
-    float: right;
-    margin: 2% 0% 0% -40%;
-    padding: 0% 0% 0% 0%;
-    width: 45%;
-    
-    border-style: none;
-    border-width: 1px;
-    border-color: #31eee1;
-  }
   div#tswmeasurements {
     width: 98%;
     float: left;

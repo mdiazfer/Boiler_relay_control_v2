@@ -25,22 +25,23 @@ extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPrev
 extern RTC_DATA_ATTR uint16_t year,previousYear;
 extern RTC_DATA_ATTR uint32_t minHeapSinceUpgrade,minHeapSinceBoot;
 extern RTC_DATA_ATTR uint64_t lastTimeHTTPClouCheck,lastTimeNTPCheck,lastMQTTChangeCheck,lastCloudClockChangeCheck,lastTimeMQTTSampleCheck;
-extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled,ntpSynced,OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,logTagged,forceWifiReconnect,forceWebServerInit;
+extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled,ntpSynced,
+                              OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,logTagged,forceWifiReconnect,forceWebServerInit,powerMeasureEnabled;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
 extern bool debugModeOn,logMessageTOFF,logMessageTRL1_ON,logMessageTRL2_ON,logMessageGAP_OFF,
-  boilerStatus,thermostateStatus,thermostateInterrupt,gasClear,gasInterrupt,isBeaconAdvertising,webServerResponding,
+  boilerStatus,thermostateStatus,boilerOn,thermostateOn,thermostateInterrupt,gasClear,gasInterrupt,isBeaconAdvertising,webServerResponding,
   webLogsOn,serialLogsOn,eepromUpdate;
 extern char activeCookie[COOKIE_SIZE],currentSetCookie[COOKIE_SIZE],firmwareVersion[VERSION_CHAR_LENGTH+1];
 extern uint8_t ntpServerIndex,auxLoopCounter,auxLoopCounter2,auxCounter,configVariables,fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
-extern uint16_t rebounds;
+extern uint16_t rebounds,voltage,power;
 extern uint32_t lastHeap,flashSize,programSize,fileSystemSize,fileSystemUsed;
 extern uint64_t whileLoopTimeLeft;
 extern int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String httpRequest,bool fromSetup);
-extern float gasSample,gasVoltCalibrated,RS_airCalibrated,RS_CurrentCalibrated,gasRatioSample;
+extern float gasSample,gasVoltCalibrated,RS_airCalibrated,RS_CurrentCalibrated,gasRatioSample,current,energyToday,energyYesterday,energyTotal;
 extern size_t fileUpdateSize,OTAAvailableSize,SPIFFSAvailableSize;
-extern String serverToUploadSamplesString,device,TZEnvVariable,TZName,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,userName,userPssw;
+extern String serverToUploadSamplesString,device,TZEnvVariable,TZName,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,userName,userPssw,powerMqttTopic;
 extern wifiNetworkInfo wifiNet;
 extern wifiCredentials wifiCred;
 extern String ntpServers[4];

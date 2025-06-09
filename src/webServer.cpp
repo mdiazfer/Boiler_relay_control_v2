@@ -86,6 +86,24 @@ String processorIndex(const String& var){
   if(var == "HEATERTIMEONTODAY") {
     return String(heaterTimeOnYear.counterToday/60);
   }
+  if(var == "ENERGYYESTERDAY") {
+    return String(energyYesterday,3);
+  }
+  if(var == "ENERGYTODAY") {
+    return String(energyToday,3);
+  }
+  if(var == "ENERGYTOTAL") {
+    return String(energyTotal,3);
+  }
+  if(var == "VOLTAGE") {
+    return String(voltage);
+  }
+  if(var == "CURRENT") {
+    return String(current,3);
+  }
+  if(var == "POWER") {
+    return String(power);
+  }
   else {
     return String();
   }
@@ -533,6 +551,20 @@ String processorCloud(const String& var){
     return "User password";
   } else if (var == "MQTTUserPssw_VALUE") {
     return "**********";  
+  } else if (var == "MQTT_POWER_DISABLED") {
+    if (!mqttServerEnabled) return String("disabled");
+    else return String();
+  } else if (var == "MQTT_POWER_ON_CHECKED") {
+    if (powerMeasureEnabled) return String("checked");
+    else return String();
+  } else if (var == "MQTT_POWER_OFF_CHECKED") {
+    if (!powerMeasureEnabled) return String("checked");
+    else return String();
+  } else if (var == "MQTTPOWERTOPIC") {
+    return powerMqttTopic;
+  } else if (var == "MQTTPOWERREQUIRED") {
+    if (powerMeasureEnabled) return String("required");
+    else return String();
   } else {
     return String();
   }
@@ -1504,6 +1536,45 @@ uint32_t initWebServer() {
               mqttTopicName=mqttTopicPrefix+device; //Adding the device name to the MQTT Topic name
             }
           }
+          // HTTP POST MQTT_Power_enabled value
+          if (p->name().compareTo("MQTT_Power_enabled")==0) {
+            if ((p->value().compareTo("on")==0) && !powerMeasureEnabled && mqttClient.connected()) {
+              powerMeasureEnabled=true;
+              //Subscription is done in MQTTPOWERTOPIC
+              if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Request to subscribe to "+powerMqttTopic);
+              configVariables=EEPROM.read(0x606) | 0x01; //Set powerMeasureEnabled bit to true (enabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;
+            }
+            if ((p->value().compareTo("off")==0) && powerMeasureEnabled && mqttClient.connected()) {
+              powerMeasureEnabled=false;
+              //Unsubscribe
+              mqttClient.unsubscribe(powerMqttTopic.c_str());
+              if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Unsubscribed to "+powerMqttTopic);
+              configVariables=EEPROM.read(0x606) & 0x01;
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;
+            }
+          }
+          // HTTP POST MQTTPOWERTOPIC value
+          if (p->name().compareTo("MQTTPOWERTOPIC")==0) {
+            char auxMqttTopicPrefix[MQTT_TOPIC_NAME_MAX_LENGTH];
+            memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
+            memcpy(auxMqttTopicPrefix,p->value().c_str(),p->value().length()); //End null not included
+            if (powerMqttTopic.compareTo(auxMqttTopicPrefix)!=0) {
+              if (powerMeasureEnabled && mqttClient.connected()) {
+                mqttClient.unsubscribe(powerMqttTopic.c_str()); //Unsubscribe first to the previous topic
+                mqttClient.subscribe(p->value().c_str(),0); //Subscribe now to the new one
+                if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Subscribed to "+p->value());
+              }
+              powerMqttTopic=p->value();
+              powerMqttTopic.toCharArray(auxMqttTopicPrefix,powerMqttTopic.length()+1);
+              EEPROM.put(0x53D,auxMqttTopicPrefix);
+              
+              updateEEPROM=true;
+            }
+          }
+
           // HTTP POST MQTTUserName value
           if (String(p->name()).compareTo("MQTTUserName")==0) {
             memset(auxUserName,'\0',MQTT_USER_CREDENTIAL_LENGTH);

@@ -836,6 +836,28 @@ bool mqttVariablesInit() {
   } else mqttTopicPrefix=auxMqttTopicPrefix;
   mqttTopicName=mqttTopicPrefix+device; //Adding the device name to the MQTT Topic name
 
+  //Get the MQTT Topic Name for Power Measurement
+  memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);EEPROM.get(0x53D,auxMqttTopicPrefix);
+  if (String(auxMqttTopicPrefix).compareTo("")==0) {
+    #ifdef MQTT_POWER_TOPIC
+      powerMqttTopic=MQTT_POWER_TOPIC;
+      //Check if MQTT topic name must be updated in EEPROM
+      if (powerMqttTopic.compareTo(String(auxMqttTopicPrefix))!=0) {
+        uint8_t auxLength=powerMqttTopic.length()+1;
+        if (auxLength>MQTT_TOPIC_NAME_MAX_LENGTH-1) { //Substring if greater that max length
+          auxLength=MQTT_TOPIC_NAME_MAX_LENGTH-1;
+          powerMqttTopic=powerMqttTopic.substring(0,auxLength);
+        }
+        memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
+        memcpy(auxMqttTopicPrefix,powerMqttTopic.c_str(),auxLength);
+        EEPROM.put(0x53D,auxMqttTopicPrefix);
+        updateEEPROM=true;
+      }
+    #else
+      powerMqttTopic=auxMqttTopicPrefix;
+    #endif
+  } else powerMqttTopic=auxMqttTopicPrefix;
+
   return updateEEPROM;
 }
 
@@ -906,6 +928,10 @@ void EEPROMInit() {
     webServerEnabled=configVariables & 0x20;
     mqttServerEnabled=configVariables & 0x40;
     secureMqttEnabled=configVariables & 0x80;
+
+    //Get the rest of variables from EEPROM
+    configVariables=EEPROM.read(0x606);
+    powerMeasureEnabled=configVariables & 0x01; //Bit 0, powerMeasureEnabled=false
 
     //Get the WiFi Credential-related variables from EEPROM or global_setup.h
     //If variables exist in global_setup.h and doesn't exit in EEPPROM, then update EEPROM 
@@ -1078,19 +1104,19 @@ void variablesInit() {
 
       //bool
       debugModeOn=DEBUG_MODE_ON;logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
-      boilerStatus=false;thermostateStatus=false;thermostateInterrupt=false;gasClear=false;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
+      boilerStatus=false;thermostateStatus=false;boilerOn=false;thermostateOn=false;thermostateInterrupt=false;gasClear=false;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
       webLogsOn=false;eepromUpdate=false;
       //webLogsOn=false;
       //uint8_t
       auxLoopCounter=0;auxLoopCounter2=0;auxCounter=0;fileUpdateError=0;errorOnActiveCookie=0;errorOnWrongCookie=0;
       //uint16_t
-      rebounds=0;
+      rebounds=0;voltage=0;power=0;
       //uint32_t
       lastHeap=0;minHeapSinceBoot=0xFFFFFFFF;flashSize=ESP.getFlashChipSize();programSize=ESP.getSketchSize();fileSystemSize=0;fileSystemUsed=0;
       //uint64_t
       whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
       //float
-      gasSample=0;gasVoltCalibrated=0;RS_airCalibrated=0;RS_CurrentCalibrated=0;gasRatioSample=0;
+      gasSample=0;gasVoltCalibrated=0;RS_airCalibrated=0;RS_CurrentCalibrated=0;gasRatioSample=0;current=0;energyToday=0;energyYesterday=0;energyTotal=0;
       //size_t
       fileUpdateSize=0;OTAAvailableSize=0;SPIFFSAvailableSize=0;
       //String

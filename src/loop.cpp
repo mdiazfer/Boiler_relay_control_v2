@@ -265,7 +265,7 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
       if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
     }
     else {
-      thermostateStatus=true; auxStatus="ON"; lastThermostatOnTime=millis();
+      thermostateStatus=true; auxStatus="ON";
       if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}
       rebounds=0;
       updateCloudServer=true;
@@ -380,7 +380,8 @@ void gas_sample(bool debugModeOn) {
   samples["device_name"] = device;
   samples["version"] = String(VERSION);
   samples["ipAddress"] = WiFi.localIP().toString();
-  samples["boilerStatus"] = boilerStatus==1?"ON":"OFF";
+  samples["boilerStatus"] = boilerStatus==true?"ON":"OFF";
+  samples["boilerOn"] = boilerOn==true?"ON":"OFF";
   samples["H2"] = String(h2_ppm);
   samples["LPG"] = String(lpg_ppm);
   samples["CH4"] = String(ch4_ppm);
@@ -389,11 +390,12 @@ void gas_sample(bool debugModeOn) {
   samples["Clean_air"] = gasClear==1?"OFF":"ON";
   samples["GAS_interrupt"] = gasInterrupt==1?"ON":"OFF";
   iconGasInterrupt=gasInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
-  samples["Thermostate_interrupt"] = thermostateInterrupt==1?"ON":"OFF";
+  samples["Thermostate_interrupt"] = thermostateInterrupt==true?"ON":"OFF";
   iconThermInterrupt=thermostateInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
   samples["Thermostate_status"] = thermostateStatus==true?"ON":"OFF";
   if (thermostateStatus) iconThermStatus=String("mdi:radiator");
   else {if (digitalRead(PIN_RL1) && !digitalRead(PIN_RL2)) iconThermStatus=String("mdi:radiator-off"); else iconThermStatus=String("mdi:radiator-disabled");}
+  samples["Thermostate_on"] = thermostateOn==true?"ON":"OFF";
   samples["SSID"] = WiFi.SSID();
   wifiNet.RSSI=WiFi.RSSI();
   samples["SIGNAL"] = String(wifiNet.RSSI);
@@ -537,6 +539,28 @@ void gas_sample(bool debugModeOn) {
   samples["boilerOnPreviousYear"] = String(auxTimeOn);
   samples["boilerOnPreviousYearJan"] = String(boilerTimeOnPreviousYear.counterMonths[0]);samples["boilerOnPreviousYearFeb"] = String(boilerTimeOnPreviousYear.counterMonths[1]);samples["boilerOnPreviousYearMar"] = String(boilerTimeOnPreviousYear.counterMonths[2]);samples["boilerOnPreviousYearApr"] = String(boilerTimeOnPreviousYear.counterMonths[3]);samples["boilerOnPreviousYearMay"] = String(boilerTimeOnPreviousYear.counterMonths[4]);samples["boilerOnPreviousYearJun"] = String(boilerTimeOnPreviousYear.counterMonths[5]);
   samples["boilerOnPreviousYearJul"] = String(boilerTimeOnPreviousYear.counterMonths[6]);samples["boilerOnPreviousYearAug"] = String(boilerTimeOnPreviousYear.counterMonths[7]);samples["boilerOnPreviousYearSep"] = String(boilerTimeOnPreviousYear.counterMonths[8]);samples["boilerOnPreviousYearOct"] = String(boilerTimeOnPreviousYear.counterMonths[9]);samples["boilerOnPreviousYearNov"] = String(boilerTimeOnPreviousYear.counterMonths[10]);samples["boilerOnPreviousYearDec"] = String(boilerTimeOnPreviousYear.counterMonths[11]);
+
+  //Get Energy readings from the SmartPlug if: powerMeasureEnabled, exists SmartPlug's IP, exists connectivity
+  /*
+  http://192.168.100.207/cm?cmnd=powerinfo
+    {"PowerInfo":{"Power":8.400,"Voltage":326,"Current":0.070,"ReactivePower":21.200,"ApparentPower":22.848,"Factor":0.368}}
+  http://192.168.100.207/cm?cmnd=energyinfo
+    {"EnergyInfo":{"TotalStartTime":"2024-07-25T11:21:51","Total":0.759,"Yesterday":0.293,"Today":0.070}}
+  
+  */
+  /*voltage=JSON.stringify(auxEnergyJson["ENERGY"]["Voltage"]).toInt();
+  current=JSON.stringify(auxEnergyJson["ENERGY"]["Current"]).toFloat();
+  power=JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt();
+  energyToday=JSON.stringify(auxEnergyJson["ENERGY"]["Today"]).toFloat();
+  energyYesterday=JSON.stringify(auxEnergyJson["ENERGY"]["Yesterday"]).toFloat();
+  energyTotal=JSON.stringify(auxEnergyJson["ENERGY"]["Total"]).toFloat();;
+  */
+  samples["Voltage"]=voltage; 
+  samples["Current"]=current;
+  samples["Power"]=power;
+  samples["EnergyToday"]=energyToday;
+  samples["EnergyYesterday"]=energyYesterday;
+  samples["EnergyTotal"]=energyTotal;
 }
 
 void temperature_sample(bool debugModeOn) {
@@ -675,7 +699,8 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
       mqttClient.publish(String(mqttTopicName+"/SENSOR").c_str(), 0, false, message.c_str());
 
       if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages published");
-
+      /*if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - samples[\"boilerToday\"]="+JSON.stringify(samples["boilerToday"])+"samples[\"heaterToday\"]="+JSON.stringify(samples["heaterToday"]));*/ //----->
+ 
       //Publish HA Discovery messages at random basis to make sure HA always recives the Discovery Packet
       // even if it didn't receive it after it rebooted due to network issues or whatever - v1.9.2
       if ((random(0,33) < 2) || (millis()<HA_ADVST_WINDOW) || updateHADiscovery) { //random < 2 ==> probability ~3%, ==> ~1 every 10 min (at samples/20s rate))
@@ -731,6 +756,13 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
   
 
   if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - ONE_SECOND_PERIOD] - Doing actions every second.");}
+  /* debugModeOn=true;
+    if (debugModeOn) {printLogln(String(millis())+" - [loop - ONE_SECOND_PERIOD] - boilerStatus="+String(boilerStatus)+", thermostateStatus="+String(thermostateStatus)+", boilerOn="+String(boilerOn)+", thermostateOn="+String(thermostateOn)+
+        "                                      \nlastThermostatOnTime="+String(lastThermostatOnTime)+", lastBoilerOnTime="+String(lastBoilerOnTime)+
+        "                                      \nheaterTimeOnYear.counterToday="+String(heaterTimeOnYear.counterToday)+", heaterTimeOnYear.counterMonths[auxMonth-1]="+String(heaterTimeOnYear.counterMonths[auxMonth-1])+
+        "                                      \nboilerTimeOnYear.counterToday="+String(boilerTimeOnYear.counterToday)+", boilerTimeOnYear.counterMonths[auxMonth-1]="+String(boilerTimeOnYear.counterMonths[auxMonth-1]));
+  }*/ //----->
+
 
   //At this point the variables already updated, even right after boot time.
   if (ntpSynced) {
@@ -743,7 +775,7 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
     auxYesterday=(auxYesterdayTimeInfo->tm_year+1900)*10000+(auxYesterdayTimeInfo->tm_mon+1)*100+auxYesterdayTimeInfo->tm_mday;
     auxMonth=(today-year*10000)/100;
 
-    if (thermostateStatus) { //Update counters if the heater is on
+    if (thermostateOn) { //Update counters if the heater is on
       heaterTimeOnYear.counterToday+=(nowTimeGlobal-lastThermostatOnTime)/1000;
       heaterTimeOnYear.counterMonths[auxMonth-1]+=(nowTimeGlobal-lastThermostatOnTime)/1000;
       lastThermostatOnTime=nowTimeGlobal;
@@ -779,18 +811,77 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
       }
     }
 
-    /*
-    if (boilerStatus) { //Update counters if the boiler is on
-    
+    if (boilerOn) { //Update counters if the boiler is on
+      boilerTimeOnYear.counterToday+=(nowTimeGlobal-lastBoilerOnTime)/1000;
+      boilerTimeOnYear.counterMonths[auxMonth-1]+=(nowTimeGlobal-lastBoilerOnTime)/1000;
+      lastBoilerOnTime=nowTimeGlobal;
+      timersEepromUpdate=true; //Update EEPROM in the next cycle
     }
     else {
+      if (today!=auxToday) {
+        //New day
+        boilerTimeOnYear.counterYesterday=boilerTimeOnYear.counterToday;
+        boilerTimeOnYear.counterToday=0;
 
+        if ((auxTimeInfo.tm_year+1900) > (boilerTimeOnYear.year)) {
+          //New year
+          memcpy(&boilerTimeOnPreviousYear,&boilerTimeOnYear,sizeof(boilerTimeOnYear)); //Update boilerTimeOnPreviousYear with boilerTimeOnYear
+          boilerTimeOnYear.year=auxTimeInfo.tm_year+1900;
+          boilerTimeOnYear.today=auxToday;
+          boilerTimeOnYear.yesterday=today;
+          boilerTimeOnYear.counterYesterday=0;
+          boilerTimeOnYear.counterToday=0;
+          updateHADiscovery=true;
+        }
+        else {
+          //Same year
+          //Do nothing
+        }
+        yesterday=today;
+        today=auxToday;
+        timersEepromUpdate=true; //Update EEPROM in the next cycle
+      }
+      else {
+        //Same day
+        //Do nothing
+      }
     }
-    */
   }
+
+  uint32_t auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnYear.counterMonths[i];
+  samples["heaterYear"] = String(heaterTimeOnYear.year);
+  samples["heaterYesterday"] = String(heaterTimeOnYear.yesterday);
+  samples["heaterToday"] = String(heaterTimeOnYear.today);
+  samples["heaterOnYear"] = String(auxTimeOn);
+  samples["heaterOnYearJan"] = String(heaterTimeOnYear.counterMonths[0]);samples["heaterOnYearFeb"] = String(heaterTimeOnYear.counterMonths[1]);samples["heaterOnYearMar"] = String(heaterTimeOnYear.counterMonths[2]);samples["heaterOnYearApr"] = String(heaterTimeOnYear.counterMonths[3]);samples["heaterOnYearMay"] = String(heaterTimeOnYear.counterMonths[4]);samples["heaterOnYearJun"] = String(heaterTimeOnYear.counterMonths[5]);
+  samples["heaterOnYearJul"] = String(heaterTimeOnYear.counterMonths[6]);samples["heaterOnYearAug"] = String(heaterTimeOnYear.counterMonths[7]);samples["heaterOnYearSep"] = String(heaterTimeOnYear.counterMonths[8]);samples["heaterOnYearOct"] = String(heaterTimeOnYear.counterMonths[9]);samples["heaterOnYearNov"] = String(heaterTimeOnYear.counterMonths[10]);samples["heaterOnYearDec"] = String(heaterTimeOnYear.counterMonths[11]);
+  samples["heaterOnYesterday"] = String(heaterTimeOnYear.counterYesterday);
+  samples["heaterOnToday"] = String(heaterTimeOnYear.counterToday);
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnPreviousYear.counterMonths[i];
+  samples["heaterPreviousYear"] = String(heaterTimeOnPreviousYear.year);
+  samples["heaterOnPreviousYear"] = String(auxTimeOn);
+  samples["heaterOnPreviousYearJan"] = String(heaterTimeOnPreviousYear.counterMonths[0]);samples["heaterOnPreviousYearFeb"] = String(heaterTimeOnPreviousYear.counterMonths[1]);samples["heaterOnPreviousYearMar"] = String(heaterTimeOnPreviousYear.counterMonths[2]);samples["heaterOnPreviousYearApr"] = String(heaterTimeOnPreviousYear.counterMonths[3]);samples["heaterOnPreviousYearMay"] = String(heaterTimeOnPreviousYear.counterMonths[4]);samples["heaterOnPreviousYearJun"] = String(heaterTimeOnPreviousYear.counterMonths[5]);
+  samples["heaterOnPreviousYearJul"] = String(heaterTimeOnPreviousYear.counterMonths[6]);samples["heaterOnPreviousYearAug"] = String(heaterTimeOnPreviousYear.counterMonths[7]);samples["heaterOnPreviousYearSep"] = String(heaterTimeOnPreviousYear.counterMonths[8]);samples["heaterOnPreviousYearOct"] = String(heaterTimeOnPreviousYear.counterMonths[9]);samples["heaterOnPreviousYearNov"] = String(heaterTimeOnPreviousYear.counterMonths[10]);samples["heaterOnPreviousYearDec"] = String(heaterTimeOnPreviousYear.counterMonths[11]);
+  
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnYear.counterMonths[i];
+  samples["boilerYear"] = String(boilerTimeOnYear.year);
+  samples["boilerYesterday"] = String(boilerTimeOnYear.yesterday);
+  samples["boilerToday"] = String(boilerTimeOnYear.today);
+  samples["boilerOnYear"] = String(auxTimeOn);
+  samples["boilerOnYearJan"] = String(boilerTimeOnYear.counterMonths[0]);samples["boilerOnYearFeb"] = String(boilerTimeOnYear.counterMonths[1]);samples["boilerOnYearMar"] = String(boilerTimeOnYear.counterMonths[2]);samples["boilerOnYearApr"] = String(boilerTimeOnYear.counterMonths[3]);samples["boilerOnYearMay"] = String(boilerTimeOnYear.counterMonths[4]);samples["boilerOnYearJun"] = String(boilerTimeOnYear.counterMonths[5]);
+  samples["boilerOnYearJul"] = String(boilerTimeOnYear.counterMonths[6]);samples["boilerOnYearAug"] = String(boilerTimeOnYear.counterMonths[7]);samples["boilerOnYearSep"] = String(boilerTimeOnYear.counterMonths[8]);samples["boilerOnYearOct"] = String(boilerTimeOnYear.counterMonths[9]);samples["boilerOnYearNov"] = String(boilerTimeOnYear.counterMonths[10]);samples["boilerOnYearDec"] = String(boilerTimeOnYear.counterMonths[11]);
+  samples["boilerOnYesterday"] = String(boilerTimeOnYear.counterYesterday);
+  samples["boilerOnToday"] = String(boilerTimeOnYear.counterToday);
+  auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnPreviousYear.counterMonths[i];
+  samples["boilerPreviousYear"] = String(boilerTimeOnPreviousYear.year);
+  samples["boilerOnPreviousYear"] = String(auxTimeOn);
+  samples["boilerOnPreviousYearJan"] = String(boilerTimeOnPreviousYear.counterMonths[0]);samples["boilerOnPreviousYearFeb"] = String(boilerTimeOnPreviousYear.counterMonths[1]);samples["boilerOnPreviousYearMar"] = String(boilerTimeOnPreviousYear.counterMonths[2]);samples["boilerOnPreviousYearApr"] = String(boilerTimeOnPreviousYear.counterMonths[3]);samples["boilerOnPreviousYearMay"] = String(boilerTimeOnPreviousYear.counterMonths[4]);samples["boilerOnPreviousYearJun"] = String(boilerTimeOnPreviousYear.counterMonths[5]);
+  samples["boilerOnPreviousYearJul"] = String(boilerTimeOnPreviousYear.counterMonths[6]);samples["boilerOnPreviousYearAug"] = String(boilerTimeOnPreviousYear.counterMonths[7]);samples["boilerOnPreviousYearSep"] = String(boilerTimeOnPreviousYear.counterMonths[8]);samples["boilerOnPreviousYearOct"] = String(boilerTimeOnPreviousYear.counterMonths[9]);samples["boilerOnPreviousYearNov"] = String(boilerTimeOnPreviousYear.counterMonths[10]);samples["boilerOnPreviousYearDec"] = String(boilerTimeOnPreviousYear.counterMonths[11]);
+
+  /*if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Exit - samples[\"boilerToday\"]="+JSON.stringify(samples["boilerToday"])+"samples[\"heaterToday\"]="+JSON.stringify(samples["heaterToday"]));*/ //----->
   
   //No time on counter update if there is no NTP sync  
-  lastTimeSecondCheck=nowTimeGlobal;
+  lastTimeSecondCheck=millis();
 }
 
 void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal) {

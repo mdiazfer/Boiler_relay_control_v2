@@ -696,6 +696,12 @@ if (!!window.EventSource) {
     Relay1=myObj.Relay1==="R1_ON"?true:false;
     Relay2=myObj.Relay2==="R2_ON"?true:false;
     ipAddress=myObj.ipAddress;
+    voltage=myObj.Voltage; document.getElementById("voltageId").innerHTML=voltage;
+    current=myObj.Current; document.getElementById("currentId").innerHTML=current.toFixed(3);
+    power=myObj.Power; document.getElementById("powerId").innerHTML=power;
+    energyToday=myObj.EnergyToday; document.getElementById("energyTodayId").innerHTML=energyToday.toFixed(3);
+    energyYesterday=myObj.EnergyYesterday; document.getElementById("energyYesterdayId").innerHTML=energyYesterday.toFixed(3);
+    energyTotal=myObj.EnergyTotal; document.getElementById("energyTotalId").innerHTML=energyTotal.toFixed(3);
     document.getElementById("latestUpdate").innerHTML = dateUpdate;
     document.getElementById('thermostatSwitch').checked=Relay1;
     document.getElementById('forceSwitch').checked=Relay2;

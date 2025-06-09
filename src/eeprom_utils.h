@@ -2,7 +2,7 @@
 #include <EEPROM.h>
 #include "wifiConnection.h"
 
-extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled;
+extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled,powerMeasureEnabled;
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetSWCount,resetPreventiveWebServerCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
                               errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
 extern RTC_DATA_ATTR uint32_t minHeapSinceUpgrade; //1*4=4B
@@ -11,7 +11,7 @@ extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPrevious
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
 extern String TZEnvVariable,TZName,device,
-        mqttServer,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,userName,userPssw;
+        mqttServer,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,userName,userPssw,powerMqttTopic;
 extern bool debugModeOn;
 extern wifiCredentials wifiCred;
 
