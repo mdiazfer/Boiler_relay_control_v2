@@ -931,7 +931,7 @@ void EEPROMInit() {
 
     //Get the rest of variables from EEPROM
     configVariables=EEPROM.read(0x606);
-    powerMeasureEnabled=configVariables & 0x01; //Bit 0, powerMeasureEnabled=false
+    powerMeasureEnabled=configVariables & 0x01; //Bit 0, powerMeasureEnabled
 
     //Get the WiFi Credential-related variables from EEPROM or global_setup.h
     //If variables exist in global_setup.h and doesn't exit in EEPPROM, then update EEPROM 
@@ -1105,12 +1105,12 @@ void variablesInit() {
       //bool
       debugModeOn=DEBUG_MODE_ON;logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
       boilerStatus=false;thermostateStatus=false;boilerOn=false;thermostateOn=false;thermostateInterrupt=false;gasClear=false;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
-      webLogsOn=false;eepromUpdate=false;
+      webLogsOn=false;eepromUpdate=false;powerMeasureSubscribed=false;
       //webLogsOn=false;
       //uint8_t
       auxLoopCounter=0;auxLoopCounter2=0;auxCounter=0;fileUpdateError=0;errorOnActiveCookie=0;errorOnWrongCookie=0;
       //uint16_t
-      rebounds=0;voltage=0;power=0;
+      rebounds=0;voltage=0;power=0;powerMeasureId=0;
       //uint32_t
       lastHeap=0;minHeapSinceBoot=0xFFFFFFFF;flashSize=ESP.getFlashChipSize();programSize=ESP.getSketchSize();fileSystemSize=0;fileSystemUsed=0;
       //uint64_t
@@ -1612,6 +1612,8 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
 
   if (!ntpSynced) {
     //No NTP, so no real date available. Let's skip counters stuff
+    today=0;yesterday=0;year=0;previousYear=0; //If no NTP, real date not avaiable, so avoid propagating wrong values with those variables. v0.9.9
+    
     heaterTimeOnYear.year=0; heaterTimeOnPreviousYear.year=0;
     heaterTimeOnYear.yesterday=0; heaterTimeOnPreviousYear.yesterday=0;
     heaterTimeOnYear.today=0; heaterTimeOnPreviousYear.today=0;
@@ -1654,7 +1656,7 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
     return error_setup;
   }
 
-  //Check variable coherency. If not, it means it's timers in EEPROM were never store before. Init them.
+  //Check variable coherency. If not, it means timers in EEPROM were never stored before. Init them.
   EEPROM.get(0x421,heaterTimeOnYear);EEPROM.get(0x465,heaterTimeOnPreviousYear);
   EEPROM.get(0x4A9,boilerTimeOnYear); EEPROM.get(0x4ED,boilerTimeOnPreviousYear);
   
@@ -1769,7 +1771,7 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
   //Update JSON variable
   uint32_t auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnYear.counterMonths[i];
   samples["heaterYear"] = String(heaterTimeOnYear.year);
-  samples["heaterYesterda"] = String(heaterTimeOnYear.yesterday);
+  samples["heaterYesterday"] = String(heaterTimeOnYear.yesterday);
   samples["heaterToday"] = String(heaterTimeOnYear.today);
   samples["heaterOnYear"] = String(auxTimeOn);
   samples["heaterOnYearJan"] = String(heaterTimeOnYear.counterMonths[0]);samples["heaterOnYearFeb"] = String(heaterTimeOnYear.counterMonths[1]);samples["heaterOnYearMar"] = String(heaterTimeOnYear.counterMonths[2]);samples["heaterOnYearApr"] = String(heaterTimeOnYear.counterMonths[3]);samples["heaterOnYearMay"] = String(heaterTimeOnYear.counterMonths[4]);samples["heaterOnYearJun"] = String(heaterTimeOnYear.counterMonths[5]);

@@ -12,7 +12,7 @@
 
 extern RTC_DATA_ATTR boolean deviceReset,factoryReset,OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,httpCloudEnabled,
                       mqttServerEnabled,secureMqttEnabled,forceMQTTConnect,forceWifiReconnect,forceNTPCheck,
-                      bluetoothEnabled,wifiEnabled,reconnectWifiAndRestartWebServer,resyncNTPServer,powerMeasureEnabled;
+                      bluetoothEnabled,wifiEnabled,reconnectWifiAndRestartWebServer,resyncNTPServer,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
                               errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
 extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot;

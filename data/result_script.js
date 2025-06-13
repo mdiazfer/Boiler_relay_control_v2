@@ -511,30 +511,7 @@ function getReadings(){
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      var myObj = JSON.parse(this.responseText);
-      console.log(myObj);
-      var temp = myObj.temperature;
-      var hum = myObj.humidity;
-      var LPG = myObj.LPG;
-      var CO = myObj.CO;
-      var ALCOHOL = myObj.ALCOHOL;
-      var CH4 = myObj.CH4;
-      var H2 = myObj.H2;
-      var date_Update=myObj.dateUpdate;
-      gaugeTemp.value = temp;
-      gaugeHum.value = hum;
-      gaugeLPG.value = LPG;
-      gaugeCO.value = CO;
-      gaugeALCOHOL.value = ALCOHOL;
-      gaugeCH4.value = CH4;
-      gaugeH2.value = H2;
-      dateUpdate=date_Update;
-      Relay1=myObj.Relay1==="R1_ON"?true:false;
-      Relay2=myObj.Relay2==="R2_ON"?true:false;
-      ipAddress=myObj.ipAddress;
-      document.getElementById("latestUpdate").innerHTML = dateUpdate;
-      document.getElementById('thermostatSwitch').checked=Relay1;
-      document.getElementById('forceSwitch').checked=Relay2;
+      updateSite(JSON.parse(this.responseText));
     }
   }; 
   xhr.open("GET", "/samples", true);
@@ -607,8 +584,200 @@ function switchForceClicked(){
 }
 
 // Get current sensor readings when the page loads
-window.addEventListener('load', getReadings);
+window.addEventListener('load', loadSite);
 
+function loadSite() {
+  let val="N/A";
+  document.getElementById("energyYesterdayId").innerHTML=val;
+  document.getElementById("energyTodayId").innerHTML=val;
+  document.getElementById("energyTotalId").innerHTML=val;
+  document.getElementById("voltageId").innerHTML=val;
+  document.getElementById("currentId").innerHTML=val;
+  document.getElementById("powerId").innerHTML=val;
+  document.getElementById("boilerTimeOnTodayId").innerHTML=val;
+
+  getReadings();
+}
+
+function updateSite(myObj) {
+  //var myObj = JSON.parse(e.data);
+  var val;
+  console.log(myObj);
+  
+  //Gas-related readings update - gauges - 
+  gaugeTemp.value = myObj.temperature;
+  gaugeHum.value = myObj.humidity;
+  gaugeLPG.value = myObj.LPG;
+    if (myObj.LPG==0) document.getElementById("id-card-title-LPG").style.color="#78B0FF"; //Blue
+    else if (myObj.LPG<=200) document.getElementById("id-card-title-LPG").style.color="#555755"; //Grey
+    else if (myObj.LPG<=1500) document.getElementById("id-card-title-LPG").style.color="#6ED81A"; //Green
+    else if (myObj.LPG<=5000) document.getElementById("id-card-title-LPG").style.color="#FEE909"; //Yellow
+    else if (myObj.LPG<=10000) document.getElementById("id-card-title-LPG").style.color="#C30016"; //Red
+    else document.getElementById("id-card-title-LPG").style.color="#555755"; //Grey
+  gaugeCO.value = myObj.CO;
+    if (myObj.CO==0) document.getElementById("id-card-title-CO").style.color="#78B0FF"; //Blue
+    else if (myObj.CO<=200) document.getElementById("id-card-title-CO").style.color="#555755"; //Grey
+    else if (myObj.CO<=500) document.getElementById("id-card-title-CO").style.color="#6ED81A"; //Green
+    else if (myObj.CO<=900) document.getElementById("id-card-title-CO").style.color="#FEE909"; //Yellow
+    else if (myObj.CO<=10000) document.getElementById("id-card-title-CO").style.color="#C30016"; //Red
+    else document.getElementById("id-card-title-CO").style.color="#555755"; //Grey
+  gaugeALCOHOL.value = myObj.ALCOHOL;
+    if (myObj.ALCOHOL==0) document.getElementById("id-card-title-ALCOHOL").style.color="#78B0FF"; //Blue
+    else if (myObj.ALCOHOL<=200) document.getElementById("id-card-title-ALCOHOL").style.color="#555755"; //Grey
+    else if (myObj.ALCOHOL<=1500) document.getElementById("id-card-title-ALCOHOL").style.color="#6ED81A"; //Green
+    else if (myObj.ALCOHOL<=5000) document.getElementById("id-card-title-ALCOHOL").style.color="#FEE909"; //Yellow
+    else if (myObj.ALCOHOL<=10000) document.getElementById("id-card-title-ALCOHOL").style.color="#C30016"; //Red
+    else document.getElementById("id-card-title-ALCOHOL").style.color="#555755"; //Grey
+  gaugeCH4.value = myObj.CH4;
+    if (myObj.CH4==0) document.getElementById("id-card-title-CH4").style.color="#78B0FF"; //Blue
+    else if (myObj.CH4<=200) document.getElementById("id-card-title-CH4").style.color="#555755"; //Grey
+    else if (myObj.CH4<=1500) document.getElementById("id-card-title-CH4").style.color="#6ED81A"; //Green
+    else if (myObj.CH4<=5000) document.getElementById("id-card-title-CH4").style.color="#FEE909"; //Yellow
+    else if (myObj.CH4<=10000) document.getElementById("id-card-title-CH4").style.color="#C30016"; //Red
+    else document.getElementById("id-card-title-CH4").style.color="#555755"; //Grey
+  gaugeH2.value = myObj.H2;
+    if (myObj.H2==0) document.getElementById("id-card-title-H2").style.color="#78B0FF"; //Blue
+    else if (myObj.H2<=200) document.getElementById("id-card-title-H2").style.color="#555755"; //Grey
+    else if (myObj.H2<=1500) document.getElementById("id-card-title-H2").style.color="#6ED81A"; //Green
+    else if (myObj.H2<=5000) document.getElementById("id-card-title-H2").style.color="#FEE909"; //Yellow
+    else if (myObj.H2<=10000) document.getElementById("id-card-title-H2").style.color="#C30016"; //Red
+    else document.getElementById("id-card-title-H2").style.color="#555755"; //Grey
+  dateUpdate=myObj.dateUpdate;
+  previousGasClear=gasClear;
+  gasClear=myObj.Clean_air==="OFF"?true:false;
+  if (previousGasClear!=gasClear)
+    {if (gasClear) {
+      document.getElementById("cleanair").src="leaf-circle-green.png";
+      document.getElementById("cleanair").alt="Clean AIR";
+      document.getElementById("id-card-title-GAS").innerHTML="Clean AIR";
+      document.getElementById("id-card-title-GAS").style.color="#6ED81A"; //Gren
+    } else {
+      document.getElementById("cleanair").src="leaf-circle-red.png";
+      document.getElementById("cleanair").alt="GAS leak";
+      document.getElementById("id-card-title-GAS").innerHTML="GAS leak";
+      document.getElementById("id-card-title-GAS").style.color="#C30016"; //Red
+    }
+  }
+
+  //heater icon update - non smartplug dependent
+  previousThermostatStatus=thermostatStatus;
+  thermostatStatus=myObj.Thermostate_status==="OFF"?false:true;
+  if (previousThermostatStatus!=thermostatStatus)
+    {if (thermostatStatus) document.getElementById("heaterStatusIcon").src="radiator-orange.png";
+    else document.getElementById("heaterStatusIcon").src="radiator-blue.png"}
+  Relay1=myObj.Relay1==="R1_ON"?true:false;
+  Relay2=myObj.Relay2==="R2_ON"?true:false;
+  ipAddress=myObj.ipAddress;
+  document.getElementById("latestUpdate").innerHTML = dateUpdate;
+  document.getElementById('thermostatSwitch').checked=Relay1;
+  document.getElementById('forceSwitch').checked=Relay2;
+
+  //Heater Time On counters - non smartplug dependent
+  if(myObj.heaterOnYear/60>60) val=String((myObj.heaterOnYear/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYear/60).toFixed(1))+" m";
+    document.getElementById("heaterTimeOnYearId").innerHTML=val;
+  switch (new Date().getMonth()) {
+    case 0:if(myObj.heaterOnYearJan/60>60) val=String((myObj.heaterOnYearJan/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearJan/60).toFixed(1))+" m";break;
+    case 1:if(myObj.heaterOnYearFeb/60>60) val=String((myObj.heaterOnYearFeb/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearFeb/60).toFixed(1))+" m";break;
+    case 2:if(myObj.heaterOnYearMar/60>60) val=String((myObj.heaterOnYearMar/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearMar/60).toFixed(1))+" m";break;
+    case 3:if(myObj.heaterOnYearApr/60>60) val=String((myObj.heaterOnYearApr/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearApr/60).toFixed(1))+" m";break;
+    case 4:if(myObj.heaterOnYearMay/60>60) val=String((myObj.heaterOnYearMay/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearMay/60).toFixed(1))+" m";break;
+    case 5:if(myObj.heaterOnYearJun/60>60) val=String((myObj.heaterOnYearJun/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearJun/60).toFixed(1))+" m";break;
+    case 6:if(myObj.heaterOnYearJul/60>60) val=String((myObj.heaterOnYearJul/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearJul/60).toFixed(1))+" m";break;
+    case 7:if(myObj.heaterOnYearAug/60>60) val=String((myObj.heaterOnYearAug/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearAug/60).toFixed(1))+" m";break;
+    case 8:if(myObj.heaterOnYearSep/60>60) val=String((myObj.heaterOnYearSep/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearSep/60).toFixed(1))+" m";break;
+    case 9:if(myObj.heaterOnYearOct/60>60) val=String((myObj.heaterOnYearOct/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearOct/60).toFixed(1))+" m";break;
+    case 10:if(myObj.heaterOnYearNov/60>60) val=String((myObj.heaterOnYearNov/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearNov/60).toFixed(1))+" m";break;
+    case 11:if(myObj.heaterOnYearDec/60>60) val=String((myObj.heaterOnYearDec/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYearDec/60).toFixed(1))+" m";break;
+  }; document.getElementById("heaterTimeOnMonthId").innerHTML=val;
+  if(myObj.heaterOnYesterday/60>60) val=String((myObj.heaterOnYesterday/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYesterday/60).toFixed(1))+" m";
+    document.getElementById("heaterTimeOnYesterdayId").innerHTML=val;
+  if(myObj.heaterOnToday/60>60) val=String((myObj.heaterOnToday/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnToday/60).toFixed(1))+" m";
+    document.getElementById("heaterTimeOnTodayId").innerHTML=val;
+
+  //Energy and boiler time on counters related - smartplug dependent
+  if (myObj.powerMeasureEnabled && myObj.powerMeasureSubscribed) {
+    //Set grey color first
+    document.getElementById("tswenergy_title_l1").style.color="#f6ff78"; //dark yelow
+    document.getElementById("tswpower_title_l1").style.color="#f6ff78"; //dark yelow
+    document.getElementById("tswtimeon_title_l1").style.color="#78B0FF"; //dark blue
+    document.getElementById("tswenergy_col_l1").style.color="#ccd0b0"; //yelow
+    document.getElementById("tswenergy_col_l2").style.color="#ccd0b0"; //yelow
+    document.getElementById("tswenergy_col_l3").style.color="#ccd0b0"; //yelow
+    document.getElementById("tswenergy_col_l4").style.color="#ccd0b0"; //yelow
+    document.getElementById("tswtimeon_col_l1").style.color="#caf6f6"; //blue
+    document.getElementById("tswtimeon_col_l2").style.color="#caf6f6"; //blue
+
+    previousBoilerStatus=boilerStatus;
+    boilerStatus=myObj.boilerStatus==="OFF"?false:true;
+    uriIconArray=document.getElementById("boilerStatusIcon").src.split("/");
+    if (uriIconArray[uriIconArray.length-1] == "boiler-grey.png") {
+      //Update the icon if the Energy values are available
+      if (boilerStatus) document.getElementById("boilerStatusIcon").src="boiler-orange.png";
+      else document.getElementById("boilerStatusIcon").src="boiler-blue.png";
+    }
+    else {
+      //Change icon if status changed
+      if (previousBoilerStatus!=boilerStatus) {
+        if (boilerStatus) document.getElementById("boilerStatusIcon").src="boiler-orange.png";
+        else document.getElementById("boilerStatusIcon").src="boiler-blue.png";
+      }
+    }
+
+    energyYesterday=myObj.EnergyYesterday; document.getElementById("energyYesterdayId").innerHTML=energyYesterday.toFixed(3);
+    energyToday=myObj.EnergyToday; document.getElementById("energyTodayId").innerHTML=energyToday.toFixed(3);
+    energyTotal=myObj.EnergyTotal; document.getElementById("energyTotalId").innerHTML=energyTotal.toFixed(3);
+    voltage=myObj.Voltage; document.getElementById("voltageId").innerHTML=voltage;
+    current=myObj.Current; document.getElementById("currentId").innerHTML=current.toFixed(3);
+    power=myObj.Power; document.getElementById("powerId").innerHTML=power;
+
+    //Set the variables values
+    if(myObj.boilerOnYear/60>60) val=String((myObj.boilerOnYear/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYear/60).toFixed(1))+" m";
+    document.getElementById("boilerTimeOnYearId").innerHTML=val;
+    switch (new Date().getMonth()) {
+      case 0:if(myObj.boilerOnYearJan/60>60) val=String((myObj.boilerOnYearJan/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearJan/60).toFixed(1))+" m";break;
+      case 1:if(myObj.boilerOnYearFeb/60>60) val=String((myObj.boilerOnYearFeb/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearFeb/60).toFixed(1))+" m";break;
+      case 2:if(myObj.boilerOnYearMar/60>60) val=String((myObj.boilerOnYearMar/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearMar/60).toFixed(1))+" m";break;
+      case 3:if(myObj.boilerOnYearApr/60>60) val=String((myObj.boilerOnYearApr/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearApr/60).toFixed(1))+" m";break;
+      case 4:if(myObj.boilerOnYearMay/60>60) val=String((myObj.boilerOnYearMay/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearMay/60).toFixed(1))+" m";break;
+      case 5:if(myObj.boilerOnYearJun/60>60) val=String((myObj.boilerOnYearJun/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearJun/60).toFixed(1))+" m";break;
+      case 6:if(myObj.boilerOnYearJul/60>60) val=String((myObj.boilerOnYearJul/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearJul/60).toFixed(1))+" m";break;
+      case 7:if(myObj.boilerOnYearAug/60>60) val=String((myObj.boilerOnYearAug/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearAug/60).toFixed(1))+" m";break;
+      case 8:if(myObj.boilerOnYearSep/60>60) val=String((myObj.boilerOnYearSep/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearSep/60).toFixed(1))+" m";break;
+      case 9:if(myObj.boilerOnYearOct/60>60) val=String((myObj.boilerOnYearOct/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearOct/60).toFixed(1))+" m";break;
+      case 10:if(myObj.boilerOnYearNov/60>60) val=String((myObj.boilerOnYearNov/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearNov/60).toFixed(1))+" m";break;
+      case 11:if(myObj.boilerOnYearDec/60>60) val=String((myObj.boilerOnYearDec/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYearDec/60).toFixed(1))+" m";break;
+    }; document.getElementById("boilerTimeOnMonthId").innerHTML=val;
+    if(myObj.boilerOnYesterday/60>60) val=String((myObj.boilerOnYesterday/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYesterday/60).toFixed(1))+" m";
+      document.getElementById("boilerTimeOnYesterdayId").innerHTML=val;
+    if(myObj.boilerOnToday/60>60) val=String((myObj.boilerOnToday/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnToday/60).toFixed(1))+" m";
+      document.getElementById("boilerTimeOnTodayId").innerHTML=val;
+  }
+  else {
+    //Set grey color first
+    document.getElementById("tswenergy_title_l1").style.color="#636261"; //dark grey
+    document.getElementById("tswpower_title_l1").style.color="#636261"; //dark grey
+    document.getElementById("tswtimeon_title_l1").style.color="#636261"; //dark grey
+    document.getElementById("tswenergy_col_l1").style.color="#838281"; //grey
+    document.getElementById("tswenergy_col_l2").style.color="#838281"; //grey
+    document.getElementById("tswenergy_col_l3").style.color="#838281"; //grey
+    document.getElementById("tswenergy_col_l4").style.color="#838281"; //grey
+    document.getElementById("tswtimeon_col_l1").style.color="#838281"; //grey
+    document.getElementById("tswtimeon_col_l2").style.color="#838281"; //grey
+    document.getElementById("boilerStatusIcon").src="boiler-grey.png"; //grey
+    
+    //Set the variables values
+    if (!myObj.powerMeasureEnabled) val="N/E"; else val="N/A";
+    document.getElementById("energyYesterdayId").innerHTML=val;
+    document.getElementById("energyTodayId").innerHTML=val;
+    document.getElementById("energyTotalId").innerHTML=val;
+    document.getElementById("voltageId").innerHTML=val;
+    document.getElementById("currentId").innerHTML=val;
+    document.getElementById("powerId").innerHTML=val;
+    document.getElementById("boilerTimeOnTodayId").innerHTML=val;
+  }
+}
+
+//Server-Sent Events (SSE) declaration
 if (!!window.EventSource) {
   var source = new EventSource('/sampleEvents');
   
@@ -623,87 +792,11 @@ if (!!window.EventSource) {
   }, false);
   
   source.addEventListener('message', function(e) {
-    console.log("message", e.data);
+    console.log("message received: ", e.data);
   }, false);
   
   source.addEventListener('new_samples', function(e) {
     console.log("new_samples", e.data);
-    var myObj = JSON.parse(e.data);
-    console.log(myObj);
-    gaugeTemp.value = myObj.temperature;
-    gaugeHum.value = myObj.humidity;
-    gaugeLPG.value = myObj.LPG;
-      if (myObj.LPG==0) document.getElementById("id-card-title-LPG").style.color="#78B0FF"; //Blue
-      else if (myObj.LPG<=200) document.getElementById("id-card-title-LPG").style.color="#555755"; //Grey
-      else if (myObj.LPG<=1500) document.getElementById("id-card-title-LPG").style.color="#6ED81A"; //Green
-      else if (myObj.LPG<=5000) document.getElementById("id-card-title-LPG").style.color="#FEE909"; //Yellow
-      else if (myObj.LPG<=10000) document.getElementById("id-card-title-LPG").style.color="#C30016"; //Red
-      else document.getElementById("id-card-title-LPG").style.color="#555755"; //Grey
-    gaugeCO.value = myObj.CO;
-      if (myObj.CO==0) document.getElementById("id-card-title-CO").style.color="#78B0FF"; //Blue
-      else if (myObj.CO<=200) document.getElementById("id-card-title-CO").style.color="#555755"; //Grey
-      else if (myObj.CO<=500) document.getElementById("id-card-title-CO").style.color="#6ED81A"; //Green
-      else if (myObj.CO<=900) document.getElementById("id-card-title-CO").style.color="#FEE909"; //Yellow
-      else if (myObj.CO<=10000) document.getElementById("id-card-title-CO").style.color="#C30016"; //Red
-      else document.getElementById("id-card-title-CO").style.color="#555755"; //Grey
-    gaugeALCOHOL.value = myObj.ALCOHOL;
-      if (myObj.ALCOHOL==0) document.getElementById("id-card-title-ALCOHOL").style.color="#78B0FF"; //Blue
-      else if (myObj.ALCOHOL<=200) document.getElementById("id-card-title-ALCOHOL").style.color="#555755"; //Grey
-      else if (myObj.ALCOHOL<=1500) document.getElementById("id-card-title-ALCOHOL").style.color="#6ED81A"; //Green
-      else if (myObj.ALCOHOL<=5000) document.getElementById("id-card-title-ALCOHOL").style.color="#FEE909"; //Yellow
-      else if (myObj.ALCOHOL<=10000) document.getElementById("id-card-title-ALCOHOL").style.color="#C30016"; //Red
-      else document.getElementById("id-card-title-ALCOHOL").style.color="#555755"; //Grey
-    gaugeCH4.value = myObj.CH4;
-      if (myObj.CH4==0) document.getElementById("id-card-title-CH4").style.color="#78B0FF"; //Blue
-      else if (myObj.CH4<=200) document.getElementById("id-card-title-CH4").style.color="#555755"; //Grey
-      else if (myObj.CH4<=1500) document.getElementById("id-card-title-CH4").style.color="#6ED81A"; //Green
-      else if (myObj.CH4<=5000) document.getElementById("id-card-title-CH4").style.color="#FEE909"; //Yellow
-      else if (myObj.CH4<=10000) document.getElementById("id-card-title-CH4").style.color="#C30016"; //Red
-      else document.getElementById("id-card-title-CH4").style.color="#555755"; //Grey
-    gaugeH2.value = myObj.H2;
-      if (myObj.H2==0) document.getElementById("id-card-title-H2").style.color="#78B0FF"; //Blue
-      else if (myObj.H2<=200) document.getElementById("id-card-title-H2").style.color="#555755"; //Grey
-      else if (myObj.H2<=1500) document.getElementById("id-card-title-H2").style.color="#6ED81A"; //Green
-      else if (myObj.H2<=5000) document.getElementById("id-card-title-H2").style.color="#FEE909"; //Yellow
-      else if (myObj.H2<=10000) document.getElementById("id-card-title-H2").style.color="#C30016"; //Red
-      else document.getElementById("id-card-title-H2").style.color="#555755"; //Grey
-    dateUpdate=myObj.dateUpdate;
-    previousGasClear=gasClear;
-    gasClear=myObj.Clean_air==="OFF"?true:false;
-    if (previousGasClear!=gasClear)
-      {if (gasClear) {
-        document.getElementById("cleanair").src="leaf-circle-green.png";
-        document.getElementById("cleanair").alt="Clean AIR";
-        document.getElementById("id-card-title-GAS").innerHTML="Clean AIR";
-        document.getElementById("id-card-title-GAS").style.color="#6ED81A"; //Gren
-      } else {
-        document.getElementById("cleanair").src="leaf-circle-red.png";
-        document.getElementById("cleanair").alt="GAS leak";
-        document.getElementById("id-card-title-GAS").innerHTML="GAS leak";
-        document.getElementById("id-card-title-GAS").style.color="#C30016"; //Red
-      }
-    }
-    previousBoilerStatus=boilerStatus;
-    boilerStatus=myObj.boilerStatus==="OFF"?false:true;
-    if (previousBoilerStatus!=boilerStatus)
-      {if (boilerStatus) document.getElementById("boilerStatusIcon").src="boiler-orange.png";
-      else document.getElementById("boilerStatusIcon").src="boiler-blue.png"}
-    previousThermostatStatus=thermostatStatus;
-    thermostatStatus=myObj.Thermostate_status==="OFF"?false:true;
-    if (previousThermostatStatus!=thermostatStatus)
-      {if (thermostatStatus) document.getElementById("heaterStatusIcon").src="radiator-orange.png";
-      else document.getElementById("heaterStatusIcon").src="radiator-blue.png"}
-    Relay1=myObj.Relay1==="R1_ON"?true:false;
-    Relay2=myObj.Relay2==="R2_ON"?true:false;
-    ipAddress=myObj.ipAddress;
-    voltage=myObj.Voltage; document.getElementById("voltageId").innerHTML=voltage;
-    current=myObj.Current; document.getElementById("currentId").innerHTML=current.toFixed(3);
-    power=myObj.Power; document.getElementById("powerId").innerHTML=power;
-    energyToday=myObj.EnergyToday; document.getElementById("energyTodayId").innerHTML=energyToday.toFixed(3);
-    energyYesterday=myObj.EnergyYesterday; document.getElementById("energyYesterdayId").innerHTML=energyYesterday.toFixed(3);
-    energyTotal=myObj.EnergyTotal; document.getElementById("energyTotalId").innerHTML=energyTotal.toFixed(3);
-    document.getElementById("latestUpdate").innerHTML = dateUpdate;
-    document.getElementById('thermostatSwitch').checked=Relay1;
-    document.getElementById('forceSwitch').checked=Relay2;
+    updateSite(JSON.parse(e.data));
   }, false);
 }

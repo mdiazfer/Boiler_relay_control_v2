@@ -93,7 +93,7 @@
                   <p><label id='heaterStatusId'>Heater Status:</label></p>
                 <!-- </font> -->
               </div>
-              <div id="tswcontrols_icons";">
+              <div id="tswcontrols_icons";>
                 <img src="~BOILERICON~" alt="Boiler Status" title="Boiler Status Logo"
                       id="boilerStatusIcon" style="margin-top: -10%; float: none; width: 50px; height: 50px;">
                 <img src="~HEATERICON~" alt="Heater Status" title="Heater Status Logo"
@@ -104,15 +104,15 @@
 
           <div id="tswboilerenergy">
             <div id="tswenergy_title">
-              <font size="3"; style="font-family:verdana; color:#f6ff78; float: none;">Energy Metrics (KWh)</font>
+              <font id="tswenergy_title_l1"; size="3"; style="font-family:verdana; color:#636261; float: none;">Energy Metrics (KWh)</font>
             </div>
             <div id="tswenergy_col">
-              <font size="2"; style="font-family:verdana; color:#ccd0b0; float: none; ">
+              <font id="tswenergy_col_l1"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
                 Yesterday: <span id="energyYesterdayId">~ENERGYYESTERDAY~</span><br>Today: <span id="energyTodayId">~ENERGYTODAY~</span>
               </font>
             </div>
             <div id="tswenergy_col">
-              <font size="2"; style="font-family:verdana; color:#ccd0b0; float: none; ">
+              <font id="tswenergy_col_l2"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
                 Total: <span id="energyTotalId">~ENERGYTOTAL~</span><br>
               </font>
             </div>
@@ -120,15 +120,15 @@
 
           <div id="tswboilerpower">
             <div id="tswpower_title">
-              <font size="3"; style="font-family:verdana; color:#f6ff78; float: none;">Power Metrics (V/A/W)</font>
+              <font id="tswpower_title_l1"; size="3"; style="font-family:verdana; color:#636261; float: none;">Power Metrics (V/A/W)</font>
             </div>
             <div id="tswenergy_col">
-              <font size="2"; style="font-family:verdana; color:#ccd0b0; float: none; ">
+              <font id="tswenergy_col_l3"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
                 Voltage: <span id="voltageId">~VOLTAGE~</span><br>Current: <span id="currentId">~CURRENT~</span>
               </font>
             </div>
             <div id="tswenergy_col">
-              <font size="2"; style="font-family:verdana; color:#ccd0b0; float: none; ">
+              <font id="tswenergy_col_l4"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
                 Power: <span id="powerId">~POWER~</span><br>
               </font>
             </div>
@@ -136,33 +136,33 @@
           
           <div id="tswboilertimeon">
             <div id="tswtimeon_title">
-              <font size="3"; style="font-family:verdana; color:#78B0FF; float: none;">Boiler Time On (min)</font>
+              <font id="tswtimeon_title_l1"; size="3"; style="font-family:verdana; color:#636261; float: none;">Boiler Time On</font>
             </div>
             <div id="tswtimeon_col">
-              <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
-                Year: ~BOILERTIMEONYEAR~<br>Month: ~BOILERTIMEONMONTH~
+              <font id="tswtimeon_col_l1"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
+                Year: <span id="boilerTimeOnYearId">~BOILERTIMEONYEAR~</span><br>Month: <span id="boilerTimeOnMonthId">~BOILERTIMEONMONTH~</span>
               </font>
             </div>
             <div id="tswtimeon_col">
-              <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
-                Yesterday: ~BOILERTIMEONYESTERDAY~<br>Today: ~BOILERTIMEONTODAY~
+              <font id="tswtimeon_col_l2"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
+                Yesterday: <span id="boilerTimeOnYesterdayId">~BOILERTIMEONYESTERDAY~</span><br>Today: <span id="boilerTimeOnTodayId">~BOILERTIMEONTODAY~</span>
               </font>
             </div>
           </div> <!-- tswtimeoncounters -->
           
           <div id="tswheatertimeon">
             <div id="tswtimeon_title">
-              <font size="3"; style="font-family:verdana; color:#78B0FF; float: none;">Heater Time On (min)</font>
+              <font size="3"; style="font-family:verdana; color:#78B0FF; float: none;">Heater Time On</font>
               <font style="font-size: 80%; text-align: right;"><a href="stats.html" title="Statistics" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[more]</a></font>
             </div>
             <div id="tswtimeon_col">
               <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
-                Year: ~HEATERTIMEONYEAR~<br>Month: ~HEATERTIMEONMONTH~
+                Year: <span id="heaterTimeOnYearId">~HEATERTIMEONYEAR~</span><br>Month: <span id="heaterTimeOnMonthId">~HEATERTIMEONMONTH~</span>
               </font>
             </div>
             <div id="tswtimeon_col">
               <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
-                Yesterday: ~HEATERTIMEONYESTERDAY~<br>Today: ~HEATERTIMEONTODAY~
+                Yesterday: <span id="heaterTimeOnYesterdayId">~HEATERTIMEONYESTERDAY~</span><br>Today: <span id="heaterTimeOnTodayId">~HEATERTIMEONTODAY~</span>
               </font>
             </div>
         </div> <!-- tswtimeoncounters -->

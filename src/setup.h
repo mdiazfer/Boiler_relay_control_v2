@@ -26,7 +26,7 @@ extern RTC_DATA_ATTR uint16_t year,previousYear;
 extern RTC_DATA_ATTR uint32_t minHeapSinceUpgrade,minHeapSinceBoot;
 extern RTC_DATA_ATTR uint64_t lastTimeHTTPClouCheck,lastTimeNTPCheck,lastMQTTChangeCheck,lastCloudClockChangeCheck,lastTimeMQTTSampleCheck;
 extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled,ntpSynced,
-                              OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,logTagged,forceWifiReconnect,forceWebServerInit,powerMeasureEnabled;
+                              OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,logTagged,forceWifiReconnect,forceWebServerInit,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 

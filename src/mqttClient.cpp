@@ -7,25 +7,34 @@ void onMqttConnect(bool sessionPresent) {
   //Subcribe to the-iot-factory/boiler-relay-controlv2-E02940/cmnd/RELAY
   String cmdSubcriptionTopic=String(MQTT_TOPIC_PREFIX+device+"/"+MQTT_TOPIC_CMD_SUFIX_SUBSCRIPTION);
   String packetSwitchId=String(mqttClient.subscribe(cmdSubcriptionTopic.c_str(),0));
-  String powerMeasureId;
-  if (powerMeasureEnabled) powerMeasureId=String(mqttClient.subscribe(powerMqttTopic.c_str(),0));
+  if (powerMeasureEnabled) powerMeasureId=mqttClient.subscribe(powerMqttTopic.c_str(),0);
+  if (powerMeasureId==0) powerMeasureSubscribed=false; // powerMeasureSubscribed=true will be updated after receiving the first MQTT message (onMqttMessage) 
 
   if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttConnect] - MQTT connected to "+mqttServer+". Session present: "+String(sessionPresent)+
                         "\n  [onMqttConnect] - Subscribing on:"+
                         "\n  [onMqttConnect] - topic "+MQTT_TOPIC_SUBSCRIPTION+", QoS 0, packetId="+packetInfoId+
                         "\n  [onMqttConnect] - topic "+MQTT_HA_B_AND_LWT_TOPIC_PREFIX+", QoS 0, packetId="+packetStatId+ // v1.9.0 - Home Assistant Last Will Testament message (offline)
                         "\n  [onMqttConnect] - topic "+cmdSubcriptionTopic+", QoS 0, packetId="+packetSwitchId); // Relay ON/OFF
-  if (debugModeOn && powerMeasureEnabled) printLogln("  [onMqttConnect] - topic "+powerMqttTopic+", QoS 0, packetId="+powerMeasureId);
+  if (debugModeOn && powerMeasureEnabled) printLogln("  [onMqttConnect] - topic "+powerMqttTopic+", QoS 0, packetId="+String(powerMeasureId));
   MqttSyncCurrentStatus=MqttSyncOnStatus;
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttDisconnect] - MQTT disconnected, reason="+(uint8_t)reason);
   MqttSyncCurrentStatus=MqttSyncOffStatus;
+  powerMeasureSubscribed=false;
 }
 
 void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
   if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttSubscribe] - MQTT subscribe acknowledged. packetId="+String(packetId)+", qos="+String(qos));
+}
+
+void onMqttUnsubscribe(uint16_t packetId) {
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttUnsubscribe] - MQTT unsubscribe acknowledged. packetId="+String(packetId));
+}
+
+void onMqttPublish(uint16_t packetId) {
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttPublish] - MQTT publish acknowledged. packetId="+String(packetId));
 }
 
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
@@ -173,15 +182,15 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
         //Boiler isn't active
         if (boilerStatus || thermostateStatus) {
           //Coming from active status
-          boilerStatus=false;
+          boilerStatus=false; thermostateOn=false; boilerOn=false; //No flame and thermostateStatus is updated in thermostate_interrupt_triggered()
           /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler is stopped: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+")");*/  //----->
         }
         else {
-          //Coming from inactive status
-          boilerStatus=true; 
-          /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler got active with no flame: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+")");*/  //----->
+          //Getting active from inactive status or inactive status reported from regular MQTT messages from the SmartPlug
+          // Do nothing and wait for the next MQTT update to update status variables
+          /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler uncertain status. Wait for the next MQTT message to set variables: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+")");*/  //----->
         }
-        thermostateOn=false; boilerOn=false; //No flame and thermostateStatus is updated in thermostate_interrupt_triggered()
+        
       }
 
       //Variables update
@@ -191,6 +200,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       energyToday=JSON.stringify(auxEnergyJson["ENERGY"]["Today"]).toFloat();
       energyYesterday=JSON.stringify(auxEnergyJson["ENERGY"]["Yesterday"]).toFloat();
       energyTotal=JSON.stringify(auxEnergyJson["ENERGY"]["Total"]).toFloat();
+      powerMeasureSubscribed=true;
       samples["Voltage"]=voltage;
       samples["Current"]=current;
       samples["Power"]=power;
@@ -201,6 +211,8 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       samples["Thermostate_on"] = thermostateOn==true?"ON":"OFF";
       samples["boilerStatus"] = boilerStatus==true?"ON":"OFF";
       samples["boilerOn"] = boilerOn==true?"ON":"OFF";
+      samples["powerMeasureEnabled"]=powerMeasureEnabled;
+      samples["powerMeasureSubscribed"]=powerMeasureSubscribed;
 
       //Update web and mqtt
       forceMQTTpublish=true;
@@ -212,14 +224,6 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     //Do nothing for other topics
     if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Topic received ("+String(topic)+") and differs from subscriptions: '"+String(MQTT_TOPIC_SUBSCRIPTION)+"', '"+String(MQTT_HA_B_AND_LWT_TOPIC_PREFIX)+"'. Return");
   }
-}
-
-void onMqttUnsubscribe(uint16_t packetId) {
-  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttUnsubscribe] - MQTT unsubscribe acknowledged. packetId="+String(packetId));
-}
-
-void onMqttPublish(uint16_t packetId) {
-  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttPublish] - MQTT publish acknowledged. packetId="+String(packetId));
 }
 
 void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics) {

@@ -7,7 +7,7 @@
 
 extern RTC_DATA_ATTR AsyncMqttClient mqttClient;
 extern RTC_DATA_ATTR enum MqttSyncStatus MqttSyncCurrentStatus;
-extern RTC_DATA_ATTR boolean debugModeOn,wifiEnabled,mqttServerEnabled,forceMQTTpublish,forceWebEvent,thermostateStatus,updateHADiscovery,powerMeasureEnabled;
+extern RTC_DATA_ATTR boolean debugModeOn,wifiEnabled,mqttServerEnabled,forceMQTTpublish,forceWebEvent,thermostateStatus,updateHADiscovery,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot;
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,errorsHTTPUptsCnt,errorsMQTTCnt;
 extern RTC_DATA_ATTR uint16_t year;
@@ -16,7 +16,7 @@ extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPrevious
 extern String mqttTopicPrefix,mqttTopicName,mqttServer,device,iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus,powerMqttTopic;
 extern JSONVar samples;
 extern bool gasClear,thermostateStatus,boilerStatus,boilerOn,thermostateOn;
-extern uint16_t voltage,power;
+extern uint16_t voltage,power,powerMeasureId;
 extern float current,energyToday,energyYesterday,energyTotal;
 
 #ifndef _PRINT_LOG_DEFINITION_

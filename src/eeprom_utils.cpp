@@ -65,9 +65,7 @@
 //Address 53D-605: powerMqttTopic - MQTT Power Topic name char []* (200 B+null=201 B)
 //Address 606: Stores Config variable flags
 //  - Bit 0: powerMeasureEnabled - 1=true, 0=false
-
-
-
+//  - Bit 1: powerMeasureSubscribed - 1=true, 0=false
 
 uint16_t checkSum(byte *addr, uint32_t count) {
   /******************************************************

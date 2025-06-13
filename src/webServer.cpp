@@ -58,33 +58,33 @@ String processorIndex(const String& var){
   */
   if(var == "BOILERTIMEONYEAR") {
     uint32_t total=0;for (int i=0;i<12;i++) total+=boilerTimeOnYear.counterMonths[i];
-    return String(total/60); //minutes
+    return String((float)total/60,1); //minutes
   }
   if(var == "BOILERTIMEONMONTH") {
     uint32_t aux1=boilerTimeOnYear.today/10000;
     uint32_t month=(boilerTimeOnYear.today-aux1*10000)/100;
-    return String(boilerTimeOnYear.counterMonths[month-1]/60);
+    return String((float)boilerTimeOnYear.counterMonths[month-1]/60,1);
   }
   if(var == "BOILERTIMEONYESTERDAY") {
-    return String(boilerTimeOnYear.counterYesterday/60);
+    return String((float)boilerTimeOnYear.counterYesterday/60,1);
   }
   if(var == "BOILERTIMEONTODAY") {
-    return String(boilerTimeOnYear.counterToday/60);
+    return String((float)boilerTimeOnYear.counterToday/60,1);
   }
   if(var == "HEATERTIMEONYEAR") {
     uint32_t total=0;for (int i=0;i<12;i++) total+=heaterTimeOnYear.counterMonths[i];
-    return String(total/60); //minutes
+    return String((float)total/60,1); //minutes
   }
   if(var == "HEATERTIMEONMONTH") {
     uint32_t aux1=heaterTimeOnYear.today/10000;
     uint32_t month=(heaterTimeOnYear.today-aux1*10000)/100;
-    return String(heaterTimeOnYear.counterMonths[month-1]/60);
+    return String((float)heaterTimeOnYear.counterMonths[month-1]/60,1);
   }
   if(var == "HEATERTIMEONYESTERDAY") {
-    return String(heaterTimeOnYear.counterYesterday/60);
+    return String((float)heaterTimeOnYear.counterYesterday/60,1);
   }
   if(var == "HEATERTIMEONTODAY") {
-    return String(heaterTimeOnYear.counterToday/60);
+    return String((float)heaterTimeOnYear.counterToday/60,1);
   }
   if(var == "ENERGYYESTERDAY") {
     return String(energyYesterday,3);
@@ -1078,6 +1078,14 @@ uint32_t initWebServer() {
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
+  webServer.on("/boiler-grey.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/boiler-grey.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
   webServer.on("/leaf-circle-green.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
@@ -1408,7 +1416,7 @@ uint32_t initWebServer() {
     
     int params = request->params();
     uint8_t currentConfigVariables,configVariables=0;
-    bool updateEEPROM=false,connectMqtt=false,disconnectMqtt=false;
+    bool updateEEPROM=false,connectMqtt=false,disconnectMqtt=false,subscribePowerMqtt=false;
     char auxUserName[MQTT_USER_CREDENTIAL_LENGTH],auxUserPssw[MQTT_PW_CREDENTIAL_LENGTH];
     AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false, processorCloud);
     byte auxCounter=0;
@@ -1539,21 +1547,28 @@ uint32_t initWebServer() {
           // HTTP POST MQTT_Power_enabled value
           if (p->name().compareTo("MQTT_Power_enabled")==0) {
             if ((p->value().compareTo("on")==0) && !powerMeasureEnabled && mqttClient.connected()) {
-              powerMeasureEnabled=true;
-              //Subscription is done in MQTTPOWERTOPIC
+              powerMeasureEnabled=true;  //Subscription is done later in MQTTPOWERTOPIC
               if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Request to subscribe to "+powerMqttTopic);
               configVariables=EEPROM.read(0x606) | 0x01; //Set powerMeasureEnabled bit to true (enabled)
               EEPROM.write(0x606,configVariables);
               updateEEPROM=true;
             }
             if ((p->value().compareTo("off")==0) && powerMeasureEnabled && mqttClient.connected()) {
-              powerMeasureEnabled=false;
-              //Unsubscribe
-              mqttClient.unsubscribe(powerMqttTopic.c_str());
-              if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Unsubscribed to "+powerMqttTopic);
-              configVariables=EEPROM.read(0x606) & 0x01;
-              EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;
+              if (powerMqttTopic.compareTo("")!=0) {
+                powerMeasureEnabled=false;
+                //Unsubscribe
+                if (mqttClient.unsubscribe(powerMqttTopic.c_str())!=0)
+                {
+                  powerMeasureSubscribed=false;
+                  if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Unsubscribed to "+powerMqttTopic);
+                  configVariables=EEPROM.read(0x606) & 0xFE; //Set powerMeasureEnabled bit to false (disabled)
+                  EEPROM.write(0x606,configVariables);
+                  updateEEPROM=true;
+                }
+                else {
+                  if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Wrong unsubscription to "+powerMqttTopic);
+                }
+              }
             }
           }
           // HTTP POST MQTTPOWERTOPIC value
@@ -1563,15 +1578,30 @@ uint32_t initWebServer() {
             memcpy(auxMqttTopicPrefix,p->value().c_str(),p->value().length()); //End null not included
             if (powerMqttTopic.compareTo(auxMqttTopicPrefix)!=0) {
               if (powerMeasureEnabled && mqttClient.connected()) {
-                mqttClient.unsubscribe(powerMqttTopic.c_str()); //Unsubscribe first to the previous topic
-                mqttClient.subscribe(p->value().c_str(),0); //Subscribe now to the new one
-                if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Subscribed to "+p->value());
+                if (mqttClient.unsubscribe(powerMqttTopic.c_str())!=0) //Unsubscribe first to the previous topic
+                {
+                  if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Unsubscribed to "+powerMqttTopic);
+                  powerMqttTopic=p->value();
+                  memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
+                  powerMqttTopic.toCharArray(auxMqttTopicPrefix,powerMqttTopic.length()+1);
+                  EEPROM.put(0x53D,auxMqttTopicPrefix);
+                  
+                  updateEEPROM=true;
+                }
+                else {
+                  if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Wrong unsubscription to "+powerMqttTopic);
+                }
               }
-              powerMqttTopic=p->value();
-              powerMqttTopic.toCharArray(auxMqttTopicPrefix,powerMqttTopic.length()+1);
-              EEPROM.put(0x53D,auxMqttTopicPrefix);
-              
-              updateEEPROM=true;
+            }
+            if (powerMeasureEnabled && mqttClient.connected() && powerMqttTopic.compareTo("")!=0) {
+              mqttClient.subscribe(powerMqttTopic.c_str(),0); //Subscribe now to the topic
+              if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Subscribed to \""+p->value()+"\"");
+            }
+            else {
+              if (powerMqttTopic.compareTo("")==0) {
+                powerMeasureEnabled=false;
+                if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Can't subscribed to empty topic. Disabling powerMeasureEnabled");
+              }
             }
           }
 
@@ -1628,6 +1658,8 @@ uint32_t initWebServer() {
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
     request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+
+    samples["powerMeasureEnabled"]=powerMeasureEnabled; //Update powerMeasureEnabled variable anycase
 
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   }); // /cloud HTTP_POST form

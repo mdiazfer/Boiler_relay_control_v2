@@ -10,7 +10,7 @@
 #include "mq5_sensor.h"
 #include <ESP32Ping.h>
 
-extern RTC_DATA_ATTR boolean forceWifiReconnect,forceWebServerInit,firstBoot,wifiResuming,forceWEBTestCheck,forceNTPCheck,wifiEnabled,timersEepromUpdate,updateHADiscovery;
+extern RTC_DATA_ATTR boolean forceWifiReconnect,forceWebServerInit,firstBoot,wifiResuming,forceWEBTestCheck,forceNTPCheck,wifiEnabled,timersEepromUpdate,updateHADiscovery,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetSWCount,resetPreventiveWebServerCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
                               errorsHTTPUptsCnt,errorsMQTTCnt,errorsConnectivityCnt,errorsWebServerCnt;
 extern RTC_DATA_ATTR uint16_t year;

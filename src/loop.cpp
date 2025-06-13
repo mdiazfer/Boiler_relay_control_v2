@@ -102,11 +102,11 @@ void ntp_ko_check_period(bool debugModeOn) {
     debugModeOn: Print out the logs or not
    *****************************************************/
 
-  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - Last lastTimeNTPCheck="+String(lastTimeNTPCheck)+", NTPResuming="+String(NTPResuming)+", auxLoopCounter2="+String(auxLoopCounter2)+", whileLoopTimeLeft="+String(whileLoopTimeLeft));}
+  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - Last lastTimeNTPCheck="+String(lastTimeNTPCheck)+", auxLoopCounter2="+String(auxLoopCounter2)+", whileLoopTimeLeft="+String(whileLoopTimeLeft));}
   else printLog(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));
     
   //Update at begining to prevent accumulating delays in CHECK periods as this code might take long
-  if (!NTPResuming) lastTimeNTPCheck=nowTimeGlobal; //Only if the NTP reconnection didn't ABORT or BREAK in the previous interaction
+  lastTimeNTPCheck=nowTimeGlobal;
 
   //setupNTPConfig if either
   // - Last NTP check failed (and currently there is no NTP sycn) - It's done always (in any Energy Mode)
@@ -132,16 +132,14 @@ void ntp_ko_check_period(bool debugModeOn) {
     switch(setupNTPConfig(debugModeOn,false,&auxLoopCounter2,&whileLoopTimeLeft)) { //NTP Sync and CloudClockCurrentStatus update
       case ERROR_NTP_SERVER:
         forceNTPCheck=false;
-        NTPResuming=false;
         previousCloudClockCurrentStatus=CloudClockOffStatus; //CloudClock Status to be back after DISPLAY_ICONS_REFRESH_TIMEOUT
-        //CloudClockCurrentStatus=CloudClockOffStatus;
+        //CloudClockCurrentStatus=CloudClockOffStatus; //CloudClockCurrentStatus is updated in setupNTPConfig with either CloudClockOnStatus or CloudClockOffStatus
         if (debugModeOn) {printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - setupNTPConfig() finish with ERROR_NTP_SERVER. CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", forceNTPCheck="+String(forceNTPCheck));}
       break;
       case NO_ERROR:
         forceNTPCheck=false;
-        NTPResuming=false;
         previousCloudClockCurrentStatus=CloudClockOnStatus; //CloudClock Status to be back after DISPLAY_ICONS_REFRESH_TIMEOUT
-        //CloudClockCurrentStatus=CloudClockOnStatus;
+        //CloudClockCurrentStatus=CloudClockOnStatus; //CloudClockCurrentStatus is updated in setupNTPConfig with either CloudClockOnStatus or CloudClockOffStatus
         if (debugModeOn) {printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - setupNTPConfig() finish with NO_ERROR. CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", forceNTPCheck="+String(forceNTPCheck));}
       break;
     }
@@ -155,7 +153,7 @@ void ntp_ko_check_period(bool debugModeOn) {
     else {printLog(&nowTimeInfo," - NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S. ");printLogln(" - "+String(ntpServers[ntpServerIndex])+" - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));}
   }
   else {
-    if( wifiCurrentStatus==wifiOffStatus || !wifiEnabled) if (forceNTPCheck) forceNTPCheck=false; //v0.9.9 If no WiFi, don't enter in NTP_KO_CHECK_PERIOD even if it was BREAK or ABORT in previous intercation
+    if( wifiCurrentStatus==wifiOffStatus || !wifiEnabled) {if (forceNTPCheck) forceNTPCheck=false;} //v0.9.9 If no WiFi, don't enter in NTP_KO_CHECK_PERIOD even if it was BREAK or ABORT in previous intercation
     getLocalTime(&nowTimeInfo);
     if (debugModeOn) {
       ///printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - errorsNTPCnt="+String(errorsNTPCnt)+", CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck));
@@ -561,7 +559,9 @@ void gas_sample(bool debugModeOn) {
   samples["EnergyToday"]=energyToday;
   samples["EnergyYesterday"]=energyYesterday;
   samples["EnergyTotal"]=energyTotal;
-}
+  samples["powerMeasureEnabled"]=powerMeasureEnabled;
+  samples["powerMeasureSubscribed"]=powerMeasureSubscribed;
+} // -- gas_sample -- 
 
 void temperature_sample(bool debugModeOn) {
  /******************************************************
@@ -756,11 +756,14 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
   
 
   if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - ONE_SECOND_PERIOD] - Doing actions every second.");}
-  /* debugModeOn=true;
+  /*debugModeOn=true;
     if (debugModeOn) {printLogln(String(millis())+" - [loop - ONE_SECOND_PERIOD] - boilerStatus="+String(boilerStatus)+", thermostateStatus="+String(thermostateStatus)+", boilerOn="+String(boilerOn)+", thermostateOn="+String(thermostateOn)+
         "                                      \nlastThermostatOnTime="+String(lastThermostatOnTime)+", lastBoilerOnTime="+String(lastBoilerOnTime)+
         "                                      \nheaterTimeOnYear.counterToday="+String(heaterTimeOnYear.counterToday)+", heaterTimeOnYear.counterMonths[auxMonth-1]="+String(heaterTimeOnYear.counterMonths[auxMonth-1])+
-        "                                      \nboilerTimeOnYear.counterToday="+String(boilerTimeOnYear.counterToday)+", boilerTimeOnYear.counterMonths[auxMonth-1]="+String(boilerTimeOnYear.counterMonths[auxMonth-1]));
+        "                                      \nboilerTimeOnYear.counterToday="+String(boilerTimeOnYear.counterToday)+", boilerTimeOnYear.counterMonths[auxMonth-1]="+String(boilerTimeOnYear.counterMonths[auxMonth-1])+
+        "                                      \nyear="+String(year)+", previousYear="+String(previousYear)+", today="+String(today)+", yesterday="+String(yesterday)+
+        "                                      \nheaterTimeOnYear.year="+String(heaterTimeOnYear.year)+", heaterTimeOnYear.today="+String(heaterTimeOnYear.today)+", heaterTimeOnYear.yesterday="+String(heaterTimeOnYear.yesterday)+
+        "                                      \nboilerTimeOnYear.year="+String(boilerTimeOnYear.year)+", boilerTimeOnYear.today="+String(boilerTimeOnYear.today)+", boilerTimeOnYear.yesterday="+String(boilerTimeOnYear.yesterday));
   }*/ //----->
 
 
@@ -775,17 +778,28 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
     auxYesterday=(auxYesterdayTimeInfo->tm_year+1900)*10000+(auxYesterdayTimeInfo->tm_mon+1)*100+auxYesterdayTimeInfo->tm_mday;
     auxMonth=(today-year*10000)/100;
 
+    /*if (debugModeOn) {printLogln(String(millis())+" - [loop - ONE_SECOND_PERIOD] - auxMonth="+String(auxMonth)+", auxToday="+String(auxToday)+", auxYesterday="+String(auxYesterday));}*/  //----->
+
     if (thermostateOn) { //Update counters if the heater is on
       heaterTimeOnYear.counterToday+=(nowTimeGlobal-lastThermostatOnTime)/1000;
       heaterTimeOnYear.counterMonths[auxMonth-1]+=(nowTimeGlobal-lastThermostatOnTime)/1000;
       lastThermostatOnTime=nowTimeGlobal;
       timersEepromUpdate=true; //Update EEPROM in the next cycle
     }
-    else {
+    if (boilerOn) { //Update counters if the boiler is on
+      boilerTimeOnYear.counterToday+=(nowTimeGlobal-lastBoilerOnTime)/1000;
+      boilerTimeOnYear.counterMonths[auxMonth-1]+=(nowTimeGlobal-lastBoilerOnTime)/1000;
+      lastBoilerOnTime=nowTimeGlobal;
+      timersEepromUpdate=true; //Update EEPROM in the next cycle
+    }
+    if (!thermostateOn && !boilerOn) { //v0.9.9
       if (today!=auxToday) {
         //New day
         heaterTimeOnYear.counterYesterday=heaterTimeOnYear.counterToday;
         heaterTimeOnYear.counterToday=0;
+        
+        boilerTimeOnYear.counterYesterday=boilerTimeOnYear.counterToday;
+        boilerTimeOnYear.counterToday=0;
 
         if ((auxTimeInfo.tm_year+1900) > (heaterTimeOnYear.year)) {
           //New year
@@ -795,36 +809,7 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
           heaterTimeOnYear.yesterday=today;
           heaterTimeOnYear.counterYesterday=0;
           heaterTimeOnYear.counterToday=0;
-          updateHADiscovery=true;
-        }
-        else {
-          //Same year
-          //Do nothing
-        }
-        yesterday=today;
-        today=auxToday;
-        timersEepromUpdate=true; //Update EEPROM in the next cycle
-      }
-      else {
-        //Same day
-        //Do nothing
-      }
-    }
 
-    if (boilerOn) { //Update counters if the boiler is on
-      boilerTimeOnYear.counterToday+=(nowTimeGlobal-lastBoilerOnTime)/1000;
-      boilerTimeOnYear.counterMonths[auxMonth-1]+=(nowTimeGlobal-lastBoilerOnTime)/1000;
-      lastBoilerOnTime=nowTimeGlobal;
-      timersEepromUpdate=true; //Update EEPROM in the next cycle
-    }
-    else {
-      if (today!=auxToday) {
-        //New day
-        boilerTimeOnYear.counterYesterday=boilerTimeOnYear.counterToday;
-        boilerTimeOnYear.counterToday=0;
-
-        if ((auxTimeInfo.tm_year+1900) > (boilerTimeOnYear.year)) {
-          //New year
           memcpy(&boilerTimeOnPreviousYear,&boilerTimeOnYear,sizeof(boilerTimeOnYear)); //Update boilerTimeOnPreviousYear with boilerTimeOnYear
           boilerTimeOnYear.year=auxTimeInfo.tm_year+1900;
           boilerTimeOnYear.today=auxToday;
@@ -881,8 +866,9 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
   /*if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Exit - samples[\"boilerToday\"]="+JSON.stringify(samples["boilerToday"])+"samples[\"heaterToday\"]="+JSON.stringify(samples["heaterToday"]));*/ //----->
   
   //No time on counter update if there is no NTP sync  
-  lastTimeSecondCheck=millis();
-}
+  //Update with nowTimeGlobal to prevent accumulating delays in CHECK periods as this code might take long
+  lastTimeSecondCheck=nowTimeGlobal;
+} // -- one_second_check_period --
 
 void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal) {
   /******************************************************

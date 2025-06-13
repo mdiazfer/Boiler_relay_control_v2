@@ -236,7 +236,7 @@
 
 //POWER stuff
 #define BOILER_STATUS_ON_POWER_THRESHOLD 50  //Watts - Power threshold to decide whether the boiler is active (not necessarily burning gas)
-#define BOILER_FLAME_ON_POWER_THRESHOLD 238  //Watts - Power threshold to decide whether the boiler is burning gas or not due to either hot water or heater
+#define BOILER_FLAME_ON_POWER_THRESHOLD 232  //Watts - Power threshold to decide whether the boiler is burning gas or not due to either hot water or heater - Based on readings
 
 //BLE stuff
 #define BLE_ENABLED  false

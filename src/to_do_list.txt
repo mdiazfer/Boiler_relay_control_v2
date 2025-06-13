@@ -1,5 +1,10 @@
 Change Log
 ----------
+v0.9.A  - Color grey Web boiler icon and Energy info if not powerMeasureEnabled
+        - Set N/A or N/E to the values related to SmartPlug if powerMeasureEnabled is disabled from web
+        - Troubleshooting
+          + ISS010: Time On Today counter not saved in Yesterday when passing to the next day
+          + ISS011: No subscripion on MQTT power Topic after enabling MQTT Power Measurements in web
 v0.9.9  - Remove year from the MQTT topic for both previous and current years
         - Added support for MQTT Power Topic subscription
         - Added boiler activity info (on and burning gas) in the index web page
@@ -37,13 +42,24 @@ v0.8.9  - First stable version with HA support
 To do list for boiler relay control
 -----------------------------------
 - Troubleshooting
-  + ISS008: Crash from time to time (heap getting off ??)
-  + ISS009: Web server not available from time to time (connectivty lost ??)
+  + ISS008: Randomly crash (heap getting off ??)
+  + ISS009: Web server not available randomly (connectivty lost ??)
+  + ISS012: Web server not available randomly and/or connectivy lost if boiler is ON (mqttmessages) and having active SSE clients (index.html)
+  + ISS013: Web server not available randomly and/or connectivy lost if there are both console clientes open and having active SSE clients (index.html)
 - Get and Show Smart Plug's IP address in web page with link to it
 - Get Energy values on gas_sample periods and at boot time to update the index web page accordingly
-- Color grey Web boiler icon and Energy info if not powerMeasureEnabled
 - New boiler icon if it's burning gas (boilerOn or thermostateOn)
+- Redefine sammples to avoid String values as much as possible
+- New icons for HA:
+  + counter = mdi:counter
+  + ip      = mdi:ip-network
+  + ssid    = mdi:access-print-network
+  + current = mdi:current-ac
+  + power   = mdi:flas
+  + energy  = mdi:lightning-bootLogs
+  + voltage = mdi:sinc-wave
 - Increase period to send readings (??)
+- Evaluate different approach for serving dynamic web content
 - Date in logs in addition to milliseconds
 
 Done
@@ -96,9 +112,16 @@ Done
   + ISS006: Side Col height for Graphs, Global Info, Basic Configuration, Console html pages
   + ISS007: HA takes doesn't refresh quickly Heater Status/Icon after IoT restart (ie. firmware upgred)
     * Fixed in v0.9.7 - MQTT HADiscovery packets are sent several times after bootup
+  + ISS010: Time On Today counter not saved in Yesterday when passing to the next day
+    * Fixed in v0.9.9 - boiler variables were not updated in one_second_check_period function
+  + ISS011: No subscripion on MQTT power Topic after enabling MQTT Power Measurements in web
+    * Fixed in v0.9.9 - webServer.cpp
 - Remove year from the MQTT topic for both previous and current years - v0.9.9
 - Time counters for boiler, similar to the heater ones - v0.9.9
 - Show Current Power (and Energy ?) in the index page - v0.9.9
+- Deleted references to NTPResuming - v0.9.9
+- Color grey Web boiler icon and Energy info if not powerMeasureEnabled - v0.9.9
+- Set N/A or N/E to the values related to SmartPlug if powerMeasureEnabled is disabled from web - v0.9.9
 
   Discarded
   -------------

@@ -66,7 +66,7 @@ extern RTC_DATA_ATTR uint64_t lastTimeNTPCheck;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 extern struct tm nowTimeInfo;
-extern bool isBeaconAdvertising,ntpSynced,NTPResuming,startTimeConfigure,eepromUpdate;
+extern bool isBeaconAdvertising,ntpSynced,startTimeConfigure,eepromUpdate;
 
 #ifndef _PRINT_LOG_DEFINITION_
   extern void printLogln(String logMessage, unsigned char base=10);

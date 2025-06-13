@@ -37,7 +37,7 @@ RTC_DATA_ATTR uint8_t bootCount=255,resetCount=0,resetPreventiveCount=0,resetPre
 RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestCheck=false,forceWebServerInit=false,forceMQTTpublish=false,forceWebEvent=false,
                       ntpEnabled=true,httpCloudEnabled=true,forceNTPCheck=false,ntpSynced=false,
                       mqttServerEnabled=true,forceMQTTConnect=false,secureMqttEnabled=false,bluetoothEnabled=false,webServerEnabled=false,timersEepromUpdate=false,
-                      updateHADiscovery=false,deviceReset=false,factoryReset=false,logTagged=false,reconnectWifiAndRestartWebServer=false,resyncNTPServer=false,powerMeasureEnabled=false;
+                      updateHADiscovery=false,deviceReset=false,factoryReset=false,logTagged=false,reconnectWifiAndRestartWebServer=false,resyncNTPServer=false,powerMeasureEnabled=false,powerMeasureSubscribed=false;
 RTC_DATA_ATTR byte mac[6];
 RTC_DATA_ATTR uint64_t nowTimeGlobal=0,firstLoopTime=0,lastCheckTime=0,lastTimeWifiReconnectionCheck=0,lastTimeHTTPClouCheck=0,lastTimeNTPCheck=0,
                       lastCloudClockChangeCheck=0,lastInterruptTime=0,lastGasSample=0,lastTimeMQTTCheck=0,lastTimeConnectiviyCheck=0,
@@ -64,9 +64,9 @@ bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logM
       webLogsOn=false,serialLogsOn=debugModeOn,eepromUpdate=false;
 bool boilerStatus=false,boilerOn=false, //boilerStatus => Power > Threshold, boilerOn => Burning gas (flame), either due to hot water or heater
       thermostateStatus=false,thermostateOn=false; //thermostateStatus => Thermostate is active (or relay active), thermostateOn => Burning gas
-boolean NTPResuming,startTimeConfigure,wifiResuming;
+boolean startTimeConfigure,wifiResuming;
 uint8_t ntpServerIndex,configVariables,auxLoopCounter=0,auxLoopCounter2=0,auxCounter=0,fileUpdateError=0,errorOnActiveCookie=0,errorOnWrongCookie=0;
-uint16_t rebounds=0,voltage=0,power=0;
+uint16_t rebounds=0,voltage=0,power=0,powerMeasureId=0;
 uint32_t lastHeap=0,flashSize=ESP.getFlashChipSize(),programSize=ESP.getSketchSize(),fileSystemSize=0,fileSystemUsed=0;;
 uint64_t whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
 int updateCommand;
@@ -359,6 +359,7 @@ void loop() {
   }
 
   if (forceWebEvent && wifiEnabled && webServerEnabled && WiFi.status()==WL_CONNECTED && webEvents.count()>0) {
+    //webEvents.count()>0 it means clients connected
     webEvents.send("ping",NULL,nowTimeGlobal);
     webEvents.send(JSON.stringify(samples).c_str(),"new_samples",nowTimeGlobal);
     if (debugModeOn) {printLogln(String(millis())+" - [loop] - new_samples event sent to web clients.");}
