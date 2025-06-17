@@ -66,6 +66,8 @@
 //Address 606: Stores Config variable flags
 //  - Bit 0: powerMeasureEnabled - 1=true, 0=false
 //  - Bit 1: powerMeasureSubscribed - 1=true, 0=false
+//Address 607-608: powerOnFlameThreshold - Power Threshold to decide if the boiler is burning GAS or not
+//Address 609-60C: minMaxHeapBlockSizeSinceUpgrade uint32_t  4 B
 
 uint16_t checkSum(byte *addr, uint32_t count) {
   /******************************************************
@@ -100,7 +102,7 @@ uint16_t checkSum(byte *addr, uint32_t count) {
     sum = (sum & 0xFFFF) + (sum >> 16);
 
   return(~sum);
-}
+} //checkSum
 
 void factoryConfReset() {
   /******************************************************
@@ -356,9 +358,10 @@ void factoryConfReset() {
 
   if (debugModeOn) {printLogln(" and BLE Minor=0x"+String(aux,HEX));}
   
-  //Set minHeap
+  //Set minHeap and minMaxHeapBlockSizeSinceUpgrade
   EEPROM.writeInt(0x41D,minHeapSinceUpgrade);
-  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote Min Heap Seen=0x"+String(minHeapSinceUpgrade,HEX));}
+  EEPROM.writeInt(0x609,minMaxHeapBlockSizeSinceUpgrade);
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote Min Heap Seen=0x"+String(minHeapSinceUpgrade,HEX)+", Min Max Heap Block Seen=0x"+String(minMaxHeapBlockSizeSinceUpgrade));}
   
   //Initialize bootCount variable
   bootCount=1;
@@ -395,4 +398,8 @@ void factoryConfReset() {
   EEPROM.write(0x53A,errorsConnectivityCnt); //Counter for Connectivity errors (being WiFi connected)
   errorsWebServerCnt=0;
   EEPROM.write(0x53B,errorsWebServerCnt); //Counter for Web Server errors (being WiFi connected but not serving web pages)
-}
+
+  //Set Power Threshold 
+  powerOnFlameThreshold=BOILER_FLAME_ON_POWER_THRESHOLD;
+  EEPROM.writeUShort(0x607,powerOnFlameThreshold); //Power Threshold to decide whether the boiler is burning gas or not (flame)
+} //factoryConfReset

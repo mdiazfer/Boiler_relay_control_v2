@@ -22,8 +22,8 @@ extern RTC_DATA_ATTR String tempHumSensorType,bootLogs;
 extern RTC_DATA_ATTR AsyncMqttClient mqttClient;
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetWebServerCnt,
                               errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
-extern RTC_DATA_ATTR uint16_t year,previousYear;
-extern RTC_DATA_ATTR uint32_t minHeapSinceUpgrade,minHeapSinceBoot;
+extern RTC_DATA_ATTR uint16_t year,previousYear,powerOnFlameThreshold;
+extern RTC_DATA_ATTR uint32_t minMaxHeapBlockSizeSinceUpgrade,minHeapSinceUpgrade,minHeapSinceBoot,minMaxHeapBlockSizeSinceBoot,minHeapSeen;
 extern RTC_DATA_ATTR uint64_t lastTimeHTTPClouCheck,lastTimeNTPCheck,lastMQTTChangeCheck,lastCloudClockChangeCheck,lastTimeMQTTSampleCheck;
 extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled,ntpSynced,
                               OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,logTagged,forceWifiReconnect,forceWebServerInit,powerMeasureEnabled,powerMeasureSubscribed;
@@ -36,7 +36,7 @@ extern bool debugModeOn,logMessageTOFF,logMessageTRL1_ON,logMessageTRL2_ON,logMe
 extern char activeCookie[COOKIE_SIZE],currentSetCookie[COOKIE_SIZE],firmwareVersion[VERSION_CHAR_LENGTH+1];
 extern uint8_t ntpServerIndex,auxLoopCounter,auxLoopCounter2,auxCounter,configVariables,fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
 extern uint16_t rebounds,voltage,power;
-extern uint32_t lastHeap,flashSize,programSize,fileSystemSize,fileSystemUsed;
+extern uint32_t heapSize,heapBlockSize,flashSize,programSize,fileSystemSize,fileSystemUsed;
 extern uint64_t whileLoopTimeLeft;
 extern int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String httpRequest,bool fromSetup);
 extern float gasSample,gasVoltCalibrated,RS_airCalibrated,RS_CurrentCalibrated,gasRatioSample,current,energyToday,energyYesterday,energyTotal;

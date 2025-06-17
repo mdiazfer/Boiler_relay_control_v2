@@ -129,6 +129,8 @@
                 <br>
                 <label for="MQTTPOWERTOPIC">MQTT Power Topic:&nbsp;</label>
                 <input id="MQTTPOWERTOPIC_id" name="MQTTPOWERTOPIC" size="25" placeholder=~MQTTPOWERTOPIC~ type="text" pattern="^[^\/].+\/*" ~MQTTPOWERREQUIRED~ value="~MQTTPOWERTOPIC~" ~MQTT_POWER_DISABLED~>
+                <label for="POWERTHRESHOLD">&nbsp;&nbsp;Power Thresh. (W):&nbsp;</label>
+                <input id="POWERTHRESHHOLD_id" name="POWERTHRESHOLD" size="4" min="50" max="2000" placeholder=~POWERTHRESHOLD~ type="number" pattern="^[0-9]+$" maxlenght=4 ~POWERTHRESHOLDREQUIRED~ value="~POWERTHRESHOLD~" ~MQTT_POWER_DISABLED~>
               </fieldset>
               <br><br>
               <fieldset name="AdminUser" form="AdminUser_Form">

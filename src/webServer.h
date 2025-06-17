@@ -15,7 +15,8 @@ extern RTC_DATA_ATTR boolean deviceReset,factoryReset,OTAUpgradeBinAllowed,SPIFF
                       bluetoothEnabled,wifiEnabled,reconnectWifiAndRestartWebServer,resyncNTPServer,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
                               errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
-extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot;
+extern RTC_DATA_ATTR uint16_t powerOnFlameThreshold;
+extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot,minMaxHeapBlockSizeSinceBoot,minMaxHeapBlockSizeSinceUpgrade;
 extern RTC_DATA_ATTR uint64_t nowTimeGlobal,lastTimeHTTPClouCheck;
 extern RTC_DATA_ATTR float valueT,valueHum;
 extern RTC_DATA_ATTR AsyncWebServer webServer;

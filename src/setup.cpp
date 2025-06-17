@@ -959,6 +959,7 @@ void EEPROMInit() {
 
     //Set minHeapSinceUpgrade
     minHeapSinceUpgrade=EEPROM.readInt(0x41D);
+    minMaxHeapBlockSizeSinceUpgrade=EEPROM.readInt(0x609);
 
     //Set the bootCount from EEPROM
     bootCount=bootCount==255?EEPROM.read(0x3DE)+1:1; //bootCount = 255 if VERSION = version in EEPROM. Otherwhise bootCount=0 (need to update value in EEPROM)
@@ -1037,6 +1038,9 @@ void EEPROMInit() {
     //Update time on counters
     EEPROM.get(0x421,heaterTimeOnYear);EEPROM.get(0x465,heaterTimeOnPreviousYear);
     EEPROM.get(0x4A9,boilerTimeOnYear);EEPROM.get(0x4ED,boilerTimeOnPreviousYear);
+
+    //Update Power Threshold 
+    EEPROM.get(0x607,powerOnFlameThreshold); //Power Threshold to decide whether the boiler is burning gas or not (flame)
   }
 
   if (updateEEPROM) 
@@ -1112,7 +1116,7 @@ void variablesInit() {
       //uint16_t
       rebounds=0;voltage=0;power=0;powerMeasureId=0;
       //uint32_t
-      lastHeap=0;minHeapSinceBoot=0xFFFFFFFF;flashSize=ESP.getFlashChipSize();programSize=ESP.getSketchSize();fileSystemSize=0;fileSystemUsed=0;
+      heapSize=0;heapBlockSize=0;minMaxHeapBlockSizeSinceBoot=0xFFFFFFFF;minHeapSinceBoot=0xFFFFFFFF;flashSize=ESP.getFlashChipSize();programSize=ESP.getSketchSize();fileSystemSize=0;fileSystemUsed=0;
       //uint64_t
       whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
       //float
@@ -1252,7 +1256,10 @@ uint32_t httpCloudInit(boolean wifiEnabled,boolean httpCloudEnabled,enum wifiSta
         if (fromSetup) {printLogln("\n  [httpCloudInit] - Setting HTTP Cloud server ....");}
         else printLogln(String(millis())+" - [httpCloudInit] - Setting HTTP Cloud server ....");
       }
-      error_setup|=sendHttpRequest(debugModeOn,serverToUploadSamplesIPAddress,SERVER_UPLOAD_PORT,"test HTTP/1.1",fromSetup);
+      String httpRequest=String(GET_REQUEST_TO_UPLOAD_SAMPLES);
+      httpRequest=httpRequest+"device="+device+"&local_ip_address="+IpAddress2String(WiFi.localIP())+
+        "&relay_status="+String(digitalRead(PIN_THERMOSTATE))+"&counts=0 HTTP/1.1";
+      error_setup|=sendHttpRequest(debugModeOn,serverToUploadSamplesIPAddress,SERVER_UPLOAD_PORT,httpRequest,fromSetup); //Send http update
       lastTimeHTTPClouCheck=millis();
       if ((error_setup & ERROR_CLOUD_SERVER)==0) {
         CloudSyncCurrentStatus=CloudSyncOnStatus;
@@ -1414,9 +1421,11 @@ uint32_t mqttClientInit(boolean wifiEnabled, boolean mqttServerEnabled,boolean s
           }
           
           //Publish HA Discovery messages - v1.9
-          mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),true); //Remove the topics first
-          sleep(1); //wait 1 sec.
-          mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Update the topics then
+          if (!boilerStatus) { //boilerStatus is true if receiving MQTT messages storm from the SmartPlug
+            mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),true); //Remove the topics first
+            sleep(1); //wait 1 sec.
+            mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Update the topics then
+          }
         }
 
         if (MqttSyncCurrentStatus==MqttSyncOnStatus) {
@@ -1629,23 +1638,23 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
     boilerTimeOnYear.counterToday=0;boilerTimeOnPreviousYear.counterToday=0;
     
     //Update JSON variable
-    samples["heaterYear"] = "0";
-    samples["heaterOnYearJan"] = "0";samples["heaterOnYearFeb"] = "0";samples["heaterOnYearMar"] = "0";samples["heaterOnYearApr"] = "0";samples["heaterOnYearMay"] = "0";samples["heaterOnYearJun"] = "0";
-    samples["heaterOnYearJul"] = "0";samples["heaterOnYearAug"] = "0";samples["heaterOnYearSep"] = "0";samples["heaterOnYearOct"] = "0";samples["heaterOnYearNov"] = "0";samples["heaterOnYearDec"] = "0";
-    samples["heaterYesterday"] = "0";
-    samples["heaterToday"] = "0";
-    samples["heaterPreviousYear"] = "0";
-    samples["heaterOnPreviousYearJan"] = "0";samples["heaterOnPreviousYearFeb"] = "0";samples["heaterOnPreviousYearMar"] = "0";samples["heaterOnPreviousYearApr"] = "0";samples["heaterOnPreviousYearMay"] = "0";samples["heaterOnPreviousYearJun"] = "0";
-    samples["heaterOnPreviousYearJul"] = "0";samples["heaterOnPreviousYearAug"] = "0";samples["heaterOnPreviousYearSep"] = "0";samples["heaterOnPreviousYearOct"] = "0";samples["heaterOnPreviousYearNov"] = "0";samples["heaterOnPreviousYearDec"] = "0";
+    samples["heaterYear"] = 0;
+    samples["heaterOnYearJan"] = 0;samples["heaterOnYearFeb"] = 0;samples["heaterOnYearMar"] = 0;samples["heaterOnYearApr"] = 0;samples["heaterOnYearMay"] = 0;samples["heaterOnYearJun"] = 0;
+    samples["heaterOnYearJul"] = 0;samples["heaterOnYearAug"] = 0;samples["heaterOnYearSep"] = 0;samples["heaterOnYearOct"] = 0;samples["heaterOnYearNov"] = 0;samples["heaterOnYearDec"] = 0;
+    samples["heaterYesterday"] = 0;
+    samples["heaterToday"] = 0;
+    samples["heaterPreviousYear"] = 0;
+    samples["heaterOnPreviousYearJan"] = 0;samples["heaterOnPreviousYearFeb"] = 0;samples["heaterOnPreviousYearMar"] = 0;samples["heaterOnPreviousYearApr"] = 0;samples["heaterOnPreviousYearMay"] = 0;samples["heaterOnPreviousYearJun"] = 0;
+    samples["heaterOnPreviousYearJul"] = 0;samples["heaterOnPreviousYearAug"] = 0;samples["heaterOnPreviousYearSep"] = 0;samples["heaterOnPreviousYearOct"] = 0;samples["heaterOnPreviousYearNov"] = 0;samples["heaterOnPreviousYearDec"] = 0;
     
-    samples["boilerYear"] = "0";
-    samples["boilerOnYearJan"] = "0";samples["boilerOnYearFeb"] = "0";samples["boilerOnYearMar"] = "0";samples["boilerOnYearApr"] = "0";samples["boilerOnYearMay"] = "0";samples["boilerOnYearJun"] = "0";
-    samples["boilerOnYearJul"] = "0";samples["boilerOnYearAug"] = "0";samples["boilerOnYearSep"] = "0";samples["boilerOnYearOct"] = "0";samples["boilerOnYearNov"] = "0";samples["boilerOnYearDec"] = "0";
-    samples["boilerYesterday"] = "0";
-    samples["boilerToday"] = "0";
-    samples["boilerPreviousYear"] = "0";
-    samples["boilerOnPreviousYearJan"] = "0";samples["boilerOnPreviousYearFeb"] = "0";samples["boilerOnPreviousYearMar"] = "0";samples["boilerOnPreviousYearApr"] = "0";samples["boilerOnPreviousYearMay"] = "0";samples["boilerOnPreviousYearJun"] = "0";
-    samples["boilerOnPreviousYearJul"] = "0";samples["boilerOnPreviousYearAug"] = "0";samples["boilerOnPreviousYearSep"] = "0";samples["boilerOnPreviousYearOct"] = "0";samples["boilerOnPreviousYearNov"] = "0";samples["boilerOnPreviousYearDec"] = "0";
+    samples["boilerYear"] = 0;
+    samples["boilerOnYearJan"] = 0;samples["boilerOnYearFeb"] = 0;samples["boilerOnYearMar"] = 0;samples["boilerOnYearApr"] = 0;samples["boilerOnYearMay"] = 0;samples["boilerOnYearJun"] = 0;
+    samples["boilerOnYearJul"] = 0;samples["boilerOnYearAug"] = 0;samples["boilerOnYearSep"] = 0;samples["boilerOnYearOct"] = 0;samples["boilerOnYearNov"] = 0;samples["boilerOnYearDec"] = 0;
+    samples["boilerYesterday"] = 0;
+    samples["boilerToday"] = 0;
+    samples["boilerPreviousYear"] = 0;
+    samples["boilerOnPreviousYearJan"] = 0;samples["boilerOnPreviousYearFeb"] = 0;samples["boilerOnPreviousYearMar"] = 0;samples["boilerOnPreviousYearApr"] = 0;samples["boilerOnPreviousYearMay"] = 0;samples["boilerOnPreviousYearJun"] = 0;
+    samples["boilerOnPreviousYearJul"] = 0;samples["boilerOnPreviousYearAug"] = 0;samples["boilerOnPreviousYearSep"] = 0;samples["boilerOnPreviousYearOct"] = 0;samples["boilerOnPreviousYearNov"] = 0;samples["boilerOnPreviousYearDec"] = 0;
 
     if (debugModeOn) {
       if (fromSetup) {printLogln("\n  [timeOnCountersInit] - There is no real date as there is no NTP sync.\n  [timeOnCountersInit] - [KO]");}
@@ -1770,34 +1779,34 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
 
   //Update JSON variable
   uint32_t auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnYear.counterMonths[i];
-  samples["heaterYear"] = String(heaterTimeOnYear.year);
-  samples["heaterYesterday"] = String(heaterTimeOnYear.yesterday);
-  samples["heaterToday"] = String(heaterTimeOnYear.today);
-  samples["heaterOnYear"] = String(auxTimeOn);
-  samples["heaterOnYearJan"] = String(heaterTimeOnYear.counterMonths[0]);samples["heaterOnYearFeb"] = String(heaterTimeOnYear.counterMonths[1]);samples["heaterOnYearMar"] = String(heaterTimeOnYear.counterMonths[2]);samples["heaterOnYearApr"] = String(heaterTimeOnYear.counterMonths[3]);samples["heaterOnYearMay"] = String(heaterTimeOnYear.counterMonths[4]);samples["heaterOnYearJun"] = String(heaterTimeOnYear.counterMonths[5]);
-  samples["heaterOnYearJul"] = String(heaterTimeOnYear.counterMonths[6]);samples["heaterOnYearAug"] = String(heaterTimeOnYear.counterMonths[7]);samples["heaterOnYearSep"] = String(heaterTimeOnYear.counterMonths[8]);samples["heaterOnYearOct"] = String(heaterTimeOnYear.counterMonths[9]);samples["heaterOnYearNov"] = String(heaterTimeOnYear.counterMonths[10]);samples["heaterOnYearDec"] = String(heaterTimeOnYear.counterMonths[11]);
-  samples["heaterOnYesterday"] = String(heaterTimeOnYear.counterYesterday);
-  samples["heaterOnToday"] = String(heaterTimeOnYear.counterToday);
+  samples["heaterYear"] = heaterTimeOnYear.year;
+  samples["heaterYesterday"] = heaterTimeOnYear.yesterday;
+  samples["heaterToday"] = heaterTimeOnYear.today;
+  samples["heaterOnYear"] = auxTimeOn;
+  samples["heaterOnYearJan"] = heaterTimeOnYear.counterMonths[0];samples["heaterOnYearFeb"] = heaterTimeOnYear.counterMonths[1];samples["heaterOnYearMar"] = heaterTimeOnYear.counterMonths[2];samples["heaterOnYearApr"] = heaterTimeOnYear.counterMonths[3];samples["heaterOnYearMay"] = heaterTimeOnYear.counterMonths[4];samples["heaterOnYearJun"] = heaterTimeOnYear.counterMonths[5];
+  samples["heaterOnYearJul"] = heaterTimeOnYear.counterMonths[6];samples["heaterOnYearAug"] = heaterTimeOnYear.counterMonths[7];samples["heaterOnYearSep"] = heaterTimeOnYear.counterMonths[8];samples["heaterOnYearOct"] = heaterTimeOnYear.counterMonths[9];samples["heaterOnYearNov"] = heaterTimeOnYear.counterMonths[10];samples["heaterOnYearDec"] = heaterTimeOnYear.counterMonths[11];
+  samples["heaterOnYesterday"] = heaterTimeOnYear.counterYesterday;
+  samples["heaterOnToday"] = heaterTimeOnYear.counterToday;
   auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=heaterTimeOnPreviousYear.counterMonths[i];
-  samples["heaterPreviousYear"] = String(heaterTimeOnPreviousYear.year);
-  samples["heaterOnPreviousYear"] = String(auxTimeOn);
-  samples["heaterOnPreviousYearJan"] = String(heaterTimeOnPreviousYear.counterMonths[0]);samples["heaterOnPreviousYearFeb"] = String(heaterTimeOnPreviousYear.counterMonths[1]);samples["heaterOnPreviousYearMar"] = String(heaterTimeOnPreviousYear.counterMonths[2]);samples["heaterOnPreviousYearApr"] = String(heaterTimeOnPreviousYear.counterMonths[3]);samples["heaterOnPreviousYearMay"] = String(heaterTimeOnPreviousYear.counterMonths[4]);samples["heaterOnPreviousYearJun"] = String(heaterTimeOnPreviousYear.counterMonths[5]);
-  samples["heaterOnPreviousYearJul"] = String(heaterTimeOnPreviousYear.counterMonths[6]);samples["heaterOnPreviousYearAug"] = String(heaterTimeOnPreviousYear.counterMonths[7]);samples["heaterOnPreviousYearSep"] = String(heaterTimeOnPreviousYear.counterMonths[8]);samples["heaterOnPreviousYearOct"] = String(heaterTimeOnPreviousYear.counterMonths[9]);samples["heaterOnPreviousYearNov"] = String(heaterTimeOnPreviousYear.counterMonths[10]);samples["heaterOnPreviousYearDec"] = String(heaterTimeOnPreviousYear.counterMonths[11]);
+  samples["heaterPreviousYear"] = heaterTimeOnPreviousYear.year;
+  samples["heaterOnPreviousYear"] = auxTimeOn;
+  samples["heaterOnPreviousYearJan"] = heaterTimeOnPreviousYear.counterMonths[0];samples["heaterOnPreviousYearFeb"] = heaterTimeOnPreviousYear.counterMonths[1];samples["heaterOnPreviousYearMar"] = heaterTimeOnPreviousYear.counterMonths[2];samples["heaterOnPreviousYearApr"] = heaterTimeOnPreviousYear.counterMonths[3];samples["heaterOnPreviousYearMay"] = heaterTimeOnPreviousYear.counterMonths[4];samples["heaterOnPreviousYearJun"] = heaterTimeOnPreviousYear.counterMonths[5];
+  samples["heaterOnPreviousYearJul"] = heaterTimeOnPreviousYear.counterMonths[6];samples["heaterOnPreviousYearAug"] = heaterTimeOnPreviousYear.counterMonths[7];samples["heaterOnPreviousYearSep"] = heaterTimeOnPreviousYear.counterMonths[8];samples["heaterOnPreviousYearOct"] = heaterTimeOnPreviousYear.counterMonths[9];samples["heaterOnPreviousYearNov"] = heaterTimeOnPreviousYear.counterMonths[10];samples["heaterOnPreviousYearDec"] = heaterTimeOnPreviousYear.counterMonths[11];
   
   auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnYear.counterMonths[i];
-  samples["boilerYear"] = String(boilerTimeOnYear.year);
-  samples["boilerYesterday"] = String(boilerTimeOnYear.yesterday);
-  samples["boilerToday"] = String(boilerTimeOnYear.today);
-  samples["boilerOnYear"] = String(auxTimeOn);
-  samples["boilerOnYearJan"] = String(boilerTimeOnYear.counterMonths[0]);samples["boilerOnYearFeb"] = String(boilerTimeOnYear.counterMonths[1]);samples["boilerOnYearMar"] = String(boilerTimeOnYear.counterMonths[2]);samples["boilerOnYearApr"] = String(boilerTimeOnYear.counterMonths[3]);samples["boilerOnYearMay"] = String(boilerTimeOnYear.counterMonths[4]);samples["boilerOnYearJun"] = String(boilerTimeOnYear.counterMonths[5]);
-  samples["boilerOnYearJul"] = String(boilerTimeOnYear.counterMonths[6]);samples["boilerOnYearAug"] = String(boilerTimeOnYear.counterMonths[7]);samples["boilerOnYearSep"] = String(boilerTimeOnYear.counterMonths[8]);samples["boilerOnYearOct"] = String(boilerTimeOnYear.counterMonths[9]);samples["boilerOnYearNov"] = String(boilerTimeOnYear.counterMonths[10]);samples["boilerOnYearDec"] = String(boilerTimeOnYear.counterMonths[11]);
-  samples["boilerOnYesterday"] = String(boilerTimeOnYear.counterYesterday);
-  samples["boilerOnToday"] = String(boilerTimeOnYear.counterToday);
+  samples["boilerYear"] = boilerTimeOnYear.year;
+  samples["boilerYesterday"] = boilerTimeOnYear.yesterday;
+  samples["boilerToday"] = boilerTimeOnYear.today;
+  samples["boilerOnYear"] = auxTimeOn;
+  samples["boilerOnYearJan"] = boilerTimeOnYear.counterMonths[0];samples["boilerOnYearFeb"] = boilerTimeOnYear.counterMonths[1];samples["boilerOnYearMar"] = boilerTimeOnYear.counterMonths[2];samples["boilerOnYearApr"] = boilerTimeOnYear.counterMonths[3];samples["boilerOnYearMay"] = boilerTimeOnYear.counterMonths[4];samples["boilerOnYearJun"] = boilerTimeOnYear.counterMonths[5];
+  samples["boilerOnYearJul"] = boilerTimeOnYear.counterMonths[6];samples["boilerOnYearAug"] = boilerTimeOnYear.counterMonths[7];samples["boilerOnYearSep"] = boilerTimeOnYear.counterMonths[8];samples["boilerOnYearOct"] = boilerTimeOnYear.counterMonths[9];samples["boilerOnYearNov"] = boilerTimeOnYear.counterMonths[10];samples["boilerOnYearDec"] = boilerTimeOnYear.counterMonths[11];
+  samples["boilerOnYesterday"] = boilerTimeOnYear.counterYesterday;
+  samples["boilerOnToday"] = boilerTimeOnYear.counterToday;
   auxTimeOn=0; for (int i=0;i<12;i++) auxTimeOn+=boilerTimeOnPreviousYear.counterMonths[i];
-  samples["boilerPreviousYear"] = String(boilerTimeOnPreviousYear.year);
-  samples["boilerOnPreviousYear"] = String(auxTimeOn);
-  samples["boilerOnPreviousYearJan"] = String(boilerTimeOnPreviousYear.counterMonths[0]);samples["boilerOnPreviousYearFeb"] = String(boilerTimeOnPreviousYear.counterMonths[1]);samples["boilerOnPreviousYearMar"] = String(boilerTimeOnPreviousYear.counterMonths[2]);samples["boilerOnPreviousYearApr"] = String(boilerTimeOnPreviousYear.counterMonths[3]);samples["boilerOnPreviousYearMay"] = String(boilerTimeOnPreviousYear.counterMonths[4]);samples["boilerOnPreviousYearJun"] = String(boilerTimeOnPreviousYear.counterMonths[5]);
-  samples["boilerOnPreviousYearJul"] = String(boilerTimeOnPreviousYear.counterMonths[6]);samples["boilerOnPreviousYearAug"] = String(boilerTimeOnPreviousYear.counterMonths[7]);samples["boilerOnPreviousYearSep"] = String(boilerTimeOnPreviousYear.counterMonths[8]);samples["boilerOnPreviousYearOct"] = String(boilerTimeOnPreviousYear.counterMonths[9]);samples["boilerOnPreviousYearNov"] = String(boilerTimeOnPreviousYear.counterMonths[10]);samples["boilerOnPreviousYearDec"] = String(boilerTimeOnPreviousYear.counterMonths[11]);
+  samples["boilerPreviousYear"] = boilerTimeOnPreviousYear.year;
+  samples["boilerOnPreviousYear"] = auxTimeOn;
+  samples["boilerOnPreviousYearJan"] = boilerTimeOnPreviousYear.counterMonths[0];samples["boilerOnPreviousYearFeb"] = boilerTimeOnPreviousYear.counterMonths[1];samples["boilerOnPreviousYearMar"] = boilerTimeOnPreviousYear.counterMonths[2];samples["boilerOnPreviousYearApr"] = boilerTimeOnPreviousYear.counterMonths[3];samples["boilerOnPreviousYearMay"] = boilerTimeOnPreviousYear.counterMonths[4];samples["boilerOnPreviousYearJun"] = boilerTimeOnPreviousYear.counterMonths[5];
+  samples["boilerOnPreviousYearJul"] = boilerTimeOnPreviousYear.counterMonths[6];samples["boilerOnPreviousYearAug"] = boilerTimeOnPreviousYear.counterMonths[7];samples["boilerOnPreviousYearSep"] = boilerTimeOnPreviousYear.counterMonths[8];samples["boilerOnPreviousYearOct"] = boilerTimeOnPreviousYear.counterMonths[9];samples["boilerOnPreviousYearNov"] = boilerTimeOnPreviousYear.counterMonths[10];samples["boilerOnPreviousYearDec"] = boilerTimeOnPreviousYear.counterMonths[11];
 
   //samples.printTo(boardSerialPort); Print out the JSON variable
 

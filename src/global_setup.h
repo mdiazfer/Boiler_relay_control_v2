@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "0.9.9"
+#define VERSION "0.9.B"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -169,16 +169,18 @@
 #define NTP_KO_CHECK_PERIOD  60000 //Milliseconds. 1 minute
 #define NTP_CHECK_TIMEOUT     5000  //Millisecons. Should have NTP anser within 2 sc.
 #define WIFI_RECONNECT_PERIOD  120000 //milliseconds - 2 min - less than UPLOAD_SAMPLES_PERIOD for quicker icon refresh
+#define HEAP_SAMPLE_PERIOD 20000 //Millisecons - Period to get heap size readings
 #define TOFF 3000 //Time all relays are off since starting the sequence in millisenconds
 #define TRL1_ON 1000  //Time Relay-1 ON in millisenconds
 #define GAP_OFF 2000  //Time between ON Relays in millisenconds
 #define TRL2_ON  500  //Time Relay-2 ON in millisenconds
 #define THERMOSTATE_INTERRUPT_DELAY  300 //Milliseconds - Time to stabilize the interrupt
-#define MQTT_CHECK_PERIOD  20000 //Millisecons - Interval between checks on the MQTT server
-#define SAMPLE_PERIOD  20000 //Millisecons - Interval between gas/temp/hum samples
+#define MQTT_CHECK_PERIOD  180000 //Millisecons - Interval between checks on the MQTT server
+#define SAMPLE_PERIOD  20000 //Millisecons - Interval between gas/temp/hum samples if there is boiler activity (neither boiler nor heater)
+#define SAMPLE_LONG_PERIOD  300000 //Millisecons - Interval between gas/temp/hum samples if no boiler activity (neither boiler nor heater)
 #define CONNECTIVITY_CHECK_PERIOD 240000 //Millisecons - Interval between connectiviy checks
 #define ADC_SAMPLES 100
-#define HA_ADVST_WINDOW 90000 //Milliseconds - Time gap to send MQTT HA messages since bootup to make sure all the topics are processed - v0.9.7
+#define HA_ADVST_WINDOW 15000 //Milliseconds - Time gap to send MQTT HA messages since bootup to make sure all the topics are processed - v0.9.7
 
 //Binary header stuff
 //https://github.com/espressif/esp-idf/blob/8fbb63c2a701c22ccf4ce249f43aded73e134a34/components/bootloader_support/include/esp_image_format.h#L58
@@ -236,11 +238,12 @@
 
 //POWER stuff
 #define BOILER_STATUS_ON_POWER_THRESHOLD 50  //Watts - Power threshold to decide whether the boiler is active (not necessarily burning gas)
-#define BOILER_FLAME_ON_POWER_THRESHOLD 232  //Watts - Power threshold to decide whether the boiler is burning gas or not due to either hot water or heater - Based on readings
+#define BOILER_FLAME_ON_POWER_THRESHOLD 235  //Watts - Power threshold to decide whether the boiler is burning gas or not due to either hot water or heater - Based on readings
 
 //BLE stuff
 #define BLE_ENABLED  false
 #define BLE_MIN_HEAP_SIZE  95000  //Based on tests
+#define ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD  10000  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define ABSULUTE_MIN_HEAP_THRESHOLD  7000  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define MIN_HEAP_SEEN_THRESHOLD        700  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define BLE_BEACON_UUID           "F7826DA6-4FA2-4E98-8024-BC5B71E0893E"  //Kontakt proximity

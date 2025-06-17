@@ -565,6 +565,11 @@ String processorCloud(const String& var){
   } else if (var == "MQTTPOWERREQUIRED") {
     if (powerMeasureEnabled) return String("required");
     else return String();
+  } else if (var == "POWERTHRESHOLD") {
+    return String(powerOnFlameThreshold);
+  } else if (var == "POWERTHRESHOLDREQUIRED") {
+    if (powerMeasureEnabled) return String("required");
+    else return String();
   } else {
     return String();
   }
@@ -758,6 +763,10 @@ String processorMaintenance(const String& var){
   } else if (var == "SOFTRESETCOUNTER") {
     //return String(softResetCounter);
     return String();
+  } else if (var == "MINMAXHEAPBLOCKSIZE") {
+    return String(minMaxHeapBlockSizeSinceBoot);
+  } else if (var == "MINMAXHEAPBLOCKSIZEUPGRADE") {
+    return String(minMaxHeapBlockSizeSinceUpgrade);
   } else if (var == "MINHEAPSIZE") {
     return String(minHeapSinceBoot);
   } else if (var == "MINHEAPSIZEUPGRADE") {
@@ -1576,32 +1585,45 @@ uint32_t initWebServer() {
             char auxMqttTopicPrefix[MQTT_TOPIC_NAME_MAX_LENGTH];
             memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
             memcpy(auxMqttTopicPrefix,p->value().c_str(),p->value().length()); //End null not included
-            if (powerMqttTopic.compareTo(auxMqttTopicPrefix)!=0) {
-              if (powerMeasureEnabled && mqttClient.connected()) {
-                if (mqttClient.unsubscribe(powerMqttTopic.c_str())!=0) //Unsubscribe first to the previous topic
-                {
+            if (powerMqttTopic.compareTo(auxMqttTopicPrefix)!=0 && p->value().compareTo("")!=0 && //New Topic. Subscribe it
+                powerMeasureEnabled && mqttClient.connected()) {
+              
+              if (powerMeasureSubscribed) {
+                if (mqttClient.unsubscribe(powerMqttTopic.c_str())!=0) { //Unsubscribe first to the previous topic
                   if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Unsubscribed to "+powerMqttTopic);
-                  powerMqttTopic=p->value();
-                  memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
-                  powerMqttTopic.toCharArray(auxMqttTopicPrefix,powerMqttTopic.length()+1);
-                  EEPROM.put(0x53D,auxMqttTopicPrefix);
-                  
-                  updateEEPROM=true;
+                  powerMeasureSubscribed=false;
                 }
                 else {
                   if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Wrong unsubscription to "+powerMqttTopic);
                 }
               }
-            }
-            if (powerMeasureEnabled && mqttClient.connected() && powerMqttTopic.compareTo("")!=0) {
-              mqttClient.subscribe(powerMqttTopic.c_str(),0); //Subscribe now to the topic
-              if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Subscribed to \""+p->value()+"\"");
+              if (!powerMeasureSubscribed) {
+                // Subscribe now to the new topic
+                powerMqttTopic=p->value();
+                mqttClient.subscribe(powerMqttTopic.c_str(),0); //Subscribe now to the topic
+                if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Subscribed to \""+p->value()+"\"");
+              }
+              //UPdate EEPROM
+              memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
+              powerMqttTopic.toCharArray(auxMqttTopicPrefix,powerMqttTopic.length()+1);
+              EEPROM.put(0x53D,auxMqttTopicPrefix);
+              updateEEPROM=true;
             }
             else {
-              if (powerMqttTopic.compareTo("")==0) {
+              if (p->value().compareTo("")==0) {
                 powerMeasureEnabled=false;
                 if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Can't subscribed to empty topic. Disabling powerMeasureEnabled");
               }
+            }
+          }
+
+          // HTTP POST POWERTHRESHOLD value
+          if (p->name().compareTo("POWERTHRESHOLD")==0) {
+            uint16_t auxPowerOnFlameThreshold=p->value().toInt();
+            if (auxPowerOnFlameThreshold!=powerOnFlameThreshold) {
+              powerOnFlameThreshold=auxPowerOnFlameThreshold;
+              EEPROM.writeUShort(0x607,powerOnFlameThreshold);
+              updateEEPROM=true;
             }
           }
 

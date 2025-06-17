@@ -36,4 +36,12 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 void onMqttUnsubscribe(uint16_t packetId);
 void onMqttPublish(uint16_t packetId);
 void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_systemObjects1(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_systemObjects2(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_sensorsObjects(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_boilerTimeOnObjects(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_heaterTimeOnObjects(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_binaryObjects(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_relayObjects(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+void mqttClientPublishHADiscovery_buttonObjects(String mqttTopicName, String device, String ipAddress, bool removeTopics);
 

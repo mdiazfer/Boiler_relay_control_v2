@@ -594,7 +594,6 @@ function loadSite() {
   document.getElementById("voltageId").innerHTML=val;
   document.getElementById("currentId").innerHTML=val;
   document.getElementById("powerId").innerHTML=val;
-  document.getElementById("boilerTimeOnTodayId").innerHTML=val;
 
   getReadings();
 }
@@ -773,7 +772,6 @@ function updateSite(myObj) {
     document.getElementById("voltageId").innerHTML=val;
     document.getElementById("currentId").innerHTML=val;
     document.getElementById("powerId").innerHTML=val;
-    document.getElementById("boilerTimeOnTodayId").innerHTML=val;
   }
 }
 
