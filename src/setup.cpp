@@ -1048,7 +1048,7 @@ void EEPROMInit() {
   else 
     {if (debugModeOn) {printLogln("  [EEPROMInit] - No version change, but update EEPROM needed with counter variables");}}
   EEPROM.commit();
-}
+} //EEPROMInit
 
 void variablesInit() {
   /******************************************************
@@ -1108,7 +1108,7 @@ void variablesInit() {
 
       //bool
       debugModeOn=DEBUG_MODE_ON;logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
-      boilerStatus=false;thermostateStatus=false;boilerOn=false;thermostateOn=false;thermostateInterrupt=false;gasClear=false;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
+      boilerStatus=false;thermostateStatus=false;boilerOn=false;thermostateOn=false;thermostateInterrupt=false;gasClear=true;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
       webLogsOn=false;eepromUpdate=false;powerMeasureSubscribed=false;
       //webLogsOn=false;
       //uint8_t

@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "0.9.B"
+#define VERSION "1.0.0"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -84,7 +84,7 @@
 
 //WEB SERVER Stuff
 #define WEBSERVER_ENABLED true
-#define WEBSERVER_MIN_HEAP_SIZE  20000 //95000  //Based on guess. Below this, the web server will be reset
+#define WEBSERVER_MIN_HEAP_SIZE  15000 //95000  //Based on guess. Below this, the web server will be reset
 #define WEBSERVER_SEND_DELAY 800  //milliseconds - Delay to allow stop BLE Advertisings before sending HTTP Answer
 #define WEBSERVER_PORT 80
 #define WEBSERVER_CHECK_PERIOD 240000  //milliseconds - Check webServer responsiveness every 4 min

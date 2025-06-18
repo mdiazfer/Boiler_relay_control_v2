@@ -1,6 +1,15 @@
 Change Log
 ----------
+v1.0.0  - First stable complete version
+        - New line for "Power Thresh. (W):" in cloud.html
+        - New icons for HA:
+          + counter = mdi:counter
+          + ip      = mdi:ip-network
+          + upTime  = mdi:clock-end
+          Troubleshooting:
+           + IS0018: Not MQTT subscription to Energy topic (SmartPlug) after enabling it in cloud.html   
 v0.9.B  - JSON samples variable redefined to avoid unnecessary String values
+        - New strategy to create the mqtt HADiscovery message payload different than String to reduce heap consumption
         - Defined number of float decimales in value_template field of the MQTT messages (temperature, gas, etc.)
         - Reading samples (and sending MQTT and web SSE events) every:
           + SAMPLE_PERIOD (20 sg) if gas burning (either warming water or heater) or !gasClear
@@ -8,6 +17,7 @@ v0.9.B  - JSON samples variable redefined to avoid unnecessary String values
           + Both MQTT messages and web SSE Events are sent upon receiving MQTT messages from the SmartPlug, regardles the SAMPLE_PERIOD value
         - Send httpCloud update at boot time to clean up the iot file
         - Delay sending the first HA Discovery message to avoid risking heap leakage
+        - Set Power Threshold from web
         - Troubleshooting
           + IS0014: boilerOnToday and boilerOnYesterday not saved correctly in EEPROM when changing day
             * boilerOnYesterday=0, boilerOnToday=88 => change day => boilerOnYesterday=88, boilerOnToday=0 => Reboot ==> boilerOnYesterday=0, boilerOnToday=198
@@ -54,23 +64,13 @@ v0.8.9  - First stable version with HA support
 
 To do list for boiler relay control
 -----------------------------------
-- Troubleshooting
-  
+- Evaluate different approach for serving dynamic web content
+- Troubleshooting:
+
 - Track heap size over code execution
-- New strategy to create the mqtt HADiscovery message payload different than String to reduce heap consumption
 - Get and Show Smart Plug's IP address in web page with link to it
 - Get Energy values on gas_sample periods and at boot time to update the index web page accordingly
 - New boiler icon if it's burning gas (boilerOn or thermostateOn)
-- Set Power Threshold from web
-- New icons for HA:
-  + counter = mdi:counter
-  + ip      = mdi:ip-network
-  + ssid    = mdi:access-print-network
-  + current = mdi:current-ac
-  + power   = mdi:flas
-  + energy  = mdi:lightning-bootLogs
-  + voltage = mdi:sinc-wave
-- Evaluate different approach for serving dynamic web content
 - Date in logs in addition to milliseconds
 
 Done
@@ -123,10 +123,18 @@ Done
   + ISS006: Side Col height for Graphs, Global Info, Basic Configuration, Console html pages
   + ISS007: HA takes doesn't refresh quickly Heater Status/Icon after IoT restart (ie. firmware upgred)
     * Fixed in v0.9.7 - MQTT HADiscovery packets are sent several times after bootup
+  + ISS008: Randomly crash (heap getting off ??)
+    * Fixed in v0.9.B. See IS0016 for the fix
+  + ISS009: Web server not available randomly (connectivty lost ??)
+    * Fixed in v0.9.B. See IS0016 for the fix
   + ISS010: Time On Today counter not saved in Yesterday when passing to the next day
     * Fixed in v0.9.9 - boiler variables were not updated in one_second_check_period function
   + ISS011: No subscripion on MQTT power Topic after enabling MQTT Power Measurements in web
     * Fixed in v0.9.9 - webServer.cpp
+  + ISS012: Web server not available randomly and/or connectivy lost if boiler is ON (mqttmessages) and having active SSE clients (index.html)
+    * Fixed in v0.9.B. See IS0016 for the fix
+  + ISS013: Web server not available randomly and/or connectivy lost if there are both console clientes open and having active SSE clients (index.html)
+    * Fixed in v0.9.B. See IS0016 for the fix
   + IS0014: boilerOnToday and boilerOnYesterday not saved correctly in EEPROM when changing day
     * boilerOnYesterday=0, boilerOnToday=88 => change day => boilerOnYesterday=88, boilerOnToday=0 => Reboot ==> boilerOnYesterday=0, boilerOnToday=198
     * Fixed in v0.9.B
@@ -134,14 +142,6 @@ Done
     * Fixed in v0.9.B
   + IS0016: Some objects in the HA Discovery message are not recognized by HA in the very first packet sent after booting up
     * Fixed in v0.9.B
-  + ISS008: Randomly crash (heap getting off ??)
-    * Fixed in v0.9.B. See IS0016 for the fix
-  + ISS009: Web server not available randomly (connectivty lost ??)
-    * Fixed in v0.9.B. See IS0016 for the fix
-  + ISS012: Web server not available randomly and/or connectivy lost if boiler is ON (mqttmessages) and having active SSE clients (index.html)
-    * Fixed in v0.9.B. See IS0016 for the fix
-  + ISS013: Web server not available randomly and/or connectivy lost if there are both console clientes open and having active SSE clients (index.html)
-    * Fixed in v0.9.B. See IS0016 for the fix
   + IS0017: New code to send HA Discovery MQTT message to reduce heap size and heap fragmentation
     * Fixed in v0.9.B
     * No String(...).c_str() usage 
@@ -152,6 +152,7 @@ Done
 - Deleted references to NTPResuming - v0.9.9
 - Color grey Web boiler icon and Energy info if not powerMeasureEnabled - v0.9.9
 - Set N/A or N/E to the values related to SmartPlug if powerMeasureEnabled is disabled from web - v0.9.9
+- New strategy to create the mqtt HADiscovery message payload different than String to reduce heap consumption - v0.9.B
 
   Discarded
   -------------

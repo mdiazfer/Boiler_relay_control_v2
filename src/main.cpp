@@ -60,7 +60,7 @@ RTC_DATA_ATTR String bootLogs; // Initial logs at boot time
 
 //Global variable definitions stored in regular RAM. 520 KB Max
 bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logMessageTRL2_ON=false,logMessageGAP_OFF=false,
-      thermostateInterrupt=false,gasClear=false,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
+      thermostateInterrupt=false,gasClear=true,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
       webLogsOn=false,serialLogsOn=debugModeOn,eepromUpdate=false,firstHASent=false;
 bool boilerStatus=false,boilerOn=false, //boilerStatus => Power > Threshold, boilerOn => Burning gas (flame) due to warming water
       thermostateStatus=false,thermostateOn=false; //thermostateStatus => Thermostate is active (or relay active), thermostateOn => Burning gas due to either warming hot or heater

@@ -1432,7 +1432,7 @@ uint32_t initWebServer() {
 
     currentConfigVariables=EEPROM.read(0x2BE);
     wifiCred.SiteAllow[0]=false;wifiCred.SiteAllow[1]=false;wifiCred.SiteAllow[2]=false;
-    
+
     //Authentication is required
     if(!request->authenticate(userName.c_str(), userPssw.c_str())) {
       //Setup a new response to send AuthenticationRequest headers in the container.html answer
@@ -1473,7 +1473,7 @@ uint32_t initWebServer() {
       
       //Checking the rest of parameters different to checkbox
       for(int i=0;i<params;i++) {
-        const AsyncWebParameter* p = request->getParam(i);       
+        const AsyncWebParameter* p = request->getParam(i);
         if(p->isPost()){
           // HTTP POST Cloud_enabled value
           if (p->name().compareTo("Cloud_enabled")==0) {
@@ -1566,7 +1566,7 @@ uint32_t initWebServer() {
               if (powerMqttTopic.compareTo("")!=0) {
                 powerMeasureEnabled=false;
                 //Unsubscribe
-                if (mqttClient.unsubscribe(powerMqttTopic.c_str())!=0)
+                if (mqttClient.unsubscribe(powerMqttTopic.c_str())!=0 || !powerMeasureSubscribed)
                 {
                   powerMeasureSubscribed=false;
                   if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Unsubscribed to "+powerMqttTopic);
@@ -1614,6 +1614,14 @@ uint32_t initWebServer() {
                 powerMeasureEnabled=false;
                 if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - Can't subscribed to empty topic. Disabling powerMeasureEnabled");
               }
+              else {
+                if (powerMqttTopic.compareTo(auxMqttTopicPrefix)==0 && powerMeasureEnabled && //New Topic. Subscribe it
+                    mqttClient.connected() && !powerMeasureSubscribed) {
+                  //No powerMqttTopic change. Just subscribe to the topic after enabling the topic
+                  mqttClient.subscribe(powerMqttTopic.c_str(),0); //Subscribe now to the topic
+                  if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTTPOWERTOPIC - No power MQTT topic change. Subscribed to \""+powerMqttTopic+"\"");
+                }
+              }
             }
           }
 
@@ -1651,38 +1659,40 @@ uint32_t initWebServer() {
           }
         }
       }
-    }
-    if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - connectMqtt="+String(connectMqtt)+", disconnectMqtt="+String(disconnectMqtt)+", auxCounter=0x"+String(auxCounter,HEX));
-    if (connectMqtt) {
-      if (debugModeOn) printLogln("      [webServer cloud] - mqttClient.connected()="+String(mqttClient.connected()));
-      //Disconnect first from the current MQTT server
-      if (mqttClient.connected()) mqttClient.disconnect(true);
-      while (mqttClient.connected()) {}; //Wait till get disconnected
-      
-      //Connect to the MQTT broker
-      if (WiFi.status()==WL_CONNECTED && !mqttClient.connected() && mqttServerEnabled) { //Connect to MQTT broker again
-        if (debugModeOn) printLogln("      [webServer cloud] - about to init Mqtt client");
-        //mqttClientInit(false,false,false);
-        forceMQTTConnect=true; //v1.4.1 Connect from the loop cycle to avoid the error "task_wdt: Task watchdog got triggered"
+    
+      if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - connectMqtt="+String(connectMqtt)+", disconnectMqtt="+String(disconnectMqtt)+", auxCounter=0x"+String(auxCounter,HEX));
+      if (connectMqtt) {
+        if (debugModeOn) printLogln("      [webServer cloud] - mqttClient.connected()="+String(mqttClient.connected()));
+        //Disconnect first from the current MQTT server
+        if (mqttClient.connected()) mqttClient.disconnect(true);
+        while (mqttClient.connected()) {}; //Wait till get disconnected
+        
+        //Connect to the MQTT broker
+        if (WiFi.status()==WL_CONNECTED && !mqttClient.connected() && mqttServerEnabled) { //Connect to MQTT broker again
+          if (debugModeOn) printLogln("      [webServer cloud] - about to init Mqtt client");
+          //mqttClientInit(false,false,false);
+          forceMQTTConnect=true; //v1.4.1 Connect from the loop cycle to avoid the error "task_wdt: Task watchdog got triggered"
+        }
+        if (debugModeOn) printLogln("      [webServer cloud] - about to exit");
       }
-      if (debugModeOn) printLogln("      [webServer cloud] - about to exit");
+      if (disconnectMqtt) {
+        /*Code here to unsuscribe from the MQTT broker*/
+        //removeTopics=true;
+        //mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Remove all topics from Home Assistant
+        mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Offline\0"); //Availability message, not retain in the broker
+
+        //Disconnect to the MQTT broker
+        mqttClient.disconnect(true);
+      }
+      if (updateEEPROM) EEPROM.commit();
+      //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
+      //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
+      request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+
+      //Update powerMeasureEnabled and powerMeasureSubscribed variables anycase
+      samples["powerMeasureEnabled"]=powerMeasureEnabled;
+      samples["powerMeasureSubscribed"]=powerMeasureSubscribed;
     }
-    if (disconnectMqtt) {
-      /*Code here to unsuscribe from the MQTT broker*/
-      //removeTopics=true;
-      //mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Remove all topics from Home Assistant
-      mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Offline\0"); //Availability message, not retain in the broker
-
-      //Disconnect to the MQTT broker
-      mqttClient.disconnect(true);
-    }
-    if (updateEEPROM) EEPROM.commit();
-    //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
-    //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
-    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
-
-    samples["powerMeasureEnabled"]=powerMeasureEnabled; //Update powerMeasureEnabled variable anycase
-
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   }); // /cloud HTTP_POST form
   
