@@ -4,262 +4,6 @@
 
 #include "webServer.h"
 
-String processorIndex(const String& var){
-  /******************************************************
-   Function processorIndex
-   Target: Serve the index web page
-   Parameters:
-    String var: It's the tag found in the html page. i.e.: ~INDEX_Text_Update_Color~
-   Returns:
-    (String) File content
-   *****************************************************/ 
-
-  log_v(">> processorIndex");
-  if(var == "INDEX_calibrationState") {
-    return String("Latest update:");
-  }
-  if(var == "THERMOSTATCHECKED") {
-    if (!digitalRead(PIN_RL1)) return String("checked"); //RL1 ON
-    else return String();  //RL1 OFF
-  }
-  if(var == "FORCEHEATERCHECKED") {
-    if (digitalRead(PIN_RL2)) return String("checked"); //RL2 ON
-    else return String();  //RL2 OFF
-  }
-  if(var == "BOILERICON") {
-    if (boilerStatus) return String("boiler-orange.png");
-    else return String("boiler-blue.png");
-  }
-  if(var == "HEATERICON") {
-    if (thermostateStatus) return String("radiator-orange.png");
-    else return String("radiator-blue.png");
-  }
-  if(var == "CLEANAIRCOLOR") {
-    if (gasClear) return String("#6ED81A"); //green
-    else return String("#C30016"); //red
-  }
-  if(var == "CLEANAIRTEXT") {
-    if (gasClear) return String("Clean AIR");
-    else return String("GAS leak");
-  }
-  if(var == "CLEANAIRICON") {
-    if (gasClear) return String("leaf-circle-green.png");
-    else return String("leaf-circle-red.png");
-  }
-  /*
-  struct timeOnCounters {
-      uint16_t year;                 //Year of the counters. i.e.: 2025
-      uint32_t today;               //Current day of the today counter. i.e.: 20250427
-      uint32_t yesterday;           //Current day of the yesterday counter. i.e.: 20250426
-      uint32_t counterMonths[12];   //Total time on (seconds) of the month. Months 0-11
-      uint32_t counterYesterday;    //Total time on (seconds) of yesterday
-      uint32_t counterToday;        //Total time on (seconds) of today
-    }; //68 B
-  */
-  if(var == "BOILERTIMEONYEAR") {
-    uint32_t total=0;for (int i=0;i<12;i++) total+=boilerTimeOnYear.counterMonths[i];
-    return String((float)total/60,1); //minutes
-  }
-  if(var == "BOILERTIMEONMONTH") {
-    uint32_t aux1=boilerTimeOnYear.today/10000;
-    uint32_t month=(boilerTimeOnYear.today-aux1*10000)/100;
-    return String((float)boilerTimeOnYear.counterMonths[month-1]/60,1);
-  }
-  if(var == "BOILERTIMEONYESTERDAY") {
-    return String((float)boilerTimeOnYear.counterYesterday/60,1);
-  }
-  if(var == "BOILERTIMEONTODAY") {
-    return String((float)boilerTimeOnYear.counterToday/60,1);
-  }
-  if(var == "HEATERTIMEONYEAR") {
-    uint32_t total=0;for (int i=0;i<12;i++) total+=heaterTimeOnYear.counterMonths[i];
-    return String((float)total/60,1); //minutes
-  }
-  if(var == "HEATERTIMEONMONTH") {
-    uint32_t aux1=heaterTimeOnYear.today/10000;
-    uint32_t month=(heaterTimeOnYear.today-aux1*10000)/100;
-    return String((float)heaterTimeOnYear.counterMonths[month-1]/60,1);
-  }
-  if(var == "HEATERTIMEONYESTERDAY") {
-    return String((float)heaterTimeOnYear.counterYesterday/60,1);
-  }
-  if(var == "HEATERTIMEONTODAY") {
-    return String((float)heaterTimeOnYear.counterToday/60,1);
-  }
-  if(var == "ENERGYYESTERDAY") {
-    return String(energyYesterday,3);
-  }
-  if(var == "ENERGYTODAY") {
-    return String(energyToday,3);
-  }
-  if(var == "ENERGYTOTAL") {
-    return String(energyTotal,3);
-  }
-  if(var == "VOLTAGE") {
-    return String(voltage);
-  }
-  if(var == "CURRENT") {
-    return String(current,3);
-  }
-  if(var == "POWER") {
-    return String(power);
-  }
-  else {
-    return String();
-  }
-} //processorIndex
-
-String processorStats(const String& var){
-  /******************************************************
-   Function processorStats
-   Target: Serve the stats web page
-   Parameters:
-    String var: It's the tag found in the html page. i.e.: ~INDEX_Text_Update_Color~
-   Returns:
-    (String) File content
-   *****************************************************/ 
-
-  log_v(">> processorStats");
-  
-  /*
-  struct timeOnCounters {
-      uint16_t year;                 //Year of the counters. i.e.: 2025
-      uint32_t today;               //Current day of the today counter. i.e.: 20250427
-      uint32_t yesterday;           //Current day of the yesterday counter. i.e.: 20250426
-      uint32_t counterMonths[12];   //Total time on (seconds) of the month. Months 0-11
-      uint32_t counterYesterday;    //Total time on (seconds) of yesterday
-      uint32_t counterToday;        //Total time on (seconds) of today
-    } boilerTimeOnYear,heaterTimeOnYear;
-  */
-  if(var == "BOILERTIMEONJAN") {
-    return String ("<td align=left>&nbsp;January</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[0]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[0]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONFEB") {
-    return String ("<td align=left>&nbsp;February</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[1]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[1]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONMAR") {
-    return String ("<td align=left>&nbsp;March</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[2]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[2]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONAPR") {
-    return String ("<td align=left>&nbsp;April</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[3]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[3]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONMAY") {
-    return String ("<td align=left>&nbsp;May</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[4]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[4]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONJUN") {
-    return String ("<td align=left>&nbsp;June</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[5]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[5]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONJUL") {
-    return String ("<td align=left>&nbsp;July</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[6]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[6]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONAUG") {
-    return String ("<td align=left>&nbsp;August</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[7]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[7]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONSEP") {
-    return String ("<td align=left>&nbsp;Septem.</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[8]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[8]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONOCT") {
-    return String ("<td align=left>&nbsp;October</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[9]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[9]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONNOV") {
-    return String ("<td align=left>&nbsp;Novem.</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[10]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[10]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONDEC") {
-    return String ("<td align=left>&nbsp;Decem.</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnPreviousYear.counterMonths[11]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) boilerTimeOnYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) boilerTimeOnYear.counterMonths[11]/3600,1)+"</td>");
-  }
-  if(var == "BOILERTIMEONYEAR") {
-    uint8_t auxPrev=0,aux=0;
-    uint32_t totalPrev=0;for (int i=0;i<12;i++) {if (boilerTimeOnPreviousYear.counterMonths[i]!=0) auxPrev++; totalPrev+=boilerTimeOnPreviousYear.counterMonths[i];}
-    uint32_t total=0;for (int i=0;i<12;i++) {if (boilerTimeOnYear.counterMonths[i]!=0) aux++; total+=boilerTimeOnYear.counterMonths[i];}
-    if (auxPrev==0) auxPrev=1; if (aux==0) aux=1; //To avoid dividing by zero exception
-    return String ("<td align=left>&nbsp;TOTAL</td><td class=\"column-grey\" align=center>"+String((float) totalPrev/(108000*auxPrev),1)+"</td><td align=center>"+String((float) totalPrev/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) total/(108000*aux),1)+"</td><td align=center>"+String((float) total/3600,1)+"</td>");
-  }
-
-  if(var == "HEATERTIMEONJAN") {
-    return String ("<td align=left>&nbsp;January</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[0]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[0]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[0]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONFEB") {
-    return String ("<td align=left>&nbsp;February</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[1]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[1]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[1]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONMAR") {
-    return String ("<td align=left>&nbsp;March</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[2]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[2]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[2]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONAPR") {
-    return String ("<td align=left>&nbsp;April</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[3]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[3]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[3]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONMAY") {
-    return String ("<td align=left>&nbsp;May</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[4]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[4]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[4]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONJUN") {
-    return String ("<td align=left>&nbsp;June</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[5]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[5]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[5]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONJUL") {
-    return String ("<td align=left>&nbsp;July</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[6]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[6]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[6]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONAUG") {
-    return String ("<td align=left>&nbsp;August</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[7]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[7]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[7]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONSEP") {
-    return String ("<td align=left>&nbsp;Septem.</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[8]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[8]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[8]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONOCT") {
-    return String ("<td align=left>&nbsp;October</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[9]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[9]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[9]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONNOV") {
-    return String ("<td align=left>&nbsp;Novem.</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[10]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[10]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[10]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONDEC") {
-    return String ("<td align=left>&nbsp;Decem.</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnPreviousYear.counterMonths[11]/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) heaterTimeOnYear.counterMonths[11]/108000,1)+"</td><td align=center>"+String((float) heaterTimeOnYear.counterMonths[11]/3600,1)+"</td>");
-  }
-  if(var == "HEATERTIMEONYEAR") {
-    uint8_t auxPrev=0,aux=0;
-    uint32_t totalPrev=0;for (int i=0;i<12;i++) {if (heaterTimeOnPreviousYear.counterMonths[i]!=0) auxPrev++; totalPrev+=heaterTimeOnPreviousYear.counterMonths[i];}
-    uint32_t total=0;for (int i=0;i<12;i++) {if (heaterTimeOnYear.counterMonths[i]!=0) aux++; total+=heaterTimeOnYear.counterMonths[i];}
-    if (auxPrev==0) auxPrev=1; if (aux==0) aux=1; //To avoid dividing by zero exception
-    return String ("<td align=left>&nbsp;TOTAL</td><td class=\"column-grey\" align=center>"+String((float) totalPrev/(108000*auxPrev),1)+"</td><td align=center>"+String((float) totalPrev/3600,1)+"</td><td class=\"column-grey\" align=center>"+String((float) total/(108000*aux),1)+"</td><td align=center>"+String((float) total/3600,1)+"</td>");
-  }
-  else {
-    return String();
-  }
-} //processorStats
-
-
-String processorTest(const String& var){
-  /******************************************************
-   Function processorTest
-   Target: Serve the test web page
-   Parameters:
-    String var: It's the tag found in the html page. i.e.: ~INDEX_Text_Update_Color~
-   Returns:
-    (String) File content
-   *****************************************************/ 
-
-  log_v(">> processorIndex");
-  if(var == "DEVICE_NAME") {
-    return device;
-  }
-  if(var == "VERSION") {
-    return String(VERSION);
-  }
-  else {
-    return String();
-  }
-} //processorTest
-
-String processorConsole(const String& var){
-  /******************************************************
-   Function processorConsole
-   Target: Serve the index web page
-   Parameters:
-    String var: It's the tag found in the html page. i.e.: ~INDEX_Text_Update_Color~
-   Returns:
-    (String) File content
-   *****************************************************/ 
-
-  log_v(">> processorConsole");
-  return String();
-} //processorConsole
-
 String processorGraphs(const String& var){
   log_v(">> processorGraphs");
   if(var == "GRAPHSBODY") {
@@ -286,359 +30,6 @@ String processorGraphs(const String& var){
   }
   log_v("<< processorGraphs. Exit");
 } //processorGraphs
-
-String processorInfo(const String& var){
-  log_v(">> processorInfo");
-  if (var == "TEMPERATURE") {
-    return roundFloattoString(valueT,1)+" ºC";
-  } else if (var == "HUMIDITY") {
-    return roundFloattoString(valueHum,1)+" %";
-  } else if (var == "DEVICENAME") {
-    return device;
-  } else if (var == "FIRMWAREVERSION") {
-    return String(VERSION);
-  } else if (var == "DATE") {
-    struct tm timeinfo;
-    if (getLocalTime(&timeinfo)) {
-      char s[100];
-      strftime(s,sizeof(s),"%d/%m/%Y - %H:%M:%S",&timeinfo);
-      return String(s);
-    }
-    else return String("NTP server down");
-  } else if (var == "UPTIMEDATE") {
-    char s[100];
-    strftime(s,sizeof(s),"%d/%m/%Y - %H:%M:%S",&startTimeInfo);
-    return String(s);
-  } else if (var == "UPTIME") {  
-    ulong nowInSeconds=millis()/1000; //In seconds
-    uint8_t years=nowInSeconds/31536000; //Number of years
-    uint8_t months=(nowInSeconds-years*31536000)/2592000; //Number of months
-    uint8_t days=(nowInSeconds-years*31536000-months*2592000)/86400; //Number of days
-    uint8_t hours=(nowInSeconds-years*31536000-months*2592000-days*86400)/3600; //Number of hours
-    uint8_t minutes=(nowInSeconds-years*31536000-months*2592000-days*86400-hours*3600)/60; //Number of minutes
-    uint8_t seconds=(nowInSeconds-years*31536000-months*2592000-days*86400-hours*3600-minutes*60); //Number of seconds
-    //Uptime in format YY-MM-DDThh:mm:ss
-    char upTime[20];
-    sprintf(upTime,"%04d-%02d-%02dT%02d:%02d:%02d",years,months,days,hours,minutes,seconds);
-    upTime[19]='\0';
-    return String(upTime);
-  } else if (var == "TIMEZONE") {
-    return TZEnvVariable;
-    //return String(TZEnvVar);
-  } else if (var == "TIMEZONENAME") {
-    return TZName;
-  } else if (var == "SENSORTEMPHUM") {
-    return tempHumSensorType;
-  } else if (var == "SSID") {
-    if (wifiEnabled) return WiFi.SSID(); else return String("WiFi Disabled");
-  } else if (var == "BSSID") {
-    if (wifiEnabled) return WiFi.BSSIDstr(); else return String("WiFi Disabled");
-  } else if (var == "RSSI") {
-    if (wifiEnabled) {
-      switch (wifiCurrentStatus) {
-        case wifiOffStatus:return String(WiFi.RSSI())+String(" dBm (Off)");break;
-        case wifi0Status:return String(WiFi.RSSI())+String(" dBm (0%)");break;
-        case wifi25Status:return String(WiFi.RSSI())+String(" dBm (25%)");break;
-        case wifi50Status:return String(WiFi.RSSI())+String(" dBm (50%)");break;
-        case wifi75Status:return String(WiFi.RSSI())+String(" dBm (75%)");break;
-        case wifi100Status:return String(WiFi.RSSI())+String(" dBm (100%)");break;
-        default: return String(WiFi.RSSI());break;
-      }
-    }
-    else return String("WiFi Disabled");
-  } else if (var == "WIFICHANNEL") {
-    if (wifiEnabled) return String(WiFi.channel()); else return String("WiFi Disabled");
-  } else if (var == "MACADDRESS") {
-    if (wifiEnabled) return String(WiFi.macAddress()); else return String("WiFi Disabled");
-  } else if (var == "IPADDRESS") {
-    if (wifiEnabled) return String(WiFi.localIP().toString()); else return String("WiFi Disabled");
-  } else if (var == "MASK") {
-    if (wifiEnabled) return String(WiFi.subnetMask().toString()); else return String("WiFi Disabled");
-  } else if (var == "DEFAULTGW") {
-    if (wifiEnabled) return String(WiFi.gatewayIP().toString()); else return String("WiFi Disabled");
-  } else if (var == "NTPSERVER") {
-    if (wifiEnabled && CloudClockCurrentStatus==CloudClockOnStatus) return ntpServers[ntpServerIndex]; else return String("Not Available");
-  } else if (var == "NTPSTATUS") {
-    if (wifiEnabled && CloudClockCurrentStatus==CloudClockOnStatus) return String("Synced"); else return String("Not Available");
-  } else if (var == "WIFISTATUS") {
-    if (wifiEnabled) return String("Enabled"); else return String("Disabled");
-  } else if (var == "WIFICURRENTSTATUS") {
-    switch (wifiCurrentStatus) {
-      case wifiOffStatus:return String("Off");break;
-      case wifi0Status:return String("On, 0%");break;
-      case wifi25Status:return String("On, 25%");break;
-      case wifi50Status:return String("On, 50%");break;
-      case wifi75Status:return String("On, 75%");break;
-      case wifi100Status:return String("On, 100%");break;
-      default: return String();break;
-    }; 
-  } else if (var == "BLUETOOTHSTATUS") {
-    if (bluetoothEnabled) return String("Enabled"); else return String("Disabled");
-  } else if (var == "CLOUDSERVICESSTATUS") {
-    if (httpCloudEnabled) return String("Enabled"); else return String("Disabled");
-  } else if (var == "CLOUDSERVICESCURRENTSTATUS") {
-    switch (CloudSyncCurrentStatus) {
-      case CloudSyncOffStatus:return String("Down");break;
-      case CloudSyncSendStatus:return String("Updating");break;
-      case CloudSyncOnStatus:return String("Up");break;
-      default: return String();break;
-    }; 
-  } else if (var == "MQTTSERVICESSTATUS") {
-    if (mqttServerEnabled) return String("Enabled"); else return String("Disabled");
-  } else if (var == "MQTTSERVICESCURRENTSTATUS") {
-    switch (MqttSyncCurrentStatus) {
-      case MqttSyncOffStatus:return String("Down");break;
-      case MqttSyncSendStatus:return String("Updating");break;
-      case MqttSyncOnStatus:return String("Up");break;
-      default: return String();break;
-    }; 
-  } else if (var == "Secure_MQTTSERVICESSTATUS") {
-    if (secureMqttEnabled) return String("Enabled"); else return String("Disabled");
-  } else if (var == "MQTTSERVER") {
-    return mqttServer;
-  } else if (var == "MQTTTOPICNAME") {
-    return mqttTopicName;
-  } else if (var == "CLOUDSERVICESURL") {
-    return String("http://"+serverToUploadSamplesIPAddress.toString())+String(GET_REQUEST_TO_UPLOAD_SAMPLES).substring(4,String(GET_REQUEST_TO_UPLOAD_SAMPLES).length()-1);
-  } else {
-    return String();
-  }
-  log_v("<< processorInfo. Exit");
-} //processorInfo
-
-String processorBasic(const String& var){
-  log_v(">> processorBasic");  
-  if (var == "WIFICHECKED_ON") {
-    if (wifiEnabled) return String ("checked");
-    else return String();
-  } else if (var == "WIFICHECKED_OFF") {
-    if (!wifiEnabled) return String ("checked");
-    else return String();
-  } else if (var == "UserName") {
-    return userName;
-  } else if (var == "UserName_VALUE") {
-    return userName;  
-  } else if (var == "UserPssw") {
-    return "User password";
-  } else if (var == "UserPssw_VALUE") {
-    return "**********";  
-  } else if (var == "SSID") {
-    if (wifiCred.wifiSSIDs[0].compareTo(String(""))==0) {if (wifiEnabled) return "Mandatory if WiFi enabled"; else return String();}
-    else return wifiCred.wifiSSIDs[0];
-  } else if (var == "SSID_VALUE") {
-    if (wifiCred.wifiSSIDs[0].compareTo(String(""))==0) return String();
-    else return wifiCred.wifiSSIDs[0];
-  } else if (var == "SSID_REQUIRED") {
-    if (wifiCred.wifiSSIDs[0].compareTo(String(""))==0) {if (wifiEnabled) return "required"; else return String();}
-    else return String();
-  } else if (var == "PSSW") {
-    if (wifiCred.wifiPSSWs[0].compareTo(String(""))==0) return "Mandatory PSSW";
-    else return "**********";
-  } else if (var == "PSSW_VALUE") {
-    return wifiCred.wifiPSSWs[0];
-  } else if (var == "SITE") {
-    return wifiCred.wifiSITEs[0];
-  } else if (var == "SITE_VALUE") {
-    return wifiCred.wifiSITEs[0];
-  } else if (var == "SSID_BK1") {
-    return wifiCred.wifiSSIDs[1]; 
-  } else if (var == "SSID_BK1_VALUE") {
-    return wifiCred.wifiSSIDs[1];
-  } else if (var == "PSSW_BK1") {
-    if (wifiCred.wifiPSSWs[1].compareTo(String(""))==0) return wifiCred.wifiPSSWs[1];
-    else return "**********";
-  } else if (var == "PSSW_BK1_VALUE") {
-    return wifiCred.wifiPSSWs[1];
-  } else if (var == "SITE_BK1") {
-    return wifiCred.wifiSITEs[1];
-  } else if (var == "SITE_BK1_VALUE") {
-    return wifiCred.wifiSITEs[1];
-  } else if (var == "SSID_BK2") {
-    return wifiCred.wifiSSIDs[2];
-  } else if (var == "SSID_BK2_VALUE") {
-    return wifiCred.wifiSSIDs[2];
-  } else if (var == "PSSW_BK2") {
-    if (wifiCred.wifiPSSWs[2].compareTo(String(""))==0) return wifiCred.wifiPSSWs[2];
-    else return "**********";
-  } else if (var == "PSSW_BK2_VALUE") {
-    return wifiCred.wifiPSSWs[2];
-  } else if (var == "SITE_BK2") {
-    return wifiCred.wifiSITEs[2];
-  } else if (var == "SITE_BK2_VALUE") {
-    return wifiCred.wifiSITEs[2];
-  } else if (var == "NTP1") {
-    if (ntpServers[0].compareTo(String(""))==0) {if (wifiEnabled) return "Mandatory if WiFi enabled"; else return String();}
-    else return ntpServers[0];
-  } else if (var == "NTP1_VALUE") {
-    if (ntpServers[0].compareTo(String(""))==0) return String();
-    else return ntpServers[0];
-  } else if (var == "NTP1_REQUIRED") {
-    if (ntpServers[0].compareTo(String(""))==0) {if (wifiEnabled) return "required"; else return String();}
-    else return String();
-  } else if (var == "NTP2") {
-    return ntpServers[1]; 
-  } else if (var == "NTP2_VALUE") {
-    return ntpServers[1];
-  } else if (var == "NTP3") {
-    return ntpServers[2]; 
-  } else if (var == "NTP3_VALUE") {
-    return ntpServers[2];
-  } else if (var == "NTP4") {
-    return ntpServers[3]; 
-  } else if (var == "NTP4_VALUE") {
-    return ntpServers[3];
-  } else {
-    return String();
-  }
-  log_v("<< processorBasic. Exit");
-} //processorBasic
-
-String processorCloud(const String& var){
-  log_v(">> processorCloud");  
-  if (var == "CLOUD_ON_CHECKED") {
-    if (httpCloudEnabled) return String("checked");
-    else return String();
-  } else if (var == "CLOUD_OFF_CHECKED") {
-    if (!httpCloudEnabled) return String("checked");
-    else return String();
-  } else if (var == "SITE_ALLOW_NAME") {
-    if (wifiCred.wifiSITEs[0].compareTo(String(""))==0) return String("NO SITE DEFINED");
-    else return wifiCred.wifiSITEs[0];
-  } else if (var == "SITE_BK1_ALLOW_NAME") {
-    if (wifiCred.wifiSITEs[1].compareTo(String(""))==0) return String("NO SITE DEFINED");
-    else return wifiCred.wifiSITEs[1];
-  } else if (var == "SITE_BK2_ALLOW_NAME") {
-    if (wifiCred.wifiSITEs[2].compareTo(String(""))==0) return String("NO SITE DEFINED");
-    else return wifiCred.wifiSITEs[2];
-  } else if (var == "SITE_ALLOW_CHECKED") {
-    if (wifiCred.wifiSITEs[0].compareTo(String(""))==0) return String(" disabled ");
-    else if (wifiCred.SiteAllow[0]) return String("checked");
-    else return String();
-  } else if (var == "SITE_BK1_ALLOW_CHECKED") {
-    if (wifiCred.wifiSITEs[1].compareTo(String(""))==0) return String(" disabled ");
-    else if (wifiCred.SiteAllow[1]) return String("checked");
-    else return String();
-  } else if (var == "SITE_BK2_ALLOW_CHECKED") {
-    if (wifiCred.wifiSITEs[2].compareTo(String(""))==0) return String(" disabled ");
-    else
-      if (wifiCred.SiteAllow[2]) return String("checked");
-      else return String();
-  }
-  if (var == "MQTTSERVER") {
-    return mqttServer;
-  } else if (var == "MQTTTOPIC") {
-    return mqttTopicPrefix;
-  } else if (var == "MQTT_ON_CHECKED") {
-    if (mqttServerEnabled) return String("checked");
-    else return String();
-  } else if (var == "MQTT_OFF_CHECKED") {
-    if (!mqttServerEnabled) return String("checked");
-    else return String();
-  } else if (var == "MQTTREQUIRED") {
-    if (mqttServerEnabled) return String("required");
-    else return String();
-  } else if (var == "Secure_MQTT_ON_CHECKED") {
-    if (secureMqttEnabled) return String("checked");
-    else return String();
-  } else if (var == "Secure_MQTT_OFF_CHECKED") {
-    if (!secureMqttEnabled) return String("checked");
-    else return String();
-  } else if (var == "MQTTUserName") {
-    return mqttUserName;
-  } else if (var == "MQTTUserName_VALUE") {
-    return mqttUserName;  
-  } else if (var == "MQTTUserPssw") {
-    return "User password";
-  } else if (var == "MQTTUserPssw_VALUE") {
-    return "**********";  
-  } else if (var == "MQTT_POWER_DISABLED") {
-    if (!mqttServerEnabled) return String("disabled");
-    else return String();
-  } else if (var == "MQTT_POWER_ON_CHECKED") {
-    if (powerMeasureEnabled) return String("checked");
-    else return String();
-  } else if (var == "MQTT_POWER_OFF_CHECKED") {
-    if (!powerMeasureEnabled) return String("checked");
-    else return String();
-  } else if (var == "MQTTPOWERTOPIC") {
-    return powerMqttTopic;
-  } else if (var == "MQTTPOWERREQUIRED") {
-    if (powerMeasureEnabled) return String("required");
-    else return String();
-  } else if (var == "POWERTHRESHOLD") {
-    return String(powerOnFlameThreshold);
-  } else if (var == "POWERTHRESHOLDREQUIRED") {
-    if (powerMeasureEnabled) return String("required");
-    else return String();
-  } else {
-    return String();
-  }
-  log_v("<< processorCloud. Exit");
-} //processorCloud
-
-String processorBluetooth(const String& var){
-  /******************************************************
-   Function processorBluetooth
-   Target: Serve the bluetooth web page
-   Parameters:
-    String var: It's the tag found in the html page. i.e.: ~INDEX_Text_Update_Color~
-   Returns:
-    (String) File content
-   *****************************************************/ 
-  log_v(">> processorBluetooth");  
-  if (var == "BLEPROXIMITY1") {
-    /*String aux=String(BLEProximityUUID).substring(0,8);aux.toUpperCase();
-    return aux;*/
-    return String("FFFFFFFF");
-  }
-  else if (var == "BLEPROXIMITY2") {
-    /*String aux=String(BLEProximityUUID).substring(9,13);aux.toUpperCase();
-    return aux;*/
-    return String("FFFF");
-  }
-  else if (var == "BLEPROXIMITY3") {
-    /*String aux=String(BLEProximityUUID).substring(14,18);aux.toUpperCase();
-    return aux;*/
-    return String("FFFF");
-  }
-  else if (var == "BLEPROXIMITY4") {
-    /*String aux=String(BLEProximityUUID).substring(19,23);aux.toUpperCase();
-    return aux;*/
-    return String("FFFF");
-  }
-  else if (var == "BLEPROXIMITY5") {
-    /*String aux=String(BLEProximityUUID).substring(24,36);aux.toUpperCase();
-    return aux;*/
-    return String("FFFFFFFFFFFF");
-  }
-  else if (var == "BLEMAJOR") {
-    return String(65535);
-  }
-  else if (var == "BLEMAJORHEX") {
-    String aux=String(65535,HEX);aux.toUpperCase();
-    return aux;
-  }
-  else if (var == "BLEMINOR") {
-    return String(65535);
-  }
-  else if (var == "BLEMINORHEX") {
-    String aux=String(65535,HEX);aux.toUpperCase();
-    return aux;
-  }
-  else if (var == "BLUETOOTH_ON_CHECKED") {
-    /*if (bluetoothEnabled) return String("checked");
-    else return String();*/
-    return String();
-  } else if (var == "BLUETOOTH_OFF_CHECKED") {
-    /*if (!bluetoothEnabled) return String("checked");
-    else return String();*/
-    return String("checked");
-  } else {
-    return String();
-  }
-  log_v("<< processorBluetooth. Exit");
-} //processorBluetooth
-
 
 String processorContainer(const String& var){
   /******************************************************
@@ -689,102 +80,6 @@ String processorContainer(const String& var){
   log_v("<< processorContainer. Exit");
 } //processorContainer
 
-String processorMaintenance(const String& var){
-  /******************************************************
-   Function processorMaintenance
-   Target: Serve the maintenance web page
-   Parameters:
-    String var: It's the tag found in the html page. i.e.: ~INDEX_Text_Update_Color~
-   Returns:
-    (String) File content
-   *****************************************************/ 
-  log_v(">> processorMaintenance");  
-  if (var == "OTADISABLED") { //v1.2.0 - Not allow OTA upgrade if not two OTA partitions
-    if (OTAUpgradeBinAllowed) return String();
-    else return String("disabled");
-  } else if (var == "SPIFFSDISABLED") { //v1.2.0 - Not allow SPIFFS upgrade it's wrong
-    if (SPIFFSUpgradeBinAllowed) return String();
-    else return String("disabled");
-  } else if (var == "SPIFFSCHECKED") { //v1.2.0 - Not allow SPIFFS upgrade it's wrong
-    if (!SPIFFSUpgradeBinAllowed) return String();
-    else return String("checked");
-  } else if (var == "SELECTFILEBUTTONDISABLED") { //v1.2.0 - Not allow upgrade if OTA or SPIFFS are wrong
-    if (OTAUpgradeBinAllowed || SPIFFSUpgradeBinAllowed) return String();
-    else return String("disabled"); 
-  } else if (var == "SETUPERRORS") {
-    return String("0x")+String(error_setup,HEX);
-  } else if (var == "CONNECTIVITYERRORS") {
-    return String(errorsConnectivityCnt);
-  } else if (var == "WIFIERRORS") {
-    return String(errorsWiFiCnt);
-  } else if (var == "WEBSERVERERRORS") {
-    return String(errorsWebServerCnt);
-  } else if (var == "SAMPLEUPDTERRORS") {
-    return String(errorsHTTPUptsCnt);
-  } else if (var == "NTPERRORS") {
-    return String(errorsNTPCnt);
-  } else if (var == "MQTTERRORS") {
-    return String(errorsMQTTCnt);
-  } else if (var == "SPIFFSERRORS") {
-    return String(SPIFFSErrors);
-  } else if (var == "BOOTCOUNT") {
-    return String(bootCount);
-  } else if (var == "NORMALBOOTCOUNT") {
-    return String(bootCount-resetSWCount-resetCount); //resetCount=uncontrolled restart, resetSWCount=all ESP.restart, incluiding preventive, web server, mqtt, firmware update, etc.
-  } else if (var == "PREVENTIVERESETCOUNT") {
-    return String(resetPreventiveCount+resetPreventiveWebServerCount);
-  } else if (var == "PREVENTIVEABSOLUTERESETCOUNT") {
-    return String(resetPreventiveCount);
-  } else if (var == "PREVENTIVEWEBSERVERRESETCOUNT") {
-    return String(resetPreventiveWebServerCount);
-  } else if (var == "WEBSERVERRESETCOUNT") {
-    return String(resetWebServerCnt); //Restart due to web server not serving web pages 
-  } else if (var == "SWRESETCOUNT") {
-    return String(resetSWCount); //Total number of ESP.restarts, including preventive resets, firmware upgrade, resets from web and mqtt
-  } else if (var == "SWRESETWEBCOUNT") {
-    return String(resetSWWebCount); //Restart from web server button
-  } else if (var == "SWRESETMQTTCOUNT") {
-    return String(resetSWMqttCount); //Restart from MQTT
-  } else if (var == "SWRESETFIRMWARECOUNT") {
-    return String(resetSWUpgradeCount); //Restart due to firmware upgrade
-  } else if (var == "UNCONTROLLEDRESETCOUNT") {
-    return String(resetCount); //Uncontrolled reboot - kernel panic, etc.
-  } else if (var == "LASTRESETREASON") {
-    return String(esp_reset_reason(),HEX);
-  } else if (var == "BLENOLOADCOUNTER") {
-    //return String(BLEnoLoadedCounter);
-    return String();
-  } else if (var == "BLEUNLOADCOUNTER") {
-    //return String(BLEunloadsCounter);
-    return String();
-  } else if (var == "minHeapSinceUpgradeCOUNTER") {
-    //return String(minHeapSinceUpgradeCounter);
-    return String();
-  } else if (var == "SOFTRESETCOUNTER") {
-    //return String(softResetCounter);
-    return String();
-  } else if (var == "MINMAXHEAPBLOCKSIZE") {
-    return String(minMaxHeapBlockSizeSinceBoot);
-  } else if (var == "MINMAXHEAPBLOCKSIZEUPGRADE") {
-    return String(minMaxHeapBlockSizeSinceUpgrade);
-  } else if (var == "MINHEAPSIZE") {
-    return String(minHeapSinceBoot);
-  } else if (var == "MINHEAPSIZEUPGRADE") {
-    return String(minHeapSinceUpgrade);
-  } else if (var == "CURRENTHEAPSIZE") {
-    return String(esp_get_free_heap_size());
-  } else if (var == "MAINTENLEFTMEM") {
-    return String(OTAAvailableSize)+String(",")+String(SPIFFSAvailableSize);
-  } else if (var == "MAINTENLEFTBINMEM") {
-    return String(OTAAvailableSize);
-  } else if (var == "MAINTENLEFTSPIFFSMEM") {  
-    return String(SPIFFSAvailableSize);
-  } else {
-    return String();
-  }
-  log_v("<< processorMaintenance. Exit");
-} //processorMaintenance
-
 uint32_t initWebServer() {
   /******************************************************
    Function initWebServer
@@ -801,7 +96,7 @@ uint32_t initWebServer() {
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - Http request / received");}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -810,7 +105,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -819,7 +114,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_TEST_PAGE, "text/html",false,processorTest);
+    request->send(SPIFFS, WEBSERVER_TEST_PAGE, String(),false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -828,7 +123,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS,WEBSERVER_CONSOLE_PAGE, "text/html",false,processorConsole);
+    request->send(SPIFFS,WEBSERVER_CONSOLE_PAGE, String(),false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   
@@ -918,7 +213,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_STATS_PAGE, String(), false, processorStats);
+    request->send(SPIFFS, WEBSERVER_STATS_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   
@@ -927,7 +222,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_INFO_PAGE, String(), false, processorInfo);
+    request->send(SPIFFS, WEBSERVER_INFO_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   
@@ -936,7 +231,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_BASICCONFIG_PAGE, String(), false, processorBasic);
+    request->send(SPIFFS, WEBSERVER_BASICCONFIG_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   
@@ -945,7 +240,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false, processorCloud);
+    request->send(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   
@@ -954,7 +249,7 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_BLUETOOTHCONFIG_PAGE, String(), false, processorBluetooth);
+    request->send(SPIFFS, WEBSERVER_BLUETOOTHCONFIG_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   
@@ -967,7 +262,7 @@ uint32_t initWebServer() {
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
 
     //Setup a new response to send Set Cookie headers in the maintenance.html answer
-    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false, processorMaintenance);
+    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
 
     //If comes with a valid cookie and there is an ongoing upload, return the same cookie
     //This way, a broser-based abort action can be detected
@@ -1009,7 +304,7 @@ uint32_t initWebServer() {
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     fileUpdateError=ERROR_UPLOAD_FILE_NOERROR; //To check POST parameters & File Upload process
-    request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false, processorMaintenance);
+    request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -1020,7 +315,7 @@ uint32_t initWebServer() {
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     fileUpdateError=ERROR_UPLOAD_FILE_NOERROR; //To check POST parameters & File Upload process
-    request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false, processorMaintenance);
+    request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin   
   });
   
@@ -1031,7 +326,7 @@ uint32_t initWebServer() {
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     fileUpdateError=0; //To check POST parameters & File Upload process
-    request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false, processorMaintenance);
+    request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -1040,6 +335,9 @@ uint32_t initWebServer() {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    //Update JSON objects needed for this web page
+    gas_sample(false);   //Get GAS samples
+    if (tempHumSensor.isConnected()) temperature_sample(false);  //Get Temp & Hum samples
     request->send(200, "application/json", JSON.stringify(samples));
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
@@ -1052,22 +350,67 @@ uint32_t initWebServer() {
     request->send(SPIFFS, WEBSERVER_GAUGESCRIPT_PAGE, "text/javascript");
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
-  
-  // Route to resutl_script.js file
-  webServer.on(WEBSERVER_RESULTSCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+
+  // Route to WIFI_PSSWs file
+  webServer.on("/wpsw", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_RESULTSCRIPT_PAGE, "text/javascript");
+    request->send(200, "application/json", String("{\"PSSW\":\"")+wifiCred.wifiPSSWs[0]+String("\",\"PSSW_BK1\":\"")+wifiCred.wifiPSSWs[1]+String("\",\"PSSW_BK2\":\"")+wifiCred.wifiPSSWs[2]+String("\"}"));
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
-  // Route to resutl_script.js file
-  webServer.on(WEBSERVER_RESULTSCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+  // Route to index_script.js file
+  webServer.on(WEBSERVER_INDEX_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    request->send(SPIFFS, WEBSERVER_RESULTSCRIPT_PAGE, "text/javascript");
+    request->send(SPIFFS, WEBSERVER_INDEX_SCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  // Route to stats_script.js file
+  webServer.on(WEBSERVER_STATS_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_STATS_SCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  // Route to info_script.js file
+  webServer.on(WEBSERVER_INFO_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_INFO_SCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  // Route to basic_script.js file
+  webServer.on(WEBSERVER_BASIC_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_BASIC_SCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  // Route to cloud_script.js file
+  webServer.on(WEBSERVER_CLOUD_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_CLOUD_SCRIPT_PAGE, "text/javascript");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  // Route to maintenance_script.js file
+  webServer.on(WEBSERVER_MAINTENANCE_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, WEBSERVER_MAINTENANCE_SCRIPT_PAGE, "text/javascript");
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
   
@@ -1084,6 +427,14 @@ uint32_t initWebServer() {
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/boiler-orange.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+
+  webServer.on("/boiler-orange-flame.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/boiler-orange-flame.png", "image/png");
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -1169,7 +520,7 @@ uint32_t initWebServer() {
     }
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
-    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
@@ -1181,7 +532,7 @@ uint32_t initWebServer() {
     int params = request->params();
     bool updateEEPROM=false;
     char auxUserName[WEB_USER_CREDENTIAL_LENGTH],auxUserPssw[WEB_PW_CREDENTIAL_LENGTH];
-    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false, processorCloud);
+    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false);
 
     //Authentication is required
     if(!request->authenticate(userName.c_str(), userPssw.c_str())) {
@@ -1220,7 +571,8 @@ uint32_t initWebServer() {
       if (updateEEPROM) EEPROM.commit();
       //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
       //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
-      request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+      //Update JSON objects needed for this web page
+      request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
     }
 
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
@@ -1413,7 +765,7 @@ uint32_t initWebServer() {
     //request->send(200,String("text/html"),String("<!DOCTYPE html><html lang=\"en\"><head><meta http-equiv=\"refresh\" content=\"0.5; URL=http://192.168.100.103\"/></head><body style=\"background-color:#34383b;\"></body></html>"));
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
-    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+    request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
 
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
@@ -1427,7 +779,7 @@ uint32_t initWebServer() {
     uint8_t currentConfigVariables,configVariables=0;
     bool updateEEPROM=false,connectMqtt=false,disconnectMqtt=false,subscribePowerMqtt=false;
     char auxUserName[MQTT_USER_CREDENTIAL_LENGTH],auxUserPssw[MQTT_PW_CREDENTIAL_LENGTH];
-    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false, processorCloud);
+    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false);
     byte auxCounter=0;
 
     currentConfigVariables=EEPROM.read(0x2BE);
@@ -1687,7 +1039,7 @@ uint32_t initWebServer() {
       if (updateEEPROM) EEPROM.commit();
       //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
       //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
-      request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html",false,processorIndex);
+      request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
 
       //Update powerMeasureEnabled and powerMeasureSubscribed variables anycase
       samples["powerMeasureEnabled"]=powerMeasureEnabled;
@@ -1787,7 +1139,7 @@ uint32_t initWebServer() {
     
     //reconnectWifiAndRestartWebServer=false;
     //resyncNTPServer=false;
-    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false, processorMaintenance);
+    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
 
     int params = request->params();
     for(int i=0;i<params;i++) {

@@ -72,75 +72,74 @@
           <div id="tswsamples">
             <fieldset name="Samples"> <legend> Sample Info</legend>
               <p></p>
-              <p>Temperature:&nbsp; ~TEMPERATURE~</p>
-              <p>Humidity:&nbsp; ~HUMIDITY~</p>
+              <p>Temperature:&nbsp; <span id="TEMPERATURE_id"></span></p>
+              <p>Humidity:&nbsp; <span id="HUMIDITY_id"></span></p>
             </fieldset>
           </div> <!--tswsamples-->
           <div id="tswwifiinfo">
             <fieldset name="WifiInfo"> <legend> WiFi Info</legend>
               <p></p>
-              <p>SSID:&nbsp; ~SSID~</p>
-              <p>BSSID:&nbsp; ~BSSID~</p>
-              <p>RSSI:&nbsp; ~RSSI~</p>
+              <p>SSID:&nbsp; <span id="SSID_id"></span></p>
+              <p>BSSID:&nbsp; <span id="BSSID_id"></span></p>
+              <p>RSSI:&nbsp; <span id="RSSI_id"></span></p>
               <!--<p>Encryption type&nbsp; ~ENCRIPTIONTYPE~</p>-->
-              <p>WiFi Channel:&nbsp; ~WIFICHANNEL~</p>
+              <p>WiFi Channel:&nbsp; <span id="WIFICHANNEL_id"></span></p>
             </fieldset>
           </div> <!--tswwifiinfo-->
           <div id="tswdevice">
             <fieldset name="Device"> <legend> Device Info</legend>
               <p></p>
-              <p>Device Name:&nbsp; ~DEVICENAME~</p>
-              <p>Firmware Version:&nbsp; ~FIRMWAREVERSION~</p>
-              <p>Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~DATE~</p>
-              <p>Boot date:&nbsp;~UPTIMEDATE~</p>
-              <p>Uptime:&nbsp;~UPTIME~</p>
-              <p>Time Zone:&nbsp;~TIMEZONENAME~</p>
-              <p>TZ VAR:&nbsp;~TIMEZONE~</p>
+              <p>Device Name:&nbsp; <span id="DEVICENAME_id"></span></p>
+              <p>Firmware Version:&nbsp; <span id="FIRMWAREVERSION_id"></span></p>
+              <p>Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="DATE_id"></span></p>
+              <p>Boot date:&nbsp;<span id="UPTIMEDATE_id"></span></p>
+              <p>Uptime:&nbsp;<span id="UPTIME_id"></span></p>
+              <p>Time Zone:&nbsp;<span id="TIMEZONENAME_id"></span></p>
+              <p>TZ VAR:&nbsp;<span id="TIMEZONE_id"></span></p>
               <br>
-              <p>Sensor Temp/Hum:&nbsp;~SENSORTEMPHUM~</p>
+              <p>Sensor Temp/Hum:&nbsp;<span id="SENSORTEMPHUM_id"></span></p>
             </fieldset>
           </div> <!--tswdevice-->
           
           <div id="tswnetinfo">
             <fieldset name="NetInfo"> <legend> Net Info</legend>
               <p></p>
-              <p>MAC Address:&nbsp; ~MACADDRESS~</p>
-              <p>IP Address:&nbsp; ~IPADDRESS~</p>
-              <p>Mask:&nbsp; ~MASK~</p>
-              <p>Gateway:&nbsp; ~DEFAULTGW~</p>
-              <p>NTP Server:&nbsp; ~NTPSERVER~</p>
-              <p>NTP Status:&nbsp; ~NTPSTATUS~</p>
+              <p>MAC Address:&nbsp; <span id="MACADDRESS_id"></span></p>
+              <p>IP Address:&nbsp; <span id="IPADDRESS_id"></span></p>
+              <p>Mask:&nbsp; <span id="MASK_id"></span></p>
+              <p>Gateway:&nbsp; <span id="DEFAULTGW_id"></span></p>
+              <p>NTP Server:&nbsp; <span id="NTPSERVER_id"></span></p>
+              <p>NTP Status:&nbsp; <span id="NTPSTATUS_id"></span></p>
             </fieldset>
           </div> <!--tswnetinfo-->
           <div id="tswmiscinfo">
             <fieldset name="MiscInfo"> <legend> Misc Info</legend>
               <p></p>
               <div id="tswmiscinfoleft">
-                <p>WiFi ~WIFISTATUS~, Status:&nbsp; ~WIFICURRENTSTATUS~</p>
-                <p>NTP Server Status:&nbsp; ~NTPSTATUS~</p>
+                <p>WiFi <span id="WIFISTATUS_id"></span>, Status:&nbsp; <span id="WIFICURRENTSTATUS_id"></span></p>
+                <p>NTP Server Status:&nbsp; <span id="NTPSTATUS2_id"></span></p>
                 <p>
                   <font style="color:#8c9297;"">
-                    Bluetooth ~BLUETOOTHSTATUS~, Status:&nbsp; ~BLUETOOTHCURRENTSTATUS~
+                    Bluetooth <span id="BLUETOOTHSTATUS_id"></span>, Status:&nbsp; <span id="BLUETOOTHCURRENTSTATUS_id"></span>
                   </font>
                 </p>
                 <p>
-                  Cloud Services ~CLOUDSERVICESSTATUS~, Status:&nbsp; ~CLOUDSERVICESCURRENTSTATUS~<br>
-                  &nbsp;&nbsp;&nbsp;URL:&nbsp; ~CLOUDSERVICESURL~<br>
+                  Cloud Services <span id="CLOUDSERVICESSTATUS_id"></span>, Status:&nbsp; <span id="CLOUDSERVICESCURRENTSTATUS_id"></span><br>
+                  &nbsp;&nbsp;&nbsp;URL:&nbsp; <span id="CLOUDSERVICESURL_id"></span><br>
                 </p>
                 <p>
-                  MQTT Services ~MQTTSERVICESSTATUS~, Status:&nbsp; ~MQTTSERVICESCURRENTSTATUS~<br>
-                  Secure MQTT:&nbsp; ~Secure_MQTTSERVICESSTATUS~<br>
-                  &nbsp;&nbsp;&nbsp;Server:&nbsp; ~MQTTSERVER~<br>
-                  &nbsp;&nbsp;&nbsp;Root Topic:&nbsp; ~MQTTTOPICNAME~<br>
+                  MQTT Services <span id="MQTTSERVICESSTATUS_id"></span>, Status:&nbsp; <span id="MQTTSERVICESCURRENTSTATUS_id"></span><br>
+                  Secure MQTT:&nbsp; <span id="Secure_MQTTSERVICESSTATUS_id"></span><br>
+                  &nbsp;&nbsp;&nbsp;Server:&nbsp; <span id="MQTTSERVER_id"></span><br>
+                  &nbsp;&nbsp;&nbsp;Root Topic:&nbsp; <span id="MQTTTOPICNAME_id"></span><br>
                 </p>
               </div> <!--tswmiscinfoleft-->
             </fieldset>
+            <script src="info_script.js"></script>
           </div> <!--tswmiscinfo-->
           <!-- end of content column: put your content above this line -->
         </div> <!--tswcontproper-->
       </div> <!--tswcontent-->
-
-      
 
       <div style="clear: both;"></div>      
       <div id="tswfooter">

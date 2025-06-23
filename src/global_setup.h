@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "1.0.0"
+#define VERSION "1.1.0"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -114,7 +114,12 @@
 #define WEBSERVER_SAMPLES_EVENT "/sampleEvents"
 #define WEBSERVER_SAMPLES_PAGE "/samples"
 #define WEBSERVER_GAUGESCRIPT_PAGE "/gauge.min.js"
-#define WEBSERVER_RESULTSCRIPT_PAGE "/result_script.js"
+#define WEBSERVER_INDEX_SCRIPT_PAGE "/index_script.js"
+#define WEBSERVER_STATS_SCRIPT_PAGE "/stats_script.js"
+#define WEBSERVER_INFO_SCRIPT_PAGE "/info_script.js"
+#define WEBSERVER_BASIC_SCRIPT_PAGE "/basic_script.js"
+#define WEBSERVER_CLOUD_SCRIPT_PAGE "/cloud_script.js"
+#define WEBSERVER_MAINTENANCE_SCRIPT_PAGE "/maintenance_script.js"
 #define WEBSOCKET_CONSOLE_URI "/wsconsole"
 #define COOKIE_SIZE sizeof(DEVICE_NAME_PREFIX)+44 //54 //32 Chars + null
 #define CLOUD_SERVICES_URL  "http://the-iotfactory.com/lar-boil/"
@@ -243,7 +248,7 @@
 //BLE stuff
 #define BLE_ENABLED  false
 #define BLE_MIN_HEAP_SIZE  95000  //Based on tests
-#define ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD  10000  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
+#define ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD  5000  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define ABSULUTE_MIN_HEAP_THRESHOLD  7000  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define MIN_HEAP_SEEN_THRESHOLD        700  //Bellow this threshold, heap overflow risk. SoftReset is needed. 
 #define BLE_BEACON_UUID           "F7826DA6-4FA2-4E98-8024-BC5B71E0893E"  //Kontakt proximity

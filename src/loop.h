@@ -14,8 +14,8 @@ extern RTC_DATA_ATTR boolean forceWifiReconnect,forceWebServerInit,firstBoot,wif
 extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetSWCount,resetPreventiveWebServerCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
                               errorsHTTPUptsCnt,errorsMQTTCnt,errorsConnectivityCnt,errorsWebServerCnt;
 extern RTC_DATA_ATTR uint16_t year;
-extern RTC_DATA_ATTR uint64_t nowTimeGlobal,lastTimeWifiReconnectionCheck,whileLoopTimeLeft,lastCloudClockChangeCheck,lastTimeMQTTCheck,lastThermostatOnTime,
-                              lastTimeSecondCheck,lastTimeTimerEepromUpdateCheck,lastTimeConnectiviyCheck;
+extern RTC_DATA_ATTR uint64_t nowTimeGlobal,firstLoopTime,lastTimeWifiReconnectionCheck,whileLoopTimeLeft,lastCloudClockChangeCheck,lastTimeMQTTCheck,lastThermostatOnTime,
+                              lastTimeSecondCheck,lastTimeTimerEepromUpdateCheck,lastTimeConnectiviyCheck,lastGasSample;
 extern RTC_DATA_ATTR ulong wifiReconnectPeriod;
 extern RTC_DATA_ATTR float valueHum,tempSensor,valueT;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;

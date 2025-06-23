@@ -29,22 +29,19 @@
             setTimeout(getTime,1000);
           }
         </script>
-        <p style="text-align: center; font-size: smaller;"><br>
-        </p>
-      </div>
+        <p style="text-align: center; font-size: smaller;"><br></p>
+      </div> <!--tswheader-->
       <div id="tswsidecolcloud">
         <div id="tswsideproper">
           <!-- start of side column: insert your navigation menu, etc, here -->
           <!-- start of hamburger menu button -->
           <script type="text/javascript">
-                function tsw_expand_navmenu( )
-                {
-                  document.getElementById ( 'tswhamburger' ).style.display = 'none' ;
-                  document.getElementById( 'tswcssbuttons' ).style.display = 'block' ;
-                }
-              </script> <button type="button" id="tswhamburger" title="Click to expand menu"
-
-            onclick="tsw_expand_navmenu();">≡</button>
+            function tsw_expand_navmenu( ) {
+              document.getElementById ( 'tswhamburger' ).style.display = 'none' ;
+              document.getElementById( 'tswcssbuttons' ).style.display = 'block' ;
+            }
+          </script>
+          <button type="button" id="tswhamburger" title="Click to expand menu" onclick="tsw_expand_navmenu();">≡</button>
           <!-- end of hamburger menu button -->
           <div id="tswcssbuttons">
             <ul>
@@ -60,8 +57,8 @@
             </ul>
           </div>
           <!-- end of side column: put your navigation menu, etc, above this line -->
-        </div>
-      </div>
+        </div> <!--tswsideproper-->
+      </div> <!--tswsidecolcloud--> <!--*-->
       <div id="tswcontent">
         <div id="tswcontproper">
           <!-- start of content column: insert your content here -->
@@ -78,59 +75,59 @@
               
                 Enable Cloud Services:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="Cloud_on_id">On</label>
-                <input name="Cloud_enabled" id="Cloud_on_id" value="on" required="required" ~CLOUD_ON_CHECKED~ type="radio">
+                <input name="Cloud_enabled" id="Cloud_on_id" value="on" required="required" type="radio">
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="Cloud_off_id">Off</label>
-                <input name="Cloud_enabled" id="Cloud_off_id" value="off" required="required" ~CLOUD_OFF_CHECKED~ type="radio">
+                <input name="Cloud_enabled" id="Cloud_off_id" value="off" required="required" type="radio">
                 <br><br>
                 Sites allowed to upload measures from:&nbsp;&nbsp;<br><br>
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <label for="SiteAllowed_id">~SITE_ALLOW_NAME~</label>&nbsp;&nbsp;&nbsp;&nbsp;
-                <input name="SITE_ALLOW_NAME" id="SiteAllowed_id" value="site_allowed" ~SITE_ALLOW_CHECKED~ type="checkbox"><br>
+                <label for="SiteAllowed_id"><span id="SITE_ALLOW_NAME_id"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                <input name="SITE_ALLOW_NAME" id="SiteAllowed_id" value="site_allowed" type="checkbox"><br>
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <label for="SiteBk1Allowed_id">~SITE_BK1_ALLOW_NAME~</label>&nbsp;&nbsp;&nbsp;&nbsp;
-                <input name="SITE_BK1_ALLOW_NAME" id="SiteBk1Allowed_id" value="site_bk1_allowed" ~SITE_BK1_ALLOW_CHECKED~ type="checkbox"><br>
+                <label for="SiteBk1Allowed_id"><span id="SITE_BK1_ALLOW_NAME_id"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                <input name="SITE_BK1_ALLOW_NAME" id="SiteBk1Allowed_id" value="site_bk1_allowed" type="checkbox"><br>
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <label for="SiteBk2Allowed_id">~SITE_BK2_ALLOW_NAME~</label>&nbsp;&nbsp;&nbsp;&nbsp;
-                <input name="SITE_BK2_ALLOW_NAME" id="SiteBk2Allowed_id" value="site_bk2_allowed" ~SITE_BK2_ALLOW_CHECKED~ type="checkbox">&nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="SiteBk2Allowed_id"><span id="SITE_BK2_ALLOW_NAME_id"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                <input name="SITE_BK2_ALLOW_NAME" id="SiteBk2Allowed_id" value="site_bk2_allowed" type="checkbox">&nbsp;&nbsp;&nbsp;&nbsp;
               </fieldset>
               <br><br>
               <fieldset name="StatsEnabledSet">
                 <legend> MQTT Configuration</legend>
                 <p></p>
                 <label for="MQTTSERVER">MQTT Server:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                <input id="MQTTSERVER_id" name="MQTTSERVER" size="25" placeholder=~MQTTSERVER~ type="text" 
-                  pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$" 
-                  ~MQTTREQUIRED~ value="~MQTTSERVER~">
+                <input id="MQTTSERVER_id" name="MQTTSERVER" size="25" type="text" 
+                  pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
+                >
                 <br>
                 <label for="MQTTTOPIC">MQTT Topic Prefix:&nbsp;</label>
-                <input id="MQTTTOPIC_id" name="MQTTTOPIC" size="25" placeholder=~MQTTTOPIC~ type="text" pattern="^[^\/].+\/*" ~MQTTREQUIRED~ value="~MQTTTOPIC~">
+                <input id="MQTTTOPIC_id" name="MQTTTOPIC" size="25" type="text" pattern="^[^\/].+\/*" >
                 <br><br>
                 Enable MQTT Service:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="MQTT_on_id">On</label>
-                <input name="MQTT_enabled" id="MQTT_on_id" value="on" required="required" ~MQTT_ON_CHECKED~ type="radio">
+                <input name="MQTT_enabled" id="MQTT_on_id" value="on" required="required" type="radio">
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="MQTT_off_id">Off</label>
-                <input name="MQTT_enabled" id="MQTT_off_id" value="off" required="required" ~MQTT_OFF_CHECKED~ type="radio">
+                <input name="MQTT_enabled" id="MQTT_off_id" value="off" required="required" type="radio">
                 <br>
                 Secure MQTT Service:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="Secure_MQTT_on_id">On</label>
-                <input name="Secure_MQTT_enabled" id="Secure_MQTT_on_id" value="on" required="required" ~Secure_MQTT_ON_CHECKED~ type="radio">
+                <input name="Secure_MQTT_enabled" id="Secure_MQTT_on_id" value="on" required="required" type="radio">
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="Secure_MQTT_off_id">Off</label>
-                <input name="Secure_MQTT_enabled" id="Secure_MQTT_off_id" value="off" required="required" ~Secure_MQTT_OFF_CHECKED~ type="radio">
+                <input name="Secure_MQTT_enabled" id="Secure_MQTT_off_id" value="off" required="required" type="radio">
                 <br><br>
                 Enable MQTT Power Measurements:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="MQTT_Power_on_id">On</label>
-                <input name="MQTT_Power_enabled" id="MQTT_Power_on_id" value="on" required="required" ~MQTT_POWER_ON_CHECKED~ type="radio" ~MQTT_POWER_DISABLED~>
+                <input name="MQTT_Power_enabled" id="MQTT_Power_on_id" value="on" required="required" type="radio" >
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <label for="MQTT_Power_off_id">Off</label>
-                <input name="MQTT_Power_enabled" id="MQTT_Power_off_id" value="off" required="required" ~MQTT_POWER_OFF_CHECKED~ type="radio" ~MQTT_POWER_DISABLED~>
+                <input name="MQTT_Power_enabled" id="MQTT_Power_off_id" value="off" required="required" type="radio" >
                 <br>
                 <label for="MQTTPOWERTOPIC">MQTT Power Topic:&nbsp;</label>
-                <input id="MQTTPOWERTOPIC_id" name="MQTTPOWERTOPIC" size="25" placeholder=~MQTTPOWERTOPIC~ type="text" pattern="^[^\/].+\/*" ~MQTTPOWERREQUIRED~ value="~MQTTPOWERTOPIC~" ~MQTT_POWER_DISABLED~><br>
+                <input id="MQTTPOWERTOPIC_id" name="MQTTPOWERTOPIC" size="25" type="text" pattern="^[^\/].+\/*" ><br>
                 <label for="POWERTHRESHOLD">&nbsp;Power Thresh. (W):&nbsp;</label>
-                <input id="POWERTHRESHHOLD_id" name="POWERTHRESHOLD" size="4" min="50" max="2000" placeholder=~POWERTHRESHOLD~ type="number" pattern="^[0-9]+$" maxlenght=4 ~POWERTHRESHOLDREQUIRED~ value="~POWERTHRESHOLD~" ~MQTT_POWER_DISABLED~>
+                <input id="POWERTHRESHHOLD_id" name="POWERTHRESHOLD" size="4" min="50" max="2000" type="number" pattern="^[0-9]+$" maxlenght=4 >
               </fieldset>
               <br><br>
               <fieldset name="AdminUser" form="AdminUser_Form">
@@ -138,11 +135,11 @@
                 <p></p>
                 <div id="tswadminusername">
                   <label for="MQTTUserName">User Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-                  <input id="MQTTUserName_id" name="MQTTUserName" size="11" placeholder="~MQTTUserName~" value="~MQTTUserName_VALUE~" disabled maxlength="10" type="text"><br>
+                  <input id="MQTTUserName_id" name="MQTTUserName" size="11" disabled maxlength="10" type="text"><br>
                 </div>
                 <div id="tswadminuserpssw">
                   <label for="MQTTUserPssw">User Password&nbsp;</label>
-                  <input id="MQTTUserPssw_id" name="MQTTUserPssw" size="11" placeholder="~MQTTUserPssw~" value="~MQTTUserPssw_VALUE~" maxlength="10" type="password"><br>
+                  <input id="MQTTUserPssw_id" name="MQTTUserPssw" size="11" maxlength="10" type="password"><br>
                 </div>
               </fieldset>
               <p></p>
@@ -154,6 +151,7 @@
               <button type="submit" name="Button_Send" id="Button_Send_id"><strong>Submit</strong></button>
             </form>
             <p></p>
+            <script src="cloud_script.js"></script>
           <!-- end of content column: put your content above this line --> </div>
       </div>
       <div style="clear: both;"></div>

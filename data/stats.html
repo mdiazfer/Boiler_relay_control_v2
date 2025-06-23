@@ -31,7 +31,7 @@
         </script>
         <p style="text-align: center; font-size: smaller;"><br></p>
       </div> <!--tswheader-->
-      <div id="tswsidecolstats"> <!--*-->
+      <div id="tswsidecolstat"> <!--*-->
         <div id="tswsideproper">
           <!-- start of side column: insert your navigation menu, etc, here -->
           <!-- start of hamburger menu button -->
@@ -41,9 +41,7 @@
               document.getElementById( 'tswcssbuttons' ).style.display = 'block' ;
             }
           </script>
-          <button type="button" id="tswhamburger" title="Click to expand menu"onclick="tsw_expand_navmenu();">
-            ≡
-          </button>
+          <button type="button" id="tswhamburger" title="Click to expand menu" onclick="tsw_expand_navmenu();">≡</button>
           <!-- end of hamburger menu button -->
           <div id="tswcssbuttons">
             <ul>
@@ -71,7 +69,7 @@
             <div id="tswstatsboiler">
               <p style="text-align: center;">
                 <font size="5px" style="color:#78B0FF;">Boiler</font><br><br>
-                <font size="3px" style="color:#eefd17;">Yesterday: 0 min.&nbsp;&nbsp;&nbsp;&nbsp;Today: 0 min.</font>
+                <font size="3px" style="color:#eefd17;">Yesterday: <span id="boilerOnYearYesterday_id"></span>&nbsp;&nbsp;&nbsp;&nbsp;Today: <span id="boilerOnYearToday_id"></span></font>
               </p>
               <table class="styled-table" align=center>
                 <thead>
@@ -80,26 +78,26 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>~BOILERTIMEONJAN~</tr>
-                  <tr>~BOILERTIMEONFEB~</tr>
-                  <tr>~BOILERTIMEONMAR~</tr>
-                  <tr>~BOILERTIMEONAPR~</tr>
-                  <tr>~BOILERTIMEONMAY~</tr>
-                  <tr>~BOILERTIMEONJUN~</tr>
-                  <tr>~BOILERTIMEONJUL~</tr>
-                  <tr>~BOILERTIMEONAUG~</tr>
-                  <tr>~BOILERTIMEONSEP~</tr>
-                  <tr>~BOILERTIMEONOCT~</tr>
-                  <tr>~BOILERTIMEONNOV~</tr>
-                  <tr>~BOILERTIMEONDEC~</tr>
-                  <tr>~BOILERTIMEONYEAR~</tr>
+                  <tr><td align=left>&nbsp;January</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearJanAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearJan_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearJanAVG_id"></span></td><td align=center><span id="boilerOnYearJan_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;February</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearFebAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearFeb_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearFebAVG_id"></span></td><td align=center><span id="boilerOnYearFeb_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;March</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearMarAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearMar_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearMarAVG_id"></span></td><td align=center><span id="boilerOnYearMar_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;April</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearAprAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearApr_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearAprAVG_id"></span></td><td align=center><span id="boilerOnYearApr_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;May</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearMayAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearMay_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearMayAVG_id"></span></td><td align=center><span id="boilerOnYearMay_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Jun</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearJunAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearJun_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearJunAVG_id"></span></td><td align=center><span id="boilerOnYearJun_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;July</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearJulAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearJul_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearJulAVG_id"></span></td><td align=center><span id="boilerOnYearJul_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;August</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearAugAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearAug_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearAugAVG_id"></span></td><td align=center><span id="boilerOnYearAug_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Septem.</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearSepAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearSep_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearSepAVG_id"></span></td><td align=center><span id="boilerOnYearSep_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;October</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearOctAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearOct_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearOctAVG_id"></span></td><td align=center><span id="boilerOnYearOct_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Novem.</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearNovAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearNov_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearNovAVG_id"></span></td><td align=center><span id="boilerOnYearNov_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Decem.</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearDecAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearDec_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearDecAVG_id"></span></td><td align=center><span id="boilerOnYearDec_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;TOTAL</td><td class=\"column-grey\" align=center><span id="boilerOnPreviousYearTotalAVG_id"></span></td><td align=center><span id="boilerOnPreviousYearTotal_id"></span></td><td class=\"column-grey\" align=center><span id="boilerOnYearTotalAVG_id"></span></td><td align=center><span id="boilerOnYearTotal_id"></span></td></tr>
                 </tbody>
               </table>
-            </div>
+            </div> <!-- tswstatsboiler -->
             <div id="tswstatsheater">
               <p style="text-align: center;">
                 <font size="5px" style="color:#78B0FF;">Heater</font><br><br>
-                <font size="3px" style="color:#eefd17;">Yesterday: 0 min.&nbsp;&nbsp;&nbsp;&nbsp;Today: 0 min.</font>
+                <font size="3px" style="color:#eefd17;">Yesterday: <span id="heaterOnYearYesterday_id"></span>&nbsp;&nbsp;&nbsp;&nbsp;Today: <span id="heaterOnYearToday_id"></span></font>
               </p>
               <table class="styled-table" align=center>
                 <thead>
@@ -109,25 +107,26 @@
                 </thead>
                 
                 <tbody>
-                  <tr>~HEATERTIMEONJAN~</tr>
-                  <tr>~HEATERTIMEONFEB~</tr>
-                  <tr>~HEATERTIMEONMAR~</tr>
-                  <tr>~HEATERTIMEONAPR~</tr>
-                  <tr>~HEATERTIMEONMAY~</tr>
-                  <tr>~HEATERTIMEONJUN~</tr>
-                  <tr>~HEATERTIMEONJUL~</tr>
-                  <tr>~HEATERTIMEONAUG~</tr>
-                  <tr>~HEATERTIMEONSEP~</tr>
-                  <tr>~HEATERTIMEONOCT~</tr>
-                  <tr>~HEATERTIMEONNOV~</tr>
-                  <tr>~HEATERTIMEONDEC~</tr>
-                  <tr>~HEATERTIMEONYEAR~</tr>
+                  <tr><td align=left>&nbsp;January</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearJanAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearJan_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearJanAVG_id"></span></td><td align=center><span id="heaterOnYearJan_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;February</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearFebAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearFeb_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearFebAVG_id"></span></td><td align=center><span id="heaterOnYearFeb_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;March</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearMarAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearMar_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearMarAVG_id"></span></td><td align=center><span id="heaterOnYearMar_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;April</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearAprAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearApr_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearAprAVG_id"></span></td><td align=center><span id="heaterOnYearApr_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;May</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearMayAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearMay_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearMayAVG_id"></span></td><td align=center><span id="heaterOnYearMay_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Jun</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearJunAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearJun_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearJunAVG_id"></span></td><td align=center><span id="heaterOnYearJun_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;July</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearJulAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearJul_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearJulAVG_id"></span></td><td align=center><span id="heaterOnYearJul_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;August</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearAugAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearAug_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearAugAVG_id"></span></td><td align=center><span id="heaterOnYearAug_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Septem.</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearSepAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearSep_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearSepAVG_id"></span></td><td align=center><span id="heaterOnYearSep_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;October</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearOctAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearOct_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearOctAVG_id"></span></td><td align=center><span id="heaterOnYearOct_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Novem.</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearNovAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearNov_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearNovAVG_id"></span></td><td align=center><span id="heaterOnYearNov_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;Decem.</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearDecAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearDec_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearDecAVG_id"></span></td><td align=center><span id="heaterOnYearDec_id"></span></td></tr>
+                  <tr><td align=left>&nbsp;TOTAL</td><td class=\"column-grey\" align=center><span id="heaterOnPreviousYearTotalAVG_id"></span></td><td align=center><span id="heaterOnPreviousYearTotal_id"></span></td><td class=\"column-grey\" align=center><span id="heaterOnYearTotalAVG_id"></span></td><td align=center><span id="heaterOnYearTotal_id"></span></td></tr>
                 </tbody>
               </table>
-            </div>
+            </div> <!-- tswstatsheater -->
             <p style="font-size: 80%; text-align: center; font-style: italic; color:gold">(*) Time in tables in hours (h) - Average in hours per day (h/day)</p>
           </div> <!--tswstats--> <!--*-->
           <p></p>
+          <script src="stats_script.js"></script>
           <!-- end of content column: put your content above this line -->
         </div> <!--tswcontproper-->
       </div>  <!--tswcontent-->

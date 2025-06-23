@@ -315,14 +315,17 @@ void gas_sample(bool debugModeOn) {
     boilerOn => Burning gas (flame), due to warming water 
     thermostateStatus => Thermostate is active (or relay active)
     thermostateOn => Burning gas due to heater */
-  if (boilerOn || thermostateOn) printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_PERIOD] - Boiler burning gas. Taking GAS samples. - ");
-  else printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_LONG_PERIOD] - No gas burning. Taking GAS samples. - ");
+  if (gasInterrupt) printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - GAS interrupt detected. Checking on GAS samples. - ");
+  else if (boilerOn || thermostateOn) printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_PERIOD] - Boiler burning gas. Taking GAS samples. - ");
+  else if (nowTimeGlobal-firstLoopTime < 2*HA_ADVST_WINDOW) printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - First sample reading to send MQTT message. - ");
+  else if (nowTimeGlobal-lastGasSample >= SAMPLE_LONG_PERIOD) printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_LONG_PERIOD] - No gas burning. Taking GAS samples. - ");
+  else printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - Taking samples to update web request. - ");
   
   //calculate_R0(); //This is to calculate R0 when the MQ5 sensor is replaced. Don't use it for regular working
   gasRatioSample=get_resistence_ratio(debugModeOn); //This is the current ratio RS/R0 - 6.5 for clean air
   if (gasRatioSample>4.5) {
     gasClear=1;
-    if (debugModeOn) printLogln("\n         [loop - SAMPLE_PERIOD] - Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
+    if (debugModeOn) printLogln("\n         [loop - gas_sample] - Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
     else printLogln("Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
   }
   else {
@@ -344,22 +347,22 @@ void gas_sample(bool debugModeOn) {
 
     printLogln(""); //Just print new line
     if (gasTypes > 0 && gasTypes != 0x20) {
-      printLogln("         [loop - SAMPLE_PERIOD] - GAS detected. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
-      if ((gasTypes & 0x1) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    H2="+String(h2_ppm)+" ppm");
-      if ((gasTypes & 0x2) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    LPG="+String(lpg_ppm)+" ppm");
-      if ((gasTypes & 0x4) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    CH4="+String(ch4_ppm)+" ppm");
-      if ((gasTypes & 0x8) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    CO="+String(co_ppm)+" ppm");
-      if ((gasTypes & 0x10) > 0) printLogln("         [loop - SAMPLE_PERIOD] -    ALCOHOL="+String(alcohol_ppm)+" ppm");
+      printLogln("         [loop - gas_sample] - GAS detected. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
+      if ((gasTypes & 0x1) > 0) printLogln("         [loop - gas_sample] -    H2="+String(h2_ppm)+" ppm");
+      if ((gasTypes & 0x2) > 0) printLogln("         [loop - gas_sample] -    LPG="+String(lpg_ppm)+" ppm");
+      if ((gasTypes & 0x4) > 0) printLogln("         [loop - gas_sample] -    CH4="+String(ch4_ppm)+" ppm");
+      if ((gasTypes & 0x8) > 0) printLogln("         [loop - gas_sample] -    CO="+String(co_ppm)+" ppm");
+      if ((gasTypes & 0x10) > 0) printLogln("         [loop - gas_sample] -    ALCOHOL="+String(alcohol_ppm)+" ppm");
     }
     if (gasTypes > 0x20)
-      {printLogln("         [loop - SAMPLE_PERIOD] - Other GASes detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
+      {printLogln("         [loop - gas_sample] - Other GASes detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
     else if (gasTypes == 0x20)
-      {printLogln("         [loop - SAMPLE_PERIOD] - GAS detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
-    if ((h2_ppm>0 && h2_ppm<200) || h2_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    H2="+String(h2_ppm)+" ppm. Discard that value.");
-    if ((lpg_ppm>0 && lpg_ppm<200) || lpg_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    LPG="+String(lpg_ppm)+" ppm. Discard that value.");
-    if ((ch4_ppm>0 && ch4_ppm<200) || ch4_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    CH4="+String(ch4_ppm)+" ppm. Discard that value.");
-    if ((co_ppm>0 && co_ppm<200) || co_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    CO="+String(co_ppm)+" ppm. Discard that value.");
-    if ((alcohol_ppm>0 && alcohol_ppm<200) || alcohol_ppm>10000) printLogln("         [loop - SAMPLE_PERIOD] -    ALCOHOL="+String(alcohol_ppm)+" ppm. Discard that value.");
+      {printLogln("         [loop - gas_sample] - GAS detected out of range 200-10000, so not valid. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");}
+    if ((h2_ppm>0 && h2_ppm<200) || h2_ppm>10000) printLogln("         [loop - gas_sample] -    H2="+String(h2_ppm)+" ppm. Discard that value.");
+    if ((lpg_ppm>0 && lpg_ppm<200) || lpg_ppm>10000) printLogln("         [loop - gas_sample] -    LPG="+String(lpg_ppm)+" ppm. Discard that value.");
+    if ((ch4_ppm>0 && ch4_ppm<200) || ch4_ppm>10000) printLogln("         [loop - gas_sample] -    CH4="+String(ch4_ppm)+" ppm. Discard that value.");
+    if ((co_ppm>0 && co_ppm<200) || co_ppm>10000) printLogln("         [loop - gas_sample] -    CO="+String(co_ppm)+" ppm. Discard that value.");
+    if ((alcohol_ppm>0 && alcohol_ppm<200) || alcohol_ppm>10000) printLogln("         [loop - gas_sample] -    ALCOHOL="+String(alcohol_ppm)+" ppm. Discard that value.");
   }
 
   //Updating JSON object with samples
@@ -571,6 +574,52 @@ void gas_sample(bool debugModeOn) {
   samples["EnergyTotal"]=energyTotal;
   samples["powerMeasureEnabled"]=powerMeasureEnabled;
   samples["powerMeasureSubscribed"]=powerMeasureSubscribed;
+
+  //Additional Objectes needed in info.html
+  samples["TZName"]=TZName;
+  samples["TZEnvVariable"]=TZEnvVariable;
+  samples["tempHumSensorType"]=tempHumSensorType;
+  samples["macAddress"]=String(WiFi.macAddress());
+  samples["netMask"]=WiFi.subnetMask().toString();
+  samples["defaultGW"]=WiFi.gatewayIP().toString();
+  samples["ntpServer"]=CloudClockCurrentStatus==CloudClockOnStatus?ntpServers[ntpServerIndex]:String("Not Available");
+  samples["CloudSyncCurrentStatus"]=CloudSyncCurrentStatus;
+  samples["cloudServicesURL"]=String("http://"+serverToUploadSamplesIPAddress.toString())+String(GET_REQUEST_TO_UPLOAD_SAMPLES).substring(4,String(GET_REQUEST_TO_UPLOAD_SAMPLES).length()-1);
+  samples["mqttServerEnabled"]=mqttServerEnabled;
+  samples["MqttSyncCurrentStatus"]=MqttSyncCurrentStatus;
+  samples["secureMqttEnabled"]=secureMqttEnabled;
+  samples["mqttServer"]=mqttServer;
+  samples["mqttTopicName"]=mqttTopicName;
+
+  //Additonal objectes needed in basic.html
+  samples["userName"]=userName;
+  samples["SSID_BK1"]=wifiCred.wifiSSIDs[1];
+  samples["SSID_BK2"]=wifiCred.wifiSSIDs[2];
+  samples["SITE"]=wifiCred.wifiSITEs[0];
+  samples["SITE_BK1"]=wifiCred.wifiSITEs[1];
+  samples["SITE_BK2"]=wifiCred.wifiSITEs[2];
+  samples["SITE_ALLOWED"]=wifiCred.SiteAllow[0];
+  samples["SITE_BK1_ALLOWED"]=wifiCred.SiteAllow[1];
+  samples["SITE_BK2_ALLOWED"]=wifiCred.SiteAllow[2];
+  samples["SITE_ACTIVE"]=wifiCred.activeIndex;
+  samples["ntpServer1"]=ntpServers[0];
+  samples["ntpServer2"]=ntpServers[1];
+  samples["ntpServer3"]=ntpServers[2];
+  samples["ntpServer4"]=ntpServers[3];
+
+  //Additonal objectes needed in cloud.html
+  samples["httpCloudEnabled"]=httpCloudEnabled;
+  samples["powerMqttTopic"]=powerMqttTopic;
+  samples["powerOnFlameThreshold"]=powerOnFlameThreshold;
+  samples["mqttUserName"]=mqttUserName;
+
+  //Additonal objectes needed in maintenance.html
+  samples["OTAUpgradeBinAllowed"]=OTAUpgradeBinAllowed;
+  samples["SPIFFSUpgradeBinAllowed"]=SPIFFSUpgradeBinAllowed;
+  samples["OTAAvailableSize"]=OTAAvailableSize;
+  samples["SPIFFSAvailableSize"]=SPIFFSAvailableSize;
+  samples["error_setup"]=error_setup;
+  samples["SPIFFSErrors"]=SPIFFSErrors;
 } // -- gas_sample -- 
 
 void temperature_sample(bool debugModeOn) {

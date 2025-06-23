@@ -73,15 +73,15 @@
                   <p><label id='ForceHeaterId'>Force Heater</label></p>
               </div>
               <div id="tswcontrols_switch";>
-                <p><label class="switch"><input id="thermostatSwitch"; type="checkbox" ~THERMOSTATCHECKED~ onclick="switchThermClicked()"><span class="slider round"></span></input></label></p>
-                <p><label class="switch"><input id="forceSwitch"; type="checkbox" ~FORCEHEATERCHECKED~ onclick="switchForceClicked()"><span class="slider round"></span></input></label></p>
+                <p><label class="switch"><input id="thermostatSwitch"; type="checkbox" onclick="switchThermClicked()"><span class="slider round"></span></input></label></p>
+                <p><label class="switch"><input id="forceSwitch"; type="checkbox" onclick="switchForceClicked()"><span class="slider round"></span></input></label></p>
               </div>
             </div>    <!--tswcontrols--> <!--*-->
           </div>
 
           <div id="tswupdateheader">
             <div><!--<font size="2"; style="font-family:verdana; color:#b69249;"><label>Latest update:</label></font>-->
-              <font size="2"; style="font-family:verdana; padding-left: 45%; color:~INDEX_Text_Update_Color~;"><label>~INDEX_calibrationState~</label></font>
+              <font size="2"; style="font-family:verdana; padding-left: 45%; color: ;"><label>Latest update:</label></font>
             </div>
             <div id="tswupdate">
               <font size="2"; style="font-family:verdana; color:#FFAB00;"><label id='latestUpdate'></label></font>
@@ -94,9 +94,9 @@
                 <!-- </font> -->
               </div>
               <div id="tswcontrols_icons";>
-                <img src="~BOILERICON~" alt="Boiler Status" title="Boiler Status Logo"
+                <img src="boiler-blue.png" alt="Boiler Status" title="Boiler Status Logo"
                       id="boilerStatusIcon" style="margin-top: -10%; float: none; width: 50px; height: 50px;">
-                <img src="~HEATERICON~" alt="Heater Status" title="Heater Status Logo"
+                <img src="radiator-blue.png" alt="Heater Status" title="Heater Status Logo"
                       id="heaterStatusIcon" style="margin-top: -35%; float: none; width: 50px; height: 50px;">
               </div>
             </div> <!--tswcontrols--> <!--*-->  
@@ -108,12 +108,12 @@
             </div>
             <div id="tswenergy_col">
               <font id="tswenergy_col_l1"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
-                Ystday: <span id="energyYesterdayId">~ENERGYYESTERDAY~</span><br>Today: <span id="energyTodayId">~ENERGYTODAY~</span>
+                Ystday: <span id="energyYesterdayId"></span><br>Today: <span id="energyTodayId"></span>
               </font>
             </div>
             <div id="tswenergy_col">
               <font id="tswenergy_col_l2"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
-                Total: <span id="energyTotalId">~ENERGYTOTAL~</span><br>
+                Total: <span id="energyTotalId"></span><br>
               </font>
             </div>
           </div> <!-- tswboilerenergy -->
@@ -124,12 +124,12 @@
             </div>
             <div id="tswenergy_col">
               <font id="tswenergy_col_l3"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
-                Voltage: <span id="voltageId">~VOLTAGE~</span><br>Current: <span id="currentId">~CURRENT~</span>
+                Voltage: <span id="voltageId"></span><br>Current: <span id="currentId"></span>
               </font>
             </div>
             <div id="tswenergy_col">
               <font id="tswenergy_col_l4"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
-                Power: <span id="powerId">~POWER~</span><br>
+                Power: <span id="powerId"></span><br>
               </font>
             </div>
           </div> <!-- tswboilerpower -->
@@ -140,12 +140,12 @@
             </div>
             <div id="tswtimeon_col">
               <font id="tswtimeon_col_l1"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
-                Year: <span id="boilerTimeOnYearId">~BOILERTIMEONYEAR~</span><br>Month: <span id="boilerTimeOnMonthId">~BOILERTIMEONMONTH~</span>
+                Year: <span id="boilerTimeOnYearId"></span><br>Month: <span id="boilerTimeOnMonthId"></span>
               </font>
             </div>
             <div id="tswtimeon_col">
               <font id="tswtimeon_col_l2"; size="2"; style="font-family:verdana; color:#838281; float: none; ">
-                Ystday: <span id="boilerTimeOnYesterdayId">~BOILERTIMEONYESTERDAY~</span><br>Today: <span id="boilerTimeOnTodayId">~BOILERTIMEONTODAY~</span>
+                Ystday: <span id="boilerTimeOnYesterdayId"></span><br>Today: <span id="boilerTimeOnTodayId"></span>
               </font>
             </div>
           </div> <!-- tswtimeoncounters -->
@@ -157,12 +157,12 @@
             </div>
             <div id="tswtimeon_col">
               <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
-                Year: <span id="heaterTimeOnYearId">~HEATERTIMEONYEAR~</span><br>Month: <span id="heaterTimeOnMonthId">~HEATERTIMEONMONTH~</span>
+                Year: <span id="heaterTimeOnYearId"></span><br>Month: <span id="heaterTimeOnMonthId"></span>
               </font>
             </div>
             <div id="tswtimeon_col">
               <font size="2"; style="font-family:verdana; color:#caf6f6; float: none; ">
-                Ystday: <span id="heaterTimeOnYesterdayId">~HEATERTIMEONYESTERDAY~</span><br>Today: <span id="heaterTimeOnTodayId">~HEATERTIMEONTODAY~</span>
+                Ystday: <span id="heaterTimeOnYesterdayId"></span><br>Today: <span id="heaterTimeOnTodayId"></span>
               </font>
             </div>
         </div> <!-- tswtimeoncounters -->
@@ -172,10 +172,10 @@
               <div class="card-grid2" id="id-card-grid2">
                 <div class="card-grid" id="id-card-grid">
                   <div class="card" id="id-card-GAS">
-                    <p class="card-title" id="id-card-title-GAS" style="text-align: center; color: ~CLEANAIRCOLOR~">~CLEANAIRTEXT~</p>
+                    <p class="card-title" id="id-card-title-GAS" style="text-align: center; color: #6ED81A">Clean AIR</p>
                     <!--<div id="id-canvas-GAS" style="text-align: center;"> <canvas id="gauge-GAS"></canvas> </div>
                     -->
-                    <img src="~CLEANAIRICON~" alt="~CLEANAIRTEXT~" title="Clean Air Logo"
+                    <img src="leaf-circle-green.png" alt="Clean AIR" title="Clean Air Logo"
                       id="cleanair" style="margin-top: -4%; width: 122px; height: 122px;">
                   </div>
                   <div class="card" id="id-card-LPG">
@@ -209,7 +209,7 @@
                 </div>
               </div>
             </div>
-            <script src="result_script.js"></script>
+            <script src="index_script.js"></script>
           </div> <!--tswmeasurements--> <!--*-->
           <p></p>
           <!-- end of content column: put your content above this line -->

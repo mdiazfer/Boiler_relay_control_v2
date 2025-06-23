@@ -1,5 +1,8 @@
 Change Log
 ----------
+v1.1.0  - New approach based on updating html id tags with javascript for serving dynamic web content
+          + graphs and container still with ~ processing
+        - New boiler icon if it's burning gas (boilerOn or thermostateOn)
 v1.0.0  - First stable complete version
         - New line for "Power Thresh. (W):" in cloud.html
         - New icons for HA:
@@ -64,13 +67,13 @@ v0.8.9  - First stable version with HA support
 
 To do list for boiler relay control
 -----------------------------------
-- Evaluate different approach for serving dynamic web content
+- Check button to enable or disable logs
+- New variable to track the time the flame is on (boilerFlameTimeOnPreviousYear boilerFlameTimeOnYear heaterFlameTimeOnPreviousYear heaterFlameTimeOnYear)
+- syslog
 - Troubleshooting:
 
-- Track heap size over code execution
 - Get and Show Smart Plug's IP address in web page with link to it
 - Get Energy values on gas_sample periods and at boot time to update the index web page accordingly
-- New boiler icon if it's burning gas (boilerOn or thermostateOn)
 - Date in logs in addition to milliseconds
 
 Done
@@ -153,6 +156,8 @@ Done
 - Color grey Web boiler icon and Energy info if not powerMeasureEnabled - v0.9.9
 - Set N/A or N/E to the values related to SmartPlug if powerMeasureEnabled is disabled from web - v0.9.9
 - New strategy to create the mqtt HADiscovery message payload different than String to reduce heap consumption - v0.9.B
+- New approach based on updating html id tags with javascript for serving dynamic web content
+  + graphs and container still with ~ processing
 
   Discarded
   -------------

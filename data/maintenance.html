@@ -61,7 +61,7 @@
           </div>
           <!-- end of side column: put your navigation menu, etc, above this line -->
         </div>
-      </div>
+      </div> <!-- tswsidecolmaint -->
       <div id="tswcontent">
         <div id="tswcontproper">
           <!-- start of content column: insert your content here -->
@@ -87,118 +87,18 @@
           <fieldset name="OTA_Upgrade_fieldset"> <legend> OTA Upgrade</legend>
               File Type (Only .bin extension):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <label for="OTA_firmware_id">Firmware</label>	
-              <input name="OTA_upgrade" id="OTA_firmware_id" value="off" required="required" ~OTADISABLED~ type="radio" />
+              <input name="OTA_upgrade" id="OTA_firmware_id" value="off" required="required" type="radio" />
               &nbsp;&nbsp;
               <label for="OTA_system_file_id">File System Image</label>
-              <input name="OTA_upgrade" id="OTA_system_file_id" value="on" required="required" ~SPIFFSDISABLED~ ~SPIFFSCHECKED~ type="radio" />
+              <input name="OTA_upgrade" id="OTA_system_file_id" value="on" required="required" type="radio" />
               &nbsp;&nbsp;&nbsp;&nbsp;
               <br><br>
               <form method='POST' action='/maintenance_upload_firmware' enctype='multipart/form-data' id='upload_form'>
-                <input type='file' name='select_file' id='select_file_id' style="hidden:visibility" accept=".bin"  ~SELECTFILEBUTTONDISABLED~/>
+                <input type='file' name='select_file' id='select_file_id' style="visibility:visible" accept=".bin" />
                 <input type='submit' name='file-upload' id='file-upload_id' style="visibility:hidden" value='Upload File' onClick="return confirm('It mith take a while for the file to upload and to write into the device. Be patient as there is no progress indicator.....\n\nWhen the upload is finished the page will be refreshed and the device will be rebooted.\n\nAre you sure to continue?')">
                 <label id='prg' style="visibility:hidden"></label>
               </form>
           </fieldset>
-            
-          <script>            
-            function showHideCheck() {
-
-              if (document.getElementById('select_file_id').value!="") {
-                  document.getElementById('select_file_id').style.visibility = 'hidden';
-                  document.getElementById('prg').style.visibility = 'visible';
-                  document.getElementById('file-upload_id').style.visibility = 'visible';
-                  document.getElementById('OTA_firmware_id').disabled=true;
-                  document.getElementById('OTA_system_file_id').disabled=true;
-              } else {
-                document.getElementById('select_file_id').style.visibility = 'visible';
-                document.getElementById('file-upload_id').style.visibility = 'hidden';
-                document.getElementById('prg').style.visibility = 'hidden';
-                document.getElementById('OTA_firmware_id').disabled=false;
-                document.getElementById('OTA_system_file_id').disabled=false;
-              }
-            }
-
-            document.getElementById("select_file_id").addEventListener("change", function(){
-              var files=document.getElementById("select_file_id").files[0];
-              var filename = files.name;
-
-              /* getting file extenstion eg- .jpg,.png, etc */
-              var extension = filename.substr(filename.lastIndexOf("."));
-              /* define allowed file types */
-              //var allowedExtensionsRegx = /(\.bin|\.bin.gz)$/i;
-              var allowedExtensionsRegx = /(\.bin)$/i;
-              /* testing extension with regular expression */
-              var isAllowed = allowedExtensionsRegx.test(extension);
-              if(isAllowed){
-                  /* file upload logic goes here... */
-                  document.getElementById("prg").innerHTML = filename+" ("+files.size+" B)";
-                  const binAvailableSpace=~MAINTENLEFTBINMEM~;
-                  const spiffsAvailableSpace=~MAINTENLEFTSPIFFSMEM~;
-
-                  //Binary firmware file
-                  if (document.getElementById('OTA_firmware_id').checked) {
-                    if ((binAvailableSpace-files.size)<0) {
-                      alert("Binary File greater than available space ("+binAvailableSpace+" B)");
-                      return false;  
-                    }
-                  }
-                  //SPIFFS system file
-                  else {
-                    if ((spiffsAvailableSpace-files.size)<0) {
-                      alert("System File greater than available space ("+spiffsAvailableSpace+" B)");
-                      return false;  
-                    }
-                  }
-                  showHideCheck();
-              }else{
-                  alert("Only file extension .bin is allowed to be uploaded for either Binary or File Systems.");
-                  return false;
-              }
-            });
-
-            var fileForm=document.getElementById("upload_form");
-            fileForm.addEventListener("formdata", ({ formData }) => {
-              const file = formData.get("select_file");
-              formData.delete("select_file");
-              if (document.getElementById('OTA_firmware_id').checked) formData.append("select_file", file, "firmware.bin");
-              else formData.append("select_file", file, "filesystem.bin");
-            });
-
-            function showTip (tipElement) {
-                return function () {
-                    tipElement.style.display = "inline";
-                };
-            }
-            function hideTip (element, tipElement) {
-                return function () {
-                    if (document.activeElement !== element) {
-                        tipElement.style.display = "none";
-                    }
-                };
-            }
-            function initTipEvents(elementId, tipId) {
-                var el = document.getElementById(elementId),
-                    tip = document.getElementById(tipId),
-                    showHandler = showTip(tip),
-                    hideHandler = hideTip(el, tip);
-                
-                el.onmouseover = showHandler;
-                el.onfocus = showHandler;
-                el.onmouseout = hideHandler;
-                el.onblur = hideHandler;
-                tip.style.display = "none";
-            }
-            function init() {
-                initTipEvents("WIFIERRORS_id", "WIFIERRORS_TIP_id");
-                initTipEvents("CONNECTIVITYERRORS_id", "CONNECTIVITYERRORS_TIP_id");
-                initTipEvents("SAMPLEUPDTERRORS_id", "SAMPLEUPDTERRORS_TIP_id");
-                initTipEvents("MQTTERRORS_id", "MQTTERRORS_TIP_id");
-                initTipEvents("NTPERRORS_id", "NTPERRORS_TIP_id");
-                initTipEvents("WEBSERVERERRORS_id", "WEBSERVERERRORS_TIP_id");
-            }
-            window.onload = init;
-          </script>
-          
           <p></p>
           <br><br>
           <div id="tswerrors">
@@ -206,7 +106,7 @@
               <p></p>
               <p>
                 <form action="reset_counters" method="post">
-                  Last boot reason:&nbsp;0x~LASTRESETREASON~&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  Last boot reason:&nbsp;<span id="LASTRESETREASON_id"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                   <button type="submit" name="Reset_Counters_Button" id="Reset_Counters_Button_id"
                     onClick="return confirm('Counters will be reset.\n\nAre you sure to continue?')">
                     <strong>Counters Reset</strong>
@@ -214,46 +114,47 @@
                 </form>
               </p>
               <p>  
-                Total boots since last upgrade:&nbsp; ~BOOTCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;- Normal boots (power up):&nbsp; ~NORMALBOOTCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;- Total boots due to software resets:&nbsp; ~SWRESETCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ User resets from web:&nbsp; ~SWRESETWEBCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ User resets from mqtt:&nbsp; ~SWRESETMQTTCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Resets due to firmware update from web:&nbsp; ~SWRESETFIRMWARECOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Resets due to web server error:&nbsp; ~WEBSERVERRESETCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Preventive resets:&nbsp; ~PREVENTIVERESETCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because absolute min low heap size:&nbsp; ~PREVENTIVEABSOLUTERESETCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because web server min low heap size:&nbsp; ~PREVENTIVEWEBSERVERRESETCOUNT~<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;- Boots due to uncontrolled resets (crash):&nbsp; ~UNCONTROLLEDRESETCOUNT~
+                Total boots since last upgrade:&nbsp; <span id="BOOTCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Normal boots (power up):&nbsp; <span id="NORMALBOOTCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Total boots due to software resets:&nbsp; <span id="SWRESETCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ User resets from web:&nbsp; <span id="SWRESETWEBCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ User resets from mqtt:&nbsp; <span id="SWRESETMQTTCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Resets due to firmware update from web:&nbsp; <span id="SWRESETFIRMWARECOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Resets due to web server error:&nbsp; <span id="WEBSERVERRESETCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Preventive resets:&nbsp; <span id="PREVENTIVERESETCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because absolute min low heap size:&nbsp; <span id="PREVENTIVEABSOLUTERESETCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because web server min low heap size:&nbsp; <span id="PREVENTIVEWEBSERVERRESETCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Boots due to uncontrolled resets (crash):&nbsp; <span id="UNCONTROLLEDRESETCOUNT_id"></span>
               </p>
-              <p>Setup Error:&nbsp; ~SETUPERRORS~</p>
+              <p>Setup Error:&nbsp; <span id="SETUPERRORS_id"></span></p>
               <p>
-                <span id="WIFIERRORS_id">Connection Errors:&nbsp; ~WIFIERRORS~&nbsp;&nbsp;&nbsp;</span><span id="WIFIERRORS_TIP_id">WiFi disconnections</span><br>
-                <span id="CONNECTIVITYERRORS_id">Connectivity Errors:&nbsp; ~CONNECTIVITYERRORS~&nbsp;&nbsp;&nbsp;</span><span id="CONNECTIVITYERRORS_TIP_id">Connectivity errors being WiFi connected</span><br>
-                <span id="SAMPLEUPDTERRORS_id">Sample Update Errors:&nbsp; ~SAMPLEUPDTERRORS~&nbsp;&nbsp;&nbsp;</span><span id="SAMPLEUPDTERRORS_TIP_id">Errors for uploading samples to cloud (http)</span><br>
-                <span id="MQTTERRORS_id">MQTT Errors:&nbsp; ~MQTTERRORS~&nbsp;&nbsp;&nbsp;</span><span id="MQTTERRORS_TIP_id">Errors for plublishing MQTT messages</span><br>
-                <span id="NTPERRORS_id">NTP Sync Errors:&nbsp; ~NTPERRORS~&nbsp;&nbsp;&nbsp;</span><span id="NTPERRORS_TIP_id">Errors for NTP syncroziations</span><br>
-                <span id="WEBSERVERERRORS_id">Web Server Errors:&nbsp; ~WEBSERVERERRORS~&nbsp;&nbsp;&nbsp;</span><span id="WEBSERVERERRORS_TIP_id">Errors for serving http requests</span>
+                <span id="WIFIERRORS_id"></span><span id="WIFIERRORS_TIP_id">WiFi disconnections</span><br>
+                <span id="CONNECTIVITYERRORS_id"></span><span id="CONNECTIVITYERRORS_TIP_id">Connectivity errors being WiFi connected</span><br>
+                <span id="SAMPLEUPDTERRORS_id"></span><span id="SAMPLEUPDTERRORS_TIP_id">Errors for uploading samples to cloud (http)</span><br>
+                <span id="MQTTERRORS_id"></span><span id="MQTTERRORS_TIP_id">Errors for plublishing MQTT messages</span><br>
+                <span id="NTPERRORS_id"></span><span id="NTPERRORS_TIP_id">Errors for NTP syncroziations</span><br>
+                <span id="WEBSERVERERRORS_id"></span><span id="WEBSERVERERRORS_TIP_id">Errors for serving http requests</span>
               </p>
-              <p>SPIFFS Errors:&nbsp; ~SPIFFSERRORS~</p>
+              <p>SPIFFS Errors:&nbsp; <span id="SPIFFSERRORS_id"></span></p>
               <p>
                 <font style="color:#8c9297;"">
-                  Failures to load the BLE module:&nbsp; ~BLENOLOADCOUNTER~<br>
-                  BLE unloads because lack of heap:&nbsp; ~BLEUNLOADCOUNTER~
+                  Failures to load the BLE module:&nbsp; <span id="BLENOLOADCOUNTER_id"></span><br>
+                  BLE unloads because lack of heap:&nbsp; <span id="BLEUNLOADCOUNTER_id"></span>
                 </font>
               </p>
               <p>
-                Current heap size:&nbsp; ~CURRENTHEAPSIZE~ (Bytes)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum max. heap block size since last boot:&nbsp; ~MINMAXHEAPBLOCKSIZE~ (Bytes)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum max. heap block size since last upgrade:&nbsp; ~MINMAXHEAPBLOCKSIZEUPGRADE~ (Bytes)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum heap size since last boot:&nbsp; ~MINHEAPSIZE~ (Bytes)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum heap size since last upgrade:&nbsp; ~MINHEAPSIZEUPGRADE~ (Bytes)
+                Current heap size:&nbsp; <span id="CURRENTHEAPSIZE_id"></span> (Bytes)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum max. heap block size since last boot:&nbsp; <span id="MINMAXHEAPBLOCKSIZE_id"></span> (Bytes)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum max. heap block size since last upgrade:&nbsp; <span id="MINMAXHEAPBLOCKSIZEUPGRADE_id"></span> (Bytes)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum heap size since last boot:&nbsp; <span id="MINHEAPSIZE_id"></span> (Bytes)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Minimum heap size since last upgrade:&nbsp; <span id="MINHEAPSIZEUPGRADE_id"></span> (Bytes)
               </p>
             </fieldset>
           </div>
+          <script src="maintenance_script.js"></script>
           <!-- end of content column: put your content above this line -->
-        </div>
-      </div>
+        </div> <!-- tswcontproper  -->
+      </div> <!-- tswcontent  -->
       <div style="clear: both;"></div>
       <div id="tswfooter">
         <!-- start of footer section: insert your copyright notice, etc, here -->

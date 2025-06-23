@@ -9,6 +9,7 @@
 #include <AsyncMqttClient.h>
 #include "Update.h"
 #include "wifiConnection.h"
+#include "SHT2x.h"
 
 extern RTC_DATA_ATTR boolean deviceReset,factoryReset,OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,httpCloudEnabled,
                       mqttServerEnabled,secureMqttEnabled,forceMQTTConnect,forceWifiReconnect,forceNTPCheck,
@@ -58,6 +59,10 @@ extern IPAddress serverToUploadSamplesIPAddress;
 extern void factoryConfReset();
 extern String roundFloattoString(float_t number, uint8_t decimals);
 extern void detachNetwork(void);
+
+extern SHT2x tempHumSensor; //Temp and Hum sensor
+extern void gas_sample(bool debugModeOn);
+extern void temperature_sample(bool debugModeOn);
 
 String processorInfo(const String& var);
 uint32_t initWebServer();

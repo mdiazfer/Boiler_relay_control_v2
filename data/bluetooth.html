@@ -70,26 +70,26 @@
           <form action="bluetooth" method="post">
             <label for="BLEIBEACON">iBeacon Configuration</label><p></p>
             <label for="BLEPROXIMITY">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Proximity UUID:&nbsp;&nbsp;</label>
-            <input id="BLEPROXIMITY1_id" name="BLEPROXIMITY1" pattern="^[A-Fa-f0-9]+$" minlength="8" maxlength="8" size="8" placeholder=~BLEPROXIMITY1~ type="text" required title="8 HEX characters required" required value="~BLEPROXIMITY1~" disabled="disabled">
-            <input id="BLEPROXIMITY2_id" name="BLEPROXIMITY2" pattern="^[A-Fa-f0-9]+$" minlength="4" maxlength="4" size="4" placeholder=~BLEPROXIMITY2~ type="text" required title="4 HEX characters required" required value="~BLEPROXIMITY2~" disabled="disabled">
-            <input id="BLEPROXIMITY3_id" name="BLEPROXIMITY3" pattern="^[A-Fa-f0-9]+$" minlength="4" maxlength="4" size="4" placeholder=~BLEPROXIMITY3~ type="text" required title="4 HEX characters required"  required value="~BLEPROXIMITY3~" disabled="disabled">
-            <input id="BLEPROXIMITY4_id" name="BLEPROXIMITY4" pattern="^[A-Fa-f0-9]+$" minlength="4" maxlength="4" size="4" placeholder=~BLEPROXIMITY4~ type="text" required title="4 HEX characters required"  required value="~BLEPROXIMITY4~" disabled="disabled">
-            <input id="BLEPROXIMITY5_id" name="BLEPROXIMITY5" pattern="^[A-Fa-f0-9]+$" minlength="12" maxlength="12" size="12" placeholder=~BLEPROXIMITY5~ type="text" required title="12 HEX characters required"  required value="~BLEPROXIMITY5~" disabled="disabled">
+            <input id="BLEPROXIMITY1_id" name="BLEPROXIMITY1" pattern="^[A-Fa-f0-9]+$" minlength="8" maxlength="8" size="8" placeholder="FFFFFFFF" type="text" required title="8 HEX characters required" required value="FFFFFFFF" disabled="disabled">
+            <input id="BLEPROXIMITY2_id" name="BLEPROXIMITY2" pattern="^[A-Fa-f0-9]+$" minlength="4" maxlength="4" size="4" placeholder="FFFF" type="text" required title="4 HEX characters required" required value="FFFF" disabled="disabled">
+            <input id="BLEPROXIMITY3_id" name="BLEPROXIMITY3" pattern="^[A-Fa-f0-9]+$" minlength="4" maxlength="4" size="4" placeholder="FFFF" type="text" required title="4 HEX characters required"  required value="FFFF" disabled="disabled">
+            <input id="BLEPROXIMITY4_id" name="BLEPROXIMITY4" pattern="^[A-Fa-f0-9]+$" minlength="4" maxlength="4" size="4" placeholder="FFFF" type="text" required title="4 HEX characters required"  required value="FFFF" disabled="disabled">
+            <input id="BLEPROXIMITY5_id" name="BLEPROXIMITY5" pattern="^[A-Fa-f0-9]+$" minlength="12" maxlength="12" size="12" placeholder="FFFFFFFFFFFF" type="text" required title="12 HEX characters required"  required value="FFFFFFFFFFFF" disabled="disabled">
             <br>
             <label for="BLEMAJOR">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Major:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-            <input id="BLEMAJOR_id" name="BLEMAJOR" pattern="^[0-9]+$" maxlength="5" size="5" min=0 max=65535 placeholder=~BLEMAJOR~ type="number" required value="~BLEMAJOR~" disabled="disabled">
-            <label for="BLEMAJORHEX" id="BLEMAJORHEX_id">&nbsp;0x~BLEMAJORHEX~</label>
+            <input id="BLEMAJOR_id" name="BLEMAJOR" pattern="^[0-9]+$" maxlength="5" size="5" min=0 max=65535 placeholder="65535" type="number" required value="65535" disabled="disabled">
+            <label for="BLEMAJORHEX" id="BLEMAJORHEX_id">&nbsp;0xFFFF</label>
             <br>
             <label for="BLEMINOR">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minor:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-            <input id="BLEMINOR_id" name="BLEMINOR" pattern="^[0-9]+$" maxlength="5" size="5" min=0 max=65535 placeholder=~BLEMINOR~ type="number" required value="~BLEMINOR~" disabled="disabled">
-            <label for="BLEMINORHEX" id="BLEMINORHEX_id" >&nbsp;0x~BLEMINORHEX~</label>
+            <input id="BLEMINOR_id" name="BLEMINOR" pattern="^[0-9]+$" maxlength="5" size="5" min=0 max=65535 placeholder="65535" type="number" required value="65535" disabled="disabled">
+            <label for="BLEMINORHEX" id="BLEMINORHEX_id" >&nbsp;0xFFFF</label>
             <p></p><br><br>
             Enable Bluetooth:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             <label for="Bluetooth_on_id">On</label>	
-            <input name="Bluetooth_enabled" id="Bluetooth_on_id" value="on" required="required" ~BLUETOOTH_ON_CHECKED~  type="radio" disabled="disabled">
+            <input name="Bluetooth_enabled" id="Bluetooth_on_id" value="on" required="required" type="radio" disabled="disabled">
              &nbsp;&nbsp;&nbsp;&nbsp;
             <label for="Bluetooth_off_id">Off</label>
-            <input name="Bluetooth_enabled" id="Bluetooth_off_id" value="off" required="required" ~BLUETOOTH_OFF_CHECKED~ type="radio" disabled="disabled">
+            <input name="Bluetooth_enabled" id="Bluetooth_off_id" value="off" required="required" checked type="radio" disabled="disabled">
             <br><br>
             <p></p>
             <button type="reset" name="Button_Reset" id="Button_Reset_id" disabled="disabled">Reset</button>&nbsp;&nbsp;&nbsp;&nbsp;

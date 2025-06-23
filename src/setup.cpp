@@ -903,6 +903,8 @@ void EEPROMInit() {
     //Writing default values in EEPROM
     factoryConfReset();
     updateEEPROM=true;
+
+    samples["resetReason"] = ESP_RST_SW;
   }
   else {
     //Not the very first run after firmware upgrade.
@@ -1033,7 +1035,7 @@ void EEPROMInit() {
       default:
         printLogln("  [EEPROMInit] - Reset reason=default");break;
     }
-    samples["resetReason"] = String(resetReason);
+    samples["resetReason"] = resetReason;
 
     //Update time on counters
     EEPROM.get(0x421,heaterTimeOnYear);EEPROM.get(0x465,heaterTimeOnPreviousYear);
@@ -1504,6 +1506,15 @@ uint32_t spiffsInit(boolean debugModeOn,boolean fromSetup) {
     SPIFFSAvailableSize=getAppOTAPartitionSize(ESP_PARTITION_TYPE_DATA,0x82);
     fileSystemSize=SPIFFS.totalBytes();
     fileSystemUsed=SPIFFS.usedBytes();
+
+    //Write the test.html file. Needed to update devicename and firmware version
+    File testFile = SPIFFS.open(WEBSERVER_TEST_PAGE, FILE_WRITE);
+    if (!testFile) printLogln(String(millis())+" - [spiffsInit] - Error to open the "+String(WEBSERVER_TEST_PAGE)+" file for writing");
+    else if (testFile.print("<!DOCTYPE html><html lang=\"en\"><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"><title>TEST</title></head><body style=\"background-color: #1d2324; color: white;\">"+device+"<br>"+String(VERSION)+"<br>Test page</body></html>"))
+      printLogln(String(millis())+" - [spiffsInit] - File "+String(WEBSERVER_TEST_PAGE)+" succesfully written");
+    else
+      printLogln(String(millis())+" - [spiffsInit] - Error to write the "+String(WEBSERVER_TEST_PAGE)+" file");
+    testFile.close();
   }
   else {
     if (fromSetup) {
