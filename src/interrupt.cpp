@@ -26,7 +26,7 @@ void IRAM_ATTR gas_probe_triggered() {
    Parameters: No parameters
    *****************************************************/
   if (gasClear) gasInterrupt=true; //Only flag the interrupt with clear air
-  //gasClear=false; No need to update this flag as it's done in main loop
+  //gasClear=false; No need to update this flag as it's done in main loop or in gas_sample()
   
   //NO Serial coms in interrupt routing, otherwise CORE exception is triggered beacause watchdog timeout - https://stackoverflow.com/questions/71992044/esp32-core-1-paniced-interrupt-wdt-timeout-on-cpu1
   //if (debugModeOn) {printLogln(String(millis())+" - [gas_probe_triggered] - BEGIN, gasClear="+String(gasClear));}

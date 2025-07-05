@@ -64,5 +64,7 @@ extern SHT2x tempHumSensor; //Temp and Hum sensor
 extern void gas_sample(bool debugModeOn);
 extern void temperature_sample(bool debugModeOn);
 
+extern void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+
 String processorInfo(const String& var);
 uint32_t initWebServer();

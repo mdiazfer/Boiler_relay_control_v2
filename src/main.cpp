@@ -6,6 +6,7 @@
 #include <SPIFFS.h>
 #include <Arduino_JSON.h>
 #include <AsyncMqttClient.h>
+#include <PicoSyslog.h>
 #include "SHT2x.h"
 #include "global_setup.h"
 //#include "wifiConnection.h" //included in loop.h
@@ -61,7 +62,7 @@ RTC_DATA_ATTR String bootLogs; // Initial logs at boot time
 //Global variable definitions stored in regular RAM. 520 KB Max
 bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logMessageTRL2_ON=false,logMessageGAP_OFF=false,
       thermostateInterrupt=false,gasClear=true,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
-      webLogsOn=false,serialLogsOn=debugModeOn,eepromUpdate=false,firstHASent=false;
+      webLogsOn=false,serialLogsOn=debugModeOn,syslogOn=false,eepromUpdate=false,firstHASent=false;
 bool boilerStatus=false,boilerOn=false, //boilerStatus => Power > Threshold, boilerOn => Burning gas (flame) due to warming water
       thermostateStatus=false,thermostateOn=false; //thermostateStatus => Thermostate is active (or relay active), thermostateOn => Burning gas due to either warming hot or heater
 bool  sentHDAiscovery1=false,sentHDAiscovery2=false,sentHDAiscovery3=false,sentHDAiscovery4=false,sentHDAiscovery5=false,sentHDAiscovery6=false,sentHDAiscovery7=false,sentHDAiscovery8=false;
@@ -85,6 +86,11 @@ SHT2x tempHumSensor; //Temp and Hum sensor
 JSONVar samples;
 IPAddress serverToUploadSamplesIPAddress; //8*2=16
 char activeCookie[COOKIE_SIZE],currentSetCookie[COOKIE_SIZE],firmwareVersion[VERSION_CHAR_LENGTH+1];
+//Global MQTT buffers
+char bufferTopicHAName[100],bufferPayload[BUFFER_PAYLOAD_SIZE],bufferMqttTopicName[100],bufferDeviceSufix[10],
+     bufferIpAddress[20],bufferDevice[50],bufferMqttSensorTopicHAPrefixName[100],bufferMqttBinarySensorTopicHAPrefixName[100],
+     bufferMqttButtonTopicHAPrefixName[100],bufferMqttSwitchTopicHAPrefixName[100];
+PicoSyslog::Logger syslog;
 
 void setup() {
   pinMode(BOARD_RX,INPUT);  //Pin definition for serial RX
@@ -119,6 +125,7 @@ void setup() {
   wifiCurrentStatus=wifiOffStatus; //It's updated in wifiInit
   printLog("[setup] - WiFi initialization");
   error_setup=wifiInit(wifiEnabled,debugModeOn);
+  if (!(error_setup & ERROR_WIFI_SETUP)) syslogOn=debugModeOn; //Enable syslog only if connectivity is OK
   printLogln("[setup] - error_setup="+String(error_setup));
   
   //HTTP - Cloud server init
@@ -194,12 +201,14 @@ void loop() {
     eepromUpdate=true; //EEPROM to be updated at the end of the cycle.
   }
   if (heapSize<ABSULUTE_MIN_HEAP_THRESHOLD || minMaxHeapBlockSizeSinceBoot<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) { //Preventive reset to avoid crash
+    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize+")<ABSULUTE_MIN_HEAP_THRESHOLD (")+String(ABSULUTE_MIN_HEAP_THRESHOLD)+"). Restart needed");
     resetPreventiveCount++; //preventive resets (mainly becuase low heap situation)
     EEPROM.write(0x41B,resetPreventiveCount);
     EEPROM.commit();
     ESP.restart(); //Rebooting
   }
   else if(heapSize<WEBSERVER_MIN_HEAP_SIZE) {
+    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize+")<WEBSERVER_MIN_HEAP_SIZE (")+String(WEBSERVER_MIN_HEAP_SIZE)+"). Restart needed");
     resetPreventiveWebServerCount++; //preventive web reset resets (mainly becuase low heap situation)
     EEPROM.write(0x531,resetPreventiveWebServerCount);
     EEPROM.commit();
@@ -239,8 +248,9 @@ void loop() {
     else {
       printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi restart required to either free heap memory up or restart web server. error_setup=0x"+String(error_setup,HEX)+"), heapSize="+String(heapSize));
     }
-    bool auxWebLogsOn=webLogsOn;
+    bool auxWebLogsOn=webLogsOn,auxSyslogOn=syslogOn;
     webLogsOn=false;
+    syslogOn=false;
     detachNetwork(); //detach the network and network services before restarting them again
     forceWifiReconnect=false;
     wifi_reconnect_period(debugModeOn); //restart network
@@ -253,7 +263,7 @@ void loop() {
       //error_setup&=!ERROR_WEB_SERVER; error_setup&=!ERROR_WEB_SOCKET;error_setup|=webServerInit(error_setup,wifiEnabled,webServerEnabled,wifiCurrentStatus,debugModeOn,false);
       if ((error_setup & ERROR_EEPROM_VARIABLES_INIT)!=0) {error_setup&=!ERROR_EEPROM_VARIABLES_INIT; error_setup|=timeOnCountersInit(error_setup,false,false,ntpSynced);} //This is in case during first boot was not wifi
       error_setup&=!ERROR_MQTT_SERVER; error_setup|=mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,error_setup,false,false,mqttTopicName,device);
-      webLogsOn=auxWebLogsOn;
+      webLogsOn=auxWebLogsOn;syslogOn=auxSyslogOn;
       if (error_setup==0) printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi and network services successfully restarted . error_setup=0x"+String(error_setup,HEX)+"), heap="+String(ESP.getFreeHeap()));
       else printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi successfully restarted but there are network services errors: error_setup=0x"+String(error_setup,HEX)+"), heap="+String(ESP.getFreeHeap()));
     }
@@ -338,6 +348,7 @@ void loop() {
     // NTP status is not check as NTP checks take time (random period) and forcing NTP in here is avoided (as it may take several loop cycles = complexity)
     switch (connectiviy_check_period(debugModeOn,nowTimeGlobal)) {
       case ERROR_WEB_SERVER:
+        printLogln(String(millis())+" - [loop - CONNECTIVITY_CHECK_PERIOD] - ERROR_WEB_SERVER after connectiviy_check_period(). HeapSize ("+String(esp_get_free_heap_size())+"). Restart needed");
         resetWebServerCnt++; //Stats
         EEPROM.write(0x53B,errorsWebServerCnt);
         EEPROM.write(0x53C,resetWebServerCnt);
@@ -378,7 +389,7 @@ void loop() {
   //Delay of THERMOSTATE_INTERRUPT_DELAY milliseconds is needed to avoid bouncing
   nowTimeGlobal=millis();
   if (thermostateInterrupt && (nowTimeGlobal-lastInterruptTime >= THERMOSTATE_INTERRUPT_DELAY)) {
-    thermostate_interrupt_triggered(debugModeOn); //Sending HTTP Cloud updates is done from that function
+    thermostate_interrupt_triggered(debugModeOn); //Sending HTTP Cloud, mqtt and web client updates is done from that function
   }
   heapBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);if(heapBlockSize<minMaxHeapBlockSizeSinceBoot) minMaxHeapBlockSizeSinceBoot=heapBlockSize;
 

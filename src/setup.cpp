@@ -20,12 +20,14 @@ void printLogln(String logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.println(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux+"\n");
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(aux);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux+"\n";
   }
   else {
     if (serialLogsOn) boardSerialPort.println(logMessage);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(logMessage+"\n");
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(logMessage);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage+"\n";
   }
   
@@ -46,12 +48,14 @@ void printLog(String logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.print(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(aux);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux;
   }
   else {
     if (serialLogsOn) boardSerialPort.print(logMessage);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(logMessage);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(logMessage);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage;
   }
 
@@ -73,12 +77,14 @@ void printLogln(uint8_t logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.println(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux+"\n");
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(aux);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux+"\n";
   }
   else {
     if (serialLogsOn) boardSerialPort.println(String(logMessage));
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(logMessage)+"\n");
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(logMessage);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage+"\n";
   }
 
@@ -99,12 +105,14 @@ void printLog(uint8_t logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.print(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(aux);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux;
   }
   else {
     if (serialLogsOn) boardSerialPort.print(String(logMessage));
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(logMessage));
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(logMessage);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage;
   }
 
@@ -126,6 +134,7 @@ void printLogln(tm * timeinfo, const char *format) {
   if (serialLogsOn) boardSerialPort.println(String(s));
   if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
        !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(s)+"\n");
+  if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(String(s));
   if (millis()<=BOOT_LOGS_TIME) bootLogs+=String(s)+"\n";
 
   if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
@@ -145,6 +154,7 @@ void printLog(tm * timeinfo, const char *format) {
   if (serialLogsOn) boardSerialPort.print(String(s));
   if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
        !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(s));
+  if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(String(s));
   if (millis()<=BOOT_LOGS_TIME) bootLogs+=String(s);
 
   if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
@@ -1128,6 +1138,10 @@ void variablesInit() {
       //String
       TZEnvVariable=String(NTP_TZ_ENV_VARIABLE);TZName=String(NTP_TZ_NAME);serverToUploadSamplesString=String(SERVER_UPLOAD_SAMPLES);
 
+      //MQTT buffers init
+      memset(bufferMqttTopicName,'\0',sizeof(bufferMqttTopicName));memset(bufferPayload,'\0',sizeof(bufferPayload));memset(bufferMqttTopicName,'\0',sizeof(bufferMqttTopicName));memset(bufferDeviceSufix,'\0',sizeof(bufferDeviceSufix));
+      memset(bufferIpAddress,'\0',sizeof(bufferIpAddress));memset(bufferDevice,'\0',sizeof(bufferDevice));memset(bufferMqttSensorTopicHAPrefixName,'\0',sizeof(bufferMqttSensorTopicHAPrefixName));
+
       //MQTT callbacks definition
       mqttClient.onConnect(onMqttConnect);
       mqttClient.onDisconnect(onMqttDisconnect);
@@ -1220,6 +1234,8 @@ uint32_t wifiInit(boolean wifiEnabled,boolean debugModeOn) {
       else if (wifiNet.RSSI>=WIFI_050_RSSI) wifiCurrentStatus=wifi50Status;
       else if (wifiNet.RSSI>=WIFI_025_RSSI) wifiCurrentStatus=wifi25Status;
       else if (wifiNet.RSSI<WIFI_000_RSSI) wifiCurrentStatus=wifi0Status;
+
+      syslog.server=SYSLOG_SERVER;
     }
     else {
       if (debugModeOn) printLogln("  [wifiInit] - WiFi connection .......... [KO]");
@@ -1679,18 +1695,6 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
   //Check variable coherency. If not, it means timers in EEPROM were never stored before. Init them.
   EEPROM.get(0x421,heaterTimeOnYear);EEPROM.get(0x465,heaterTimeOnPreviousYear);
   EEPROM.get(0x4A9,boilerTimeOnYear); EEPROM.get(0x4ED,boilerTimeOnPreviousYear);
-  
-  /*heaterTimeOnPreviousYear.year=2024;
-  heaterTimeOnPreviousYear.yesterday=20240530;heaterTimeOnPreviousYear.today=20240531;
-  heaterTimeOnPreviousYear.counterYesterday=0;heaterTimeOnPreviousYear.counterToday=0;
-  heaterTimeOnPreviousYear.counterMonths[0]=2178360;heaterTimeOnPreviousYear.counterMonths[1]=156600;heaterTimeOnPreviousYear.counterMonths[2]=100440;heaterTimeOnPreviousYear.counterMonths[3]=41400;heaterTimeOnPreviousYear.counterMonths[4]=16920;heaterTimeOnPreviousYear.counterMonths[5]=0;
-  heaterTimeOnPreviousYear.counterMonths[6]=0;heaterTimeOnPreviousYear.counterMonths[7]=0;heaterTimeOnPreviousYear.counterMonths[8]=0;heaterTimeOnPreviousYear.counterMonths[9]=14760;heaterTimeOnPreviousYear.counterMonths[10]=115200;heaterTimeOnPreviousYear.counterMonths[11]=228960;
-  heaterTimeOnYear.year=2025;
-  heaterTimeOnYear.yesterday=20250420;heaterTimeOnYear.today=20250421;
-  heaterTimeOnYear.counterMonths[0]=1060200;heaterTimeOnYear.counterMonths[1]=181800;heaterTimeOnYear.counterMonths[2]=273960;heaterTimeOnYear.counterMonths[3]=46080;heaterTimeOnYear.counterMonths[4]=0;heaterTimeOnYear.counterMonths[5]=0;
-  heaterTimeOnYear.counterMonths[6]=0;heaterTimeOnYear.counterMonths[7]=0;heaterTimeOnYear.counterMonths[8]=0;heaterTimeOnYear.counterMonths[9]=0;heaterTimeOnYear.counterMonths[10]=0;heaterTimeOnYear.counterMonths[11]=0;
-  heaterTimeOnYear.counterYesterday=0;heaterTimeOnYear.counterToday=0;
-  heaterTimeOnYear.year=0xff;*/
 
   if (heaterTimeOnYear.year != (heaterTimeOnYear.yesterday/10000) || 
       heaterTimeOnYear.year != (heaterTimeOnYear.today/10000) ||
@@ -1703,6 +1707,10 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
 
         //No coherency. Variables needs to be initiated and stored in EEPROM
         if (debugModeOn) {if (fromSetup) {printLog("\n");}printLogln("  [timeOnCountersInit] - No EEPROM coherency. Writting counters in EEPROM");}
+        /*if (debugModeOn) {if (fromSetup) {printLogln("                          heaterTimeOnYear.year="+String(heaterTimeOnYear.year)+", heaterTimeOnYear.yesterday/10000="+String(heaterTimeOnYear.yesterday/10000)+", heaterTimeOnYear.today/10000="+String(heaterTimeOnYear.today/10000));}}
+        if (debugModeOn) {if (fromSetup) {printLogln("                          heaterTimeOnPreviousYear.year="+String(heaterTimeOnPreviousYear.year)+", heaterTimeOnPreviousYear.yesterday/10000="+String(heaterTimeOnPreviousYear.yesterday/10000)+", heaterTimeOnPreviousYear.today/10000="+String(heaterTimeOnPreviousYear.today/10000));}}
+        if (debugModeOn) {if (fromSetup) {printLogln("                          boilerTimeOnYear.year="+String(boilerTimeOnYear.year)+", boilerTimeOnYear.yesterday/10000="+String(boilerTimeOnYear.yesterday/10000)+", boilerTimeOnYear.today/10000="+String(boilerTimeOnYear.today/10000));}}
+        if (debugModeOn) {if (fromSetup) {printLogln("                          boilerTimeOnPreviousYear.year="+String(boilerTimeOnPreviousYear.year)+", boilerTimeOnPreviousYear.yesterday/10000="+String(boilerTimeOnPreviousYear.yesterday/10000)+", boilerTimeOnPreviousYear.today/10000="+String(boilerTimeOnPreviousYear.today/10000));}}*/
 
         //Initialize time on counters
         heaterTimeOnYear.year=year; heaterTimeOnPreviousYear.year=previousYear;
@@ -1778,6 +1786,27 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
 
       updateEeprom=true;
     }
+    /*heaterTimeOnPreviousYear.year=2024;
+    heaterTimeOnPreviousYear.yesterday=20240703;heaterTimeOnPreviousYear.today=20240704;
+    heaterTimeOnPreviousYear.counterYesterday=0;heaterTimeOnPreviousYear.counterToday=0;
+    heaterTimeOnPreviousYear.counterMonths[0]=2178360;heaterTimeOnPreviousYear.counterMonths[1]=156600;heaterTimeOnPreviousYear.counterMonths[2]=100440;heaterTimeOnPreviousYear.counterMonths[3]=41400;heaterTimeOnPreviousYear.counterMonths[4]=16920;heaterTimeOnPreviousYear.counterMonths[5]=0;
+    heaterTimeOnPreviousYear.counterMonths[6]=0;heaterTimeOnPreviousYear.counterMonths[7]=0;heaterTimeOnPreviousYear.counterMonths[8]=0;heaterTimeOnPreviousYear.counterMonths[9]=14760;heaterTimeOnPreviousYear.counterMonths[10]=115200;heaterTimeOnPreviousYear.counterMonths[11]=228960;
+    heaterTimeOnYear.year=2025;
+    heaterTimeOnYear.yesterday=20250703;heaterTimeOnYear.today=20250704;
+    heaterTimeOnYear.counterMonths[0]=1060200;heaterTimeOnYear.counterMonths[1]=181800;heaterTimeOnYear.counterMonths[2]=273960;heaterTimeOnYear.counterMonths[3]=46080;heaterTimeOnYear.counterMonths[4]=585;heaterTimeOnYear.counterMonths[5]=206;
+    heaterTimeOnYear.counterMonths[6]=0;heaterTimeOnYear.counterMonths[7]=0;heaterTimeOnYear.counterMonths[8]=0;heaterTimeOnYear.counterMonths[9]=0;heaterTimeOnYear.counterMonths[10]=0;heaterTimeOnYear.counterMonths[11]=0;
+    heaterTimeOnYear.counterYesterday=0;heaterTimeOnYear.counterToday=0;
+    boilerTimeOnPreviousYear.year=2024;
+    boilerTimeOnPreviousYear.yesterday=20240703;boilerTimeOnPreviousYear.today=20240704;
+    boilerTimeOnPreviousYear.counterYesterday=0;boilerTimeOnPreviousYear.counterToday=0;
+    boilerTimeOnPreviousYear.counterMonths[0]=0;boilerTimeOnPreviousYear.counterMonths[1]=0;boilerTimeOnPreviousYear.counterMonths[2]=0;boilerTimeOnPreviousYear.counterMonths[3]=0;boilerTimeOnPreviousYear.counterMonths[4]=0;boilerTimeOnPreviousYear.counterMonths[5]=0;
+    boilerTimeOnPreviousYear.counterMonths[6]=0;boilerTimeOnPreviousYear.counterMonths[7]=0;boilerTimeOnPreviousYear.counterMonths[8]=0;boilerTimeOnPreviousYear.counterMonths[9]=0;boilerTimeOnPreviousYear.counterMonths[10]=0;boilerTimeOnPreviousYear.counterMonths[11]=0;
+    boilerTimeOnYear.year=2025;
+    boilerTimeOnYear.yesterday=20250703;boilerTimeOnYear.today=20250704;
+    boilerTimeOnYear.counterMonths[0]=0;boilerTimeOnYear.counterMonths[1]=0;boilerTimeOnYear.counterMonths[2]=0;boilerTimeOnYear.counterMonths[3]=0;boilerTimeOnYear.counterMonths[4]=0;boilerTimeOnYear.counterMonths[5]=6131;
+    boilerTimeOnYear.counterMonths[6]=1250;boilerTimeOnYear.counterMonths[7]=0;boilerTimeOnYear.counterMonths[8]=0;boilerTimeOnYear.counterMonths[9]=0;boilerTimeOnYear.counterMonths[10]=0;boilerTimeOnYear.counterMonths[11]=0;
+    boilerTimeOnYear.counterYesterday=535;boilerTimeOnYear.counterToday=282;
+    updateEeprom=true;*/
   } 
 
   //Save variables in EEPROM

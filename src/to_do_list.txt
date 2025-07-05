@@ -1,5 +1,9 @@
 Change Log
 ----------
+v1.1.1  - Dynamic mqtt icon for boiler and radiator in index.html. Icon change based on boilerOn or thermostateOn variables (flame on/off)
+        - Heap size optimization:
+          + mqtt buffers converted into global variables: bufferTopicHAName, bufferPayload, bufferMqttTopicName, bufferDeviceSufix, bufferIpAddress, bufferDevice,
+             bufferMqttSensorTopicHAPrefixName,  bufferMqttBinarySensorTopicHAPrefixName,  bufferMqttSwitchTopicHAPrefixName,  bufferMqttButtonTopicHAPrefixName
 v1.1.0  - New approach based on updating html id tags with javascript for serving dynamic web content
           + graphs and container still with ~ processing
         - New boiler icon if it's burning gas (boilerOn or thermostateOn)

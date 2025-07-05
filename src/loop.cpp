@@ -285,18 +285,22 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
   //if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - updateCloudServer="+String(updateCloudServer)+", httpCloudEnabled="+String(httpCloudEnabled)+", CloudSyncCurrentStatus="+String(CloudSyncCurrentStatus)+" (0=CloudSyncOnStatus, 1=CloudSyncSendStatus, 2=CloudSyncOffStatus), wifiCred.activeIndex="+String(wifiCred.activeIndex));}
   //if (debugModeOn) {for (int i=0; i<=2; i++) printLogln("          [loop - thermostate_interrupt_triggered] - wifiCred.wifiSSIDs["+String(i)+"]="+String(wifiCred.wifiSSIDs[i])+", wifiCred.wifiSITEs["+String(i)+"]="+String(wifiCred.wifiSITEs[i])+", wifiCred.SiteAllow["+String(i)+"]="+String(wifiCred.SiteAllow[i]));}
   
-  //Send the http cloud update
-  if (updateCloudServer && httpCloudEnabled && (CloudSyncCurrentStatus==CloudSyncOnStatus) && wifiCred.SiteAllow[wifiCred.activeIndex]) {
-    /*
-      Thermostat ON  - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=1&counts=101 HTTP/1.0"
-      Thermostat OFF - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=0&counts=-1737 HTTP/1.0"
-    */
-    httpRequest=httpRequest+"device="+device+"&local_ip_address="+IpAddress2String(WiFi.localIP())+
-      "&relay_status="+String(auxThermostatInterrupt)+"&counts="+String(auxRebounds/2)+" HTTP/1.1";
-    error_setup&=!ERROR_CLOUD_SERVER;
-    error_setup|=sendHttpRequest(debugModeOn,serverToUploadSamplesIPAddress,SERVER_UPLOAD_PORT,httpRequest,false); //Send http update
-    //CloudSyncCurrentStatus is updated in sendHttpRequest()
-    lastTimeHTTPClouCheck=millis();
+  //Send the updates to http cloud, web client and mqtt broker
+  if (updateCloudServer) {
+    samples["Thermostate_status"] = thermostateStatus==true?"ON":"OFF";
+    forceWebEvent=true; forceMQTTpublish=true;  //Web client and MQTT update to inform about the thermostateStatus status
+    if (httpCloudEnabled && (CloudSyncCurrentStatus==CloudSyncOnStatus) && wifiCred.SiteAllow[wifiCred.activeIndex]) {
+      /*
+        Thermostat ON  - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=1&counts=101 HTTP/1.0"
+        Thermostat OFF - HTTP Request => "GET /lar-to/?device=boiler-temp-relay&local_ip_address=192.168.100.192&relay_status=0&counts=-1737 HTTP/1.0"
+      */
+      httpRequest=httpRequest+"device="+device+"&local_ip_address="+IpAddress2String(WiFi.localIP())+
+        "&relay_status="+String(auxThermostatInterrupt)+"&counts="+String(auxRebounds/2)+" HTTP/1.1";
+      error_setup&=!ERROR_CLOUD_SERVER;
+      error_setup|=sendHttpRequest(debugModeOn,serverToUploadSamplesIPAddress,SERVER_UPLOAD_PORT,httpRequest,false); //Send http update
+      //CloudSyncCurrentStatus is updated in sendHttpRequest()
+      lastTimeHTTPClouCheck=millis();
+    }
   }
 }
 

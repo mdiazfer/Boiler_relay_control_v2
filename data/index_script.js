@@ -504,7 +504,7 @@ var boilerOn=false;
 var boilerStatus=false;
 var thermostatOn=false;
 var thermostatStatus=false;
-var Relay1=true;
+var Relay1=false;
 var Relay2=false;
 var ipAddress="";
 
@@ -660,19 +660,15 @@ function updateSite(myObj) {
     }
   }
 
-  //heater icon update - non smartplug dependent
-  previousThermostatStatus=thermostatStatus;
-  thermostatStatus=myObj.Thermostate_status==="OFF"?false:true;
-  if (previousThermostatStatus!=thermostatStatus)
-    {if (thermostatStatus) document.getElementById("heaterStatusIcon").src="radiator-orange.png";
-    else document.getElementById("heaterStatusIcon").src="radiator-blue.png"}
+  //variables update - non smartplug dependent
+  previousRelay1=Relay1; previousRelay2=Relay2;
   Relay1=myObj.Relay1==="R1_ON"?true:false;
   Relay2=myObj.Relay2==="R2_ON"?true:false;
   ipAddress=myObj.ipAddress;
   document.getElementById("latestUpdate").innerHTML = dateUpdate;
   document.getElementById('thermostatSwitch').checked=Relay1;
   document.getElementById('forceSwitch').checked=Relay2;
-
+  
   //Heater Time On counters - non smartplug dependent
   if(myObj.heaterOnYear/60>60) val=String((myObj.heaterOnYear/3600).toFixed(1))+" h"; else val=String((myObj.heaterOnYear/60).toFixed(1))+" m";
     document.getElementById("heaterTimeOnYearId").innerHTML=val;
@@ -710,32 +706,39 @@ function updateSite(myObj) {
 
     previousBoilerStatus=boilerStatus;
     boilerStatus=myObj.boilerStatus==="OFF"?false:true;
+    previousThermostatStatus=thermostatStatus;
+    thermostatStatus=myObj.Thermostate_status==="OFF"?false:true;
     previousThermostatOn=thermostatOn;
     thermostatOn=myObj.Thermostate_on==="OFF"?false:true;
     previousBoilerOn=boilerOn;
     boilerOn=myObj.boilerOn==="OFF"?false:true;
+
+    //boiler icon update - smartplug dependent
     uriIconArray=document.getElementById("boilerStatusIcon").src.split("/");
-    if (uriIconArray[uriIconArray.length-1] == "boiler-grey.png") {
-      //Update the icon if the Energy values are available
-      if (boilerOn || thermostatOn) document.getElementById("boilerStatusIcon").src="boiler-orange-flame.png";
-      else if (boilerStatus) document.getElementById("boilerStatusIcon").src="boiler-orange.png";
-      else document.getElementById("boilerStatusIcon").src="boiler-blue.png";
-    }
-    else {
-      //Change icon if status changed
-      if (previousBoilerStatus!=boilerStatus || previousThermostatOn!=thermostatOn || previousBoilerOn!=boilerOn) {
-        if (boilerOn || thermostatOn) document.getElementById("boilerStatusIcon").src="boiler-orange-flame.png";
-        else if (boilerStatus) document.getElementById("boilerStatusIcon").src="boiler-orange.png";
-        else document.getElementById("boilerStatusIcon").src="boiler-blue.png";
-      }
+    if (uriIconArray[uriIconArray.length-1] == "boiler-grey.png" || //very first web load
+        previousBoilerStatus!=boilerStatus || previousThermostatOn!=thermostatOn ||
+        previousBoilerOn!=boilerOn || previousThermostatOn!=thermostatOn ||
+        previousRelay1!=Relay1 || previousRelay2!=Relay2) {
+      //Update the boiler icon
+      if (!boilerStatus) document.getElementById("boilerStatusIcon").src="boiler-blue.png";
+      else if (boilerOn || thermostatOn) document.getElementById("boilerStatusIcon").src="boiler-orange-flame.png";
+      else document.getElementById("boilerStatusIcon").src="boiler-orange.png";
+      
+      //Update the radiator icon - smartplug dependent
+      if (!Relay1 && !Relay2) {document.getElementById("heaterStatusIcon").src="radiator-disabled-off.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";}
+      else if (!thermostatStatus) {document.getElementById("heaterStatusIcon").src="radiator-blue.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+      else if (!thermostatOn) {document.getElementById("heaterStatusIcon").src="radiator-orange.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+      else {document.getElementById("heaterStatusIcon").src="radiator-orange-on.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
     }
 
-    energyYesterday=myObj.EnergyYesterday; document.getElementById("energyYesterdayId").innerHTML=energyYesterday.toFixed(3);
-    energyToday=myObj.EnergyToday; document.getElementById("energyTodayId").innerHTML=energyToday.toFixed(3);
-    energyTotal=myObj.EnergyTotal; document.getElementById("energyTotalId").innerHTML=energyTotal.toFixed(3);
-    voltage=myObj.Voltage; document.getElementById("voltageId").innerHTML=voltage;
-    current=myObj.Current; document.getElementById("currentId").innerHTML=current.toFixed(3);
-    power=myObj.Power; document.getElementById("powerId").innerHTML=power;
+    if (myObj.Voltage!=0 && myObj.Current!=0) { //powerMQTT already received
+      energyYesterday=myObj.EnergyYesterday; document.getElementById("energyYesterdayId").innerHTML=energyYesterday.toFixed(3);
+      energyToday=myObj.EnergyToday; document.getElementById("energyTodayId").innerHTML=energyToday.toFixed(3);
+      energyTotal=myObj.EnergyTotal; document.getElementById("energyTotalId").innerHTML=energyTotal.toFixed(3);
+      voltage=myObj.Voltage; document.getElementById("voltageId").innerHTML=voltage;
+      current=myObj.Current; document.getElementById("currentId").innerHTML=current.toFixed(3);
+      power=myObj.Power; document.getElementById("powerId").innerHTML=power;
+    }
 
     //Set the variables values
     if(myObj.boilerOnYear/60>60) val=String((myObj.boilerOnYear/3600).toFixed(1))+" h"; else val=String((myObj.boilerOnYear/60).toFixed(1))+" m";
@@ -760,6 +763,18 @@ function updateSite(myObj) {
       document.getElementById("boilerTimeOnTodayId").innerHTML=val;
   }
   else {
+    //boiler icon update - non smartplug dependent
+    document.getElementById("boilerStatusIcon").src="boiler-grey.png"; //grey
+    
+    //heater icon update - non smartplug dependent
+    previousThermostatStatus=thermostatStatus;
+    thermostatStatus=myObj.Thermostate_status==="OFF"?false:true;
+    if (!Relay1 && !Relay2) {document.getElementById("heaterStatusIcon").src="radiator-disabled-off.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";}
+    else if (previousThermostatStatus!=thermostatStatus)
+      {if (thermostatStatus) {document.getElementById("heaterStatusIcon").src="radiator-orange.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+       else {document.getElementById("heaterStatusIcon").src="radiator-blue.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}}
+    else {document.getElementById("heaterStatusIcon").src="radiator-blue.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+    
     //Set grey color first
     document.getElementById("tswenergy_title_l1").style.color="#636261"; //dark grey
     document.getElementById("tswpower_title_l1").style.color="#636261"; //dark grey
@@ -770,7 +785,6 @@ function updateSite(myObj) {
     document.getElementById("tswenergy_col_l4").style.color="#838281"; //grey
     document.getElementById("tswtimeon_col_l1").style.color="#838281"; //grey
     document.getElementById("tswtimeon_col_l2").style.color="#838281"; //grey
-    document.getElementById("boilerStatusIcon").src="boiler-grey.png"; //grey
     
     //Set the variables values
     if (!myObj.powerMeasureEnabled) val="N/E"; else val="N/A";
@@ -782,10 +796,10 @@ function updateSite(myObj) {
     document.getElementById("powerId").innerHTML=val;
   }
 
-  if (myObj.Relay1=="R1_ON") document.getElementById("thermostatSwitch").checked=true;
+  if (Relay1) document.getElementById("thermostatSwitch").checked=true;
   else document.getElementById("boilerStatusIcon").checked=false;
   
-  if (myObj.Relay2=="R2_ON") document.getElementById("forceSwitch").checked=true;
+  if (Relay2) document.getElementById("forceSwitch").checked=true;
   else document.getElementById("boilerStatusIcon").checked=false;
 }
 

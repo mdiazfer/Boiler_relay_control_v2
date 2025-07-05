@@ -477,6 +477,22 @@ uint32_t initWebServer() {
     request->send(SPIFFS, "/radiator-orange.png", "image/png");
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
+  
+  webServer.on("/radiator-disabled-off.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/radiator-disabled-off.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
+  
+  webServer.on("/radiator-orange-on.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/radiator-orange-on.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  });
 
   webServer.on("/basic1", HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
@@ -1030,7 +1046,7 @@ uint32_t initWebServer() {
       if (disconnectMqtt) {
         /*Code here to unsuscribe from the MQTT broker*/
         //removeTopics=true;
-        //mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); //Remove all topics from Home Assistant
+        //mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),true); //Remove all topics from Home Assistant
         mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Offline\0"); //Availability message, not retain in the broker
 
         //Disconnect to the MQTT broker

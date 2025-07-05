@@ -17,6 +17,20 @@ void onMqttConnect(bool sessionPresent) {
                         "\n  [onMqttConnect] - topic "+cmdSubcriptionTopic+", QoS 0, packetId="+packetSwitchId); // Relay ON/OFF
   if (debugModeOn && powerMeasureEnabled) printLogln("  [onMqttConnect] - topic "+powerMqttTopic+", QoS 0, packetId="+String(powerMeasureId));
 
+  //MQTT HA Discovery buffers init
+  memset(bufferMqttTopicName,'\0',sizeof(bufferMqttTopicName));sprintf(bufferMqttTopicName,"%s",String(MQTT_TOPIC_PREFIX+device).c_str()); // the-iot-factory/boiler-relay-controlv2-2254C4
+  memset(bufferIpAddress,'\0',sizeof(bufferIpAddress));sprintf(bufferIpAddress,"%s",WiFi.localIP().toString().c_str()); // 192.168.100.215
+  memset(bufferDevice,'\0',sizeof(bufferDevice));sprintf(bufferDevice,"%s",device.c_str()); // boiler-relay-controlv2-2254C4
+      //Taking the 6 latest MAC's bytes: F8:B3:B7:22:54:C4 is converted into 2254C4
+      String macAux=String((char)hex_digits[mac[3]>>4])+String((char)hex_digits[mac[3]&15])+
+                    String((char)hex_digits[mac[4]>>4])+String((char)hex_digits[mac[4]&15])+
+                    String((char)hex_digits[mac[5]>>4])+String((char)hex_digits[mac[5]&15]);
+  memset(bufferDeviceSufix,'\0',sizeof(bufferDeviceSufix));sprintf(bufferDeviceSufix,"%s",macAux.c_str()); // 2254C4
+  memset(bufferMqttSensorTopicHAPrefixName,'\0',sizeof(bufferMqttSensorTopicHAPrefixName));sprintf(bufferMqttSensorTopicHAPrefixName,"%s",String(MQTT_HA_SENSOR_TOPIC_PREFIX+String("/")+device+"/"+macAux).c_str()); // homeassistant/sensor/boiler-relay-controlv2-2254C4/2254C4
+  memset(bufferMqttBinarySensorTopicHAPrefixName,'\0',sizeof(bufferMqttBinarySensorTopicHAPrefixName));sprintf(bufferMqttBinarySensorTopicHAPrefixName,"%s",String(MQTT_HA_BINARY_SENSOR_TOPIC_PREFIX+String("/")+device+"/"+macAux).c_str()); // homeassistant/binary_sensor/boiler-relay-controlv2-2254C4/2254C4
+  memset(bufferMqttButtonTopicHAPrefixName,'\0',sizeof(bufferMqttButtonTopicHAPrefixName));sprintf(bufferMqttButtonTopicHAPrefixName,"%s",String(MQTT_HA_BUTTON_TOPIC_PREFIX+String("/")+device+"/"+macAux).c_str()); // homeassistant/button/boiler-relay-controlv2-2254C4/2254C4
+  memset(bufferMqttSwitchTopicHAPrefixName,'\0',sizeof(bufferMqttSwitchTopicHAPrefixName));sprintf(bufferMqttSwitchTopicHAPrefixName,"%s",String(MQTT_HA_SWITCH_TOPIC_PREFIX+String("/")+device+"/"+macAux).c_str()); // homeassistant/switch/boiler-relay-controlv2-2254C4/2254C4
+
   samples["powerMeasureEnabled"]=powerMeasureEnabled;
   samples["powerMeasureSubscribed"]=powerMeasureSubscribed;
   MqttSyncCurrentStatus=MqttSyncOnStatus;
@@ -45,7 +59,7 @@ void onMqttPublish(uint16_t packetId) {
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
   char aux[len+1];strcpy(aux,payload); aux[len]='\0';
 
-  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttMessage] - MQTT published message received on topic='"+String(topic)+"', mesage: '"+String(aux)+"', index: "+String(index));
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttMessage] - MQTT published message received on topic='"+String(topic)+"', mesage: '"+String(aux)+"', index: "+String(index)+", heapSize="+String(esp_get_free_heap_size())+"B, heapBlock="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+" B");
   
   if (String(topic) == String(MQTT_TOPIC_SUBSCRIPTION)) {
     //Pubish device name
@@ -60,7 +74,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
   } else if (String(topic) == String(MQTT_TOPIC_PREFIX+device+"/"+MQTT_TOPIC_CMD_SUFIX_SUBSCRIPTION)) {
     if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Command received: "+String(aux));
     if (String(aux).equalsIgnoreCase(String("REBOOT"))) {
-      printLogln(String(millis())+" - [onMqttMessage] - REBOOT");
+      printLogln(String(millis())+" - [onMqttMessage] - REBOOT. HeapSize="+String(esp_get_free_heap_size())+". Reboot now");
       //Home Assistant support
       //Publish device is not available
       mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Offline\0"); //Availability message, not retain in the broker. This makes HA to subscribe to the */SENSOR topic if not already done
@@ -239,7 +253,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     //Do nothing for other topics
     if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Topic received ("+String(topic)+") and differs from subscriptions: '"+String(MQTT_TOPIC_SUBSCRIPTION)+"', '"+String(MQTT_HA_B_AND_LWT_TOPIC_PREFIX)+"'. Return");
   }
-}
+} // onMqttMessage
 
 void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics) {
   //Break up the MQTT messages to avoid leaking heap - IS0016 - v0.9.B
@@ -284,16 +298,6 @@ void mqttClientPublishHADiscovery_systemObjects1(String mqttTopicName, String de
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
-  
 
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
@@ -381,15 +385,6 @@ void mqttClientPublishHADiscovery_systemObjects2(String mqttTopicName, String de
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
 
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
@@ -508,15 +503,6 @@ void mqttClientPublishHADiscovery_sensorsObjects(String mqttTopicName, String de
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
 
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
@@ -582,16 +568,7 @@ void mqttClientPublishHADiscovery_boilerTimeOnObjects(String mqttTopicName, Stri
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
-
+  
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
   // In the following exmaple:
@@ -761,16 +738,7 @@ void mqttClientPublishHADiscovery_heaterTimeOnObjects(String mqttTopicName, Stri
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
-
+  
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
   // In the following exmaple:
@@ -940,16 +908,7 @@ void mqttClientPublishHADiscovery_binaryObjects(String mqttTopicName, String dev
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
-
+  
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
   // In the following exmaple:
@@ -975,39 +934,40 @@ void mqttClientPublishHADiscovery_binaryObjects(String mqttTopicName, String dev
   
   
   //Device, Environment, GAS, Signals, System (Counters), WiFi
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_Clean_air/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_Clean_air/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: Gas Detection\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_Clean_air\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"dev_cla\":\"gas\",\"ic\":\"mdi:meter-gas\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Clean_air']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_boilerOn/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_boilerOn/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: Boiler Flame\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_boilerOn\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"",iconThermStatus.c_str(),"\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['boilerOn']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_boilerStatus/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_boilerStatus/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: Boiler Active\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_boilerStatus\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"",iconThermStatus.c_str(),"\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['boilerStatus']}}\"}");
+  //memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: Boiler Active\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_boilerStatus\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"icon_template\":\">{% if is_state('binary_sensor.boiler_relay_controlv2_2254c4_environment_boiler_active', 'off') %} mdi:water-boiler {% elif is_state('binary_sensor.boiler_relay_controlv2_2254c4_environment_boiler_flame', 'on') %} mdi:water-boiler-alert {% elif is_state('binary_sensor.boiler_relay_controlv2_2254c4_environment_heater_flame', 'on') %} mdi:water-boiler-alert {% else %}mdi:water-boiler{% endif %}\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['boilerStatus']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_Thermostate_on/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_Thermostate_on/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: Heater Flame\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_Thermostate_on\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"",iconThermStatus.c_str(),"\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Thermostate_on']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_Thermostate_status/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_Thermostate_status/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: Heater Active\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_Thermostate_status\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"",iconThermStatus.c_str(),"\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Thermostate_status']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_GAS_interrupt/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_GAS_interrupt/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Signal: Gas Sensor\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_GAS_interrupt\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"",iconGasInterrupt.c_str(),"\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['GAS_interrupt']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_Thermostate_interrupt/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_Thermostate_interrupt/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Signal: Therm. Sensor\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_Thermostate_interrupt\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"",iconThermInterrupt.c_str(),"\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Thermostate_interrupt']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_NTP/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_NTP/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"WiFi: Sync NTP\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_NTP\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"mdi:cloud-clock\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['NTP']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_HTTP_CLOUD/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_HTTP_CLOUD/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"WiFi: Sync HTTP Cloud\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_HTTP_CLOUD\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"mdi:cloud-upload\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['HTTP_CLOUD']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
@@ -1018,16 +978,7 @@ void mqttClientPublishHADiscovery_relayObjects(String mqttTopicName, String devi
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
-
+  
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
   // In the following exmaple:
@@ -1053,11 +1004,11 @@ void mqttClientPublishHADiscovery_relayObjects(String mqttTopicName, String devi
   
   
   //Device, Environment, GAS, Signals, System (Counters), WiFi
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_Relay1/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_Relay1/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Relay: Allow Ext. Therm.\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"R1_OFF\",\"pl_on\":\"R1_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_Relay1\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Relay1']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_Relay2/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_Relay2/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Relay: Force Heater\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"R2_OFF\",\"pl_on\":\"R2_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_Relay2\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Relay2']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
@@ -1068,16 +1019,7 @@ void mqttClientPublishHADiscovery_buttonObjects(String mqttTopicName, String dev
   struct tm nowTimeInfo; //36 B
   char s[100];
   getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
-  String deviceSufix=device.substring(23); //Getting the MAC address part of device name
-  String mqttSensorTopicHAPrefixName=String(MQTT_HA_SENSOR_TOPIC_PREFIX)+String("/"+device+"/"+deviceSufix);
-  char bufferTopicHAName[100];
-  char bufferPayload[900];
-  char bufferMqttTopicName[100]={'\0'};sprintf(bufferMqttTopicName,"%s",mqttTopicName.c_str());
-  char bufferDeviceSufix[10]={'\0'};sprintf(bufferDeviceSufix,"%s",deviceSufix.c_str());
-  char bufferIpAddress[20]={'\0'};sprintf(bufferIpAddress,"%s",ipAddress.c_str());
-  char bufferDevice[50]={'\0'};sprintf(bufferDevice,"%s",device.c_str());
-  char bufferMqttSensorTopicHAPrefixName[100];sprintf(bufferMqttSensorTopicHAPrefixName,"%s",mqttSensorTopicHAPrefixName.c_str());
-
+  
   //For every sample value, a Discovery Message must be published
   //HA Discovery topic format is as follows: <discovery_prefix>/<component>/[<node_id>]/<object_id>/config
   // In the following exmaple:
@@ -1103,11 +1045,11 @@ void mqttClientPublishHADiscovery_buttonObjects(String mqttTopicName, String dev
   
   
   //Device, Environment, GAS, Signals, System (Counters), WiFi
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_reboot/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttButtonTopicHAPrefixName,"_reboot/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device  : Reboot\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"payload_press\":\"REBOOT\",\"uniq_id\":\"",bufferDeviceSufix,"_reboot\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reboot']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
-  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_reset_time_counters/config");
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttButtonTopicHAPrefixName,"_reset_time_counters/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device  : Reset Time Counters\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"payload_press\":\"RESET_TIME_COUNTERS\",\"uniq_id\":\"",bufferDeviceSufix,"_reset_time_counters\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);

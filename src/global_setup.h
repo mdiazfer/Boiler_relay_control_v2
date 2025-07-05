@@ -81,6 +81,7 @@
 #define WIFI_MAX_SSID_LENGTH  33 //32 CHAR + NULL
 #define WIFI_MAX_PSSW_LENGTH  64 //63 CHAR + NULL
 #define WIFI_MAX_SITE_LENGTH  11 //10 CHAR + NULL
+#define SYSLOG_SERVER "10.88.50.5"
 
 //WEB SERVER Stuff
 #define WEBSERVER_ENABLED true
@@ -240,6 +241,7 @@
 #ifndef MQTT_POWER_TOPIC
   #define MQTT_POWER_TOPIC "tele/tasmota_2EDC69/SENSOR"
 #endif
+#define BUFFER_PAYLOAD_SIZE 900
 
 //POWER stuff
 #define BOILER_STATUS_ON_POWER_THRESHOLD 50  //Watts - Power threshold to decide whether the boiler is active (not necessarily burning gas)

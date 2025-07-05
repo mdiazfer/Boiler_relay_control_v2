@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <AsyncMqttClient.h>
 #include <Arduino_JSON.h>
+#include <PicoSyslog.h>
 #include "SHT2x.h"
 #include "wifiConnection.h"
 #include "mqttClient.h"
@@ -32,7 +33,7 @@ extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
 extern bool debugModeOn,logMessageTOFF,logMessageTRL1_ON,logMessageTRL2_ON,logMessageGAP_OFF,
   boilerStatus,thermostateStatus,boilerOn,thermostateOn,thermostateInterrupt,gasClear,gasInterrupt,isBeaconAdvertising,webServerResponding,
-  webLogsOn,serialLogsOn,eepromUpdate;
+  webLogsOn,serialLogsOn,syslogOn,eepromUpdate;
 extern char activeCookie[COOKIE_SIZE],currentSetCookie[COOKIE_SIZE],firmwareVersion[VERSION_CHAR_LENGTH+1];
 extern uint8_t ntpServerIndex,auxLoopCounter,auxLoopCounter2,auxCounter,configVariables,fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
 extern uint16_t rebounds,voltage,power;
@@ -48,6 +49,7 @@ extern String ntpServers[4];
 extern SHT2x tempHumSensor; //Temp and Hum sensor
 extern IPAddress serverToUploadSamplesIPAddress;
 extern JSONVar samples;
+extern PicoSyslog::Logger syslog;
 
 #ifndef _PRINT_LOG_DEFINITION_
   void printLogln(String logMessage, unsigned char base=10);

@@ -18,6 +18,10 @@ extern JSONVar samples;
 extern bool gasClear,thermostateStatus,boilerStatus,boilerOn,thermostateOn;
 extern uint16_t voltage,power,powerMeasureId;
 extern float current,energyToday,energyYesterday,energyTotal;
+extern byte mac[6];
+extern char bufferTopicHAName[100],bufferPayload[BUFFER_PAYLOAD_SIZE],bufferMqttTopicName[100],bufferDeviceSufix[10],
+            bufferIpAddress[20],bufferDevice[50],bufferMqttSensorTopicHAPrefixName[100],bufferMqttBinarySensorTopicHAPrefixName[100],
+            bufferMqttButtonTopicHAPrefixName[100],bufferMqttSwitchTopicHAPrefixName[100];
 
 #ifndef _PRINT_LOG_DEFINITION_
   extern void printLogln(String logMessage, unsigned char base=10);
@@ -27,6 +31,10 @@ extern float current,energyToday,energyYesterday,energyTotal;
   extern void printLogln(tm * timeinfo, const char *format);
   extern void printLog(tm * timeinfo, const char *format);
   #define _PRINT_LOG_DEFINITION_
+#endif
+#ifndef __hex_digits__
+  static const char hex_digits[] = "0123456789ABCDEF";
+  #define __hex_digits__
 #endif
 
 void onMqttConnect(bool sessionPresent);
