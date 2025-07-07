@@ -618,12 +618,12 @@ void gas_sample(bool debugModeOn) {
   samples["mqttUserName"]=mqttUserName;
 
   //Additonal objectes needed in maintenance.html
-  samples["OTAUpgradeBinAllowed"]=OTAUpgradeBinAllowed;
-  samples["SPIFFSUpgradeBinAllowed"]=SPIFFSUpgradeBinAllowed;
-  samples["OTAAvailableSize"]=OTAAvailableSize;
-  samples["SPIFFSAvailableSize"]=SPIFFSAvailableSize;
-  samples["error_setup"]=error_setup;
-  samples["SPIFFSErrors"]=SPIFFSErrors;
+  samples["OTAUpgradeBinAllowed"]=OTAUpgradeBinAllowed;samples["SPIFFSUpgradeBinAllowed"]=SPIFFSUpgradeBinAllowed;
+  samples["OTAAvailableSize"]=OTAAvailableSize;samples["SPIFFSAvailableSize"]=SPIFFSAvailableSize;
+  samples["error_setup"]=error_setup;samples["SPIFFSErrors"]=SPIFFSErrors;
+  samples["serialLogsOn"]=serialLogsOn?"SERIAL_LOGS_ON":"SERIAL_LOGS_OFF";
+  samples["webLogsOn"]=webLogsOn?"WEB_LOGS_ON":"WEB_LOGS_OFF";samples["sysLogsOn"]=sysLogsOn?"SYS_LOGS_ON":"SYS_LOGS_OFF";
+  samples["sysLogServer"]=sysLogServer;samples["sysLogServerUDPPort"]=sysLogServerUDPPort;
 } // -- gas_sample -- 
 
 void temperature_sample(bool debugModeOn) {

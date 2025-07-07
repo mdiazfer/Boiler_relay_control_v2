@@ -2,7 +2,9 @@
 #include <WiFi.h>
 #include <AsyncMqttClient.h>
 #include <Arduino_JSON.h>
-#include <PicoSyslog.h>
+#ifdef SYSLOG_SERVER
+  #include <PicoSyslog.h>
+#endif
 #include "SHT2x.h"
 #include "wifiConnection.h"
 #include "mqttClient.h"
@@ -33,23 +35,25 @@ extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
 extern bool debugModeOn,logMessageTOFF,logMessageTRL1_ON,logMessageTRL2_ON,logMessageGAP_OFF,
   boilerStatus,thermostateStatus,boilerOn,thermostateOn,thermostateInterrupt,gasClear,gasInterrupt,isBeaconAdvertising,webServerResponding,
-  webLogsOn,serialLogsOn,syslogOn,eepromUpdate;
+  webLogsOn,serialLogsOn,sysLogsOn,eepromUpdate;
 extern char activeCookie[COOKIE_SIZE],currentSetCookie[COOKIE_SIZE],firmwareVersion[VERSION_CHAR_LENGTH+1];
 extern uint8_t ntpServerIndex,auxLoopCounter,auxLoopCounter2,auxCounter,configVariables,fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
-extern uint16_t rebounds,voltage,power;
+extern uint16_t rebounds,voltage,power,sysLogServerUDPPort;
 extern uint32_t heapSize,heapBlockSize,flashSize,programSize,fileSystemSize,fileSystemUsed;
 extern uint64_t whileLoopTimeLeft;
 extern int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String httpRequest,bool fromSetup);
 extern float gasSample,gasVoltCalibrated,RS_airCalibrated,RS_CurrentCalibrated,gasRatioSample,current,energyToday,energyYesterday,energyTotal;
 extern size_t fileUpdateSize,OTAAvailableSize,SPIFFSAvailableSize;
-extern String serverToUploadSamplesString,device,TZEnvVariable,TZName,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,userName,userPssw,powerMqttTopic;
+extern String serverToUploadSamplesString,device,TZEnvVariable,TZName,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,sysLogServer,userName,userPssw,powerMqttTopic;
 extern wifiNetworkInfo wifiNet;
 extern wifiCredentials wifiCred;
 extern String ntpServers[4];
 extern SHT2x tempHumSensor; //Temp and Hum sensor
 extern IPAddress serverToUploadSamplesIPAddress;
 extern JSONVar samples;
-extern PicoSyslog::Logger syslog;
+#ifdef SYSLOG_SERVER
+  extern PicoSyslog::Logger syslog;
+#endif
 
 #ifndef _PRINT_LOG_DEFINITION_
   void printLogln(String logMessage, unsigned char base=10);
@@ -70,6 +74,7 @@ bool wifiVariablesInit();
 bool initTZVariables();
 bool ntpVariablesInit();
 bool mqttVariablesInit();
+bool syslogVariablesInit();
 void EEPROMInit();
 void variablesInit();
 uint32_t tempSensorInit(boolean debugModeOn);

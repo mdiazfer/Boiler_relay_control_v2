@@ -6,17 +6,20 @@
 #include <SPIFFS.h>
 #include <Arduino_JSON.h>
 #include <AsyncMqttClient.h>
-#include <PicoSyslog.h>
 #include "SHT2x.h"
 #include "global_setup.h"
 //#include "wifiConnection.h" //included in loop.h
 //#include "mq5_sensor.h"     //included in loop.h
+#ifdef SYSLOG_SERVER
+  #include <PicoSyslog.h>
+#endif
 #include "setup.h"
 #include "interrupt.h"
 #include "loop.h"
 #include "eeprom_utils.h"
 #include "webServer.h"
 #include "webSocket.h"
+
 
 //Global variable definitions stored in RTC memory to be persistent during Sleep periods. 8 KB Max
 RTC_DATA_ATTR boolean firstBoot=true;  //1B - First boot flag.
@@ -62,13 +65,13 @@ RTC_DATA_ATTR String bootLogs; // Initial logs at boot time
 //Global variable definitions stored in regular RAM. 520 KB Max
 bool debugModeOn=DEBUG_MODE_ON,logMessageTOFF=false,logMessageTRL1_ON=false,logMessageTRL2_ON=false,logMessageGAP_OFF=false,
       thermostateInterrupt=false,gasClear=true,gasInterrupt=false,isBeaconAdvertising=false,webServerResponding=false,
-      webLogsOn=false,serialLogsOn=debugModeOn,syslogOn=false,eepromUpdate=false,firstHASent=false;
+      webLogsOn=false,serialLogsOn=debugModeOn,sysLogsOn=false,eepromUpdate=false,firstHASent=false;
 bool boilerStatus=false,boilerOn=false, //boilerStatus => Power > Threshold, boilerOn => Burning gas (flame) due to warming water
       thermostateStatus=false,thermostateOn=false; //thermostateStatus => Thermostate is active (or relay active), thermostateOn => Burning gas due to either warming hot or heater
 bool  sentHDAiscovery1=false,sentHDAiscovery2=false,sentHDAiscovery3=false,sentHDAiscovery4=false,sentHDAiscovery5=false,sentHDAiscovery6=false,sentHDAiscovery7=false,sentHDAiscovery8=false;
 boolean startTimeConfigure,wifiResuming;
 uint8_t ntpServerIndex,configVariables,auxLoopCounter=0,auxLoopCounter2=0,auxCounter=0,fileUpdateError=0,errorOnActiveCookie=0,errorOnWrongCookie=0;
-uint16_t rebounds=0,voltage=0,power=0,powerMeasureId=0;
+uint16_t rebounds=0,voltage=0,power=0,powerMeasureId=0,sysLogServerUDPPort=0;
 uint32_t heapSize=0,minHeapSeen=0,heapBlockSize=0,flashSize=ESP.getFlashChipSize(),programSize=ESP.getSketchSize(),fileSystemSize=0,fileSystemUsed=0;;
 uint64_t whileLoopTimeLeft=NTP_CHECK_TIMEOUT;
 int updateCommand;
@@ -76,7 +79,7 @@ float gasSample=0,gasVoltCalibrated=0,RS_airCalibrated=0,RS_CurrentCalibrated=0,
 size_t fileUpdateSize=0,OTAAvailableSize=0,SPIFFSAvailableSize=0;
 struct tm nowTimeInfo;
 String TZEnvVariable(NTP_TZ_ENV_VARIABLE),TZName(NTP_TZ_NAME),device(DEVICE_NAME_PREFIX),serverToUploadSamplesString(SERVER_UPLOAD_SAMPLES),
-        mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,userName,userPssw,
+        mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,mqttServer,sysLogServer,userName,userPssw,
         iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus,
         ntpServers[4],lastURI,fileUpdateName,powerMqttTopic;
 wifiNetworkInfo wifiNet;
@@ -90,7 +93,9 @@ char activeCookie[COOKIE_SIZE],currentSetCookie[COOKIE_SIZE],firmwareVersion[VER
 char bufferTopicHAName[100],bufferPayload[BUFFER_PAYLOAD_SIZE],bufferMqttTopicName[100],bufferDeviceSufix[10],
      bufferIpAddress[20],bufferDevice[50],bufferMqttSensorTopicHAPrefixName[100],bufferMqttBinarySensorTopicHAPrefixName[100],
      bufferMqttButtonTopicHAPrefixName[100],bufferMqttSwitchTopicHAPrefixName[100];
-PicoSyslog::Logger syslog;
+#ifdef SYSLOG_SERVER
+  PicoSyslog::Logger syslog;
+#endif
 
 void setup() {
   pinMode(BOARD_RX,INPUT);  //Pin definition for serial RX
@@ -125,7 +130,6 @@ void setup() {
   wifiCurrentStatus=wifiOffStatus; //It's updated in wifiInit
   printLog("[setup] - WiFi initialization");
   error_setup=wifiInit(wifiEnabled,debugModeOn);
-  if (!(error_setup & ERROR_WIFI_SETUP)) syslogOn=debugModeOn; //Enable syslog only if connectivity is OK
   printLogln("[setup] - error_setup="+String(error_setup));
   
   //HTTP - Cloud server init
@@ -180,6 +184,11 @@ void loop() {
     attachInterrupt(digitalPinToInterrupt(PIN_THERMOSTATE), thermostate_change, CHANGE);
     if (digitalRead(PIN_THERMOSTATE)==1) {thermostateStatus=true;} else {thermostateStatus=false;};
     if (debugModeOn) printLogln(String(millis())+" - [loop] - Interrupt set for GPIO pin "+String(PIN_THERMOSTATE)+", thermostateStatus="+String(thermostateStatus));
+
+    //Update JSON samples variable the very first time
+    samples["debugModeOn"]=debugModeOn?"DEBUG_ON":"DEBUG_OFF"; //debugModeOn must be update out of gas_sample, as it is function parameter
+    gas_sample(false);   //Get GAS samples
+    if (tempHumSensor.isConnected()) temperature_sample(false);  //Get Temp & Hum samples
   }
 
   //Rest of loop interactions
@@ -201,14 +210,14 @@ void loop() {
     eepromUpdate=true; //EEPROM to be updated at the end of the cycle.
   }
   if (heapSize<ABSULUTE_MIN_HEAP_THRESHOLD || minMaxHeapBlockSizeSinceBoot<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) { //Preventive reset to avoid crash
-    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize+")<ABSULUTE_MIN_HEAP_THRESHOLD (")+String(ABSULUTE_MIN_HEAP_THRESHOLD)+"). Restart needed");
+    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize)+")<ABSULUTE_MIN_HEAP_THRESHOLD ("+String(ABSULUTE_MIN_HEAP_THRESHOLD)+"). Restart needed");
     resetPreventiveCount++; //preventive resets (mainly becuase low heap situation)
     EEPROM.write(0x41B,resetPreventiveCount);
     EEPROM.commit();
     ESP.restart(); //Rebooting
   }
   else if(heapSize<WEBSERVER_MIN_HEAP_SIZE) {
-    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize+")<WEBSERVER_MIN_HEAP_SIZE (")+String(WEBSERVER_MIN_HEAP_SIZE)+"). Restart needed");
+    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize)+")<WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Restart needed");
     resetPreventiveWebServerCount++; //preventive web reset resets (mainly becuase low heap situation)
     EEPROM.write(0x531,resetPreventiveWebServerCount);
     EEPROM.commit();
@@ -217,7 +226,7 @@ void loop() {
 
   //Pubish the first MQTT message and HA Discovery. Wait HA_ADVST_WINDOW seconds to avoid heap leaking
   nowTimeGlobal=millis();
-  if ((nowTimeGlobal > firstLoopTime+HA_ADVST_WINDOW) && !firstHASent) {
+  if ((nowTimeGlobal > firstLoopTime+HA_ADVST_WINDOW) && !firstHASent && !webServerResponding) {
     //HA Discovery is sent again just right after booting up cause sometimes, some objects are missed.
 
     //Get readings for the index.html page to be up-to-date
@@ -239,7 +248,7 @@ void loop() {
   // 2) after detection the webServer is down
   nowTimeGlobal=millis();
   if ((((nowTimeGlobal-lastTimeWifiReconnectionCheck) >= wifiReconnectPeriod) || forceWifiReconnect ) && 
-      wifiEnabled && !firstBoot && (wifiCurrentStatus==wifiOffStatus || WiFi.status()!=WL_CONNECTED) ) {
+      wifiEnabled && !firstBoot && (wifiCurrentStatus==wifiOffStatus || WiFi.status()!=WL_CONNECTED) && !webServerResponding) {
      
     if (!forceWifiReconnect && wifiEnabled && !firstBoot && WiFi.status()!=WL_CONNECTED) {
       errorsWiFiCnt++;EEPROM.write(0x535,errorsWiFiCnt);eepromUpdate=true;
@@ -248,9 +257,9 @@ void loop() {
     else {
       printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi restart required to either free heap memory up or restart web server. error_setup=0x"+String(error_setup,HEX)+"), heapSize="+String(heapSize));
     }
-    bool auxWebLogsOn=webLogsOn,auxSyslogOn=syslogOn;
+    bool auxWebLogsOn=webLogsOn,auxSysLogsOn=sysLogsOn;
     webLogsOn=false;
-    syslogOn=false;
+    sysLogsOn=false;
     detachNetwork(); //detach the network and network services before restarting them again
     forceWifiReconnect=false;
     wifi_reconnect_period(debugModeOn); //restart network
@@ -263,7 +272,7 @@ void loop() {
       //error_setup&=!ERROR_WEB_SERVER; error_setup&=!ERROR_WEB_SOCKET;error_setup|=webServerInit(error_setup,wifiEnabled,webServerEnabled,wifiCurrentStatus,debugModeOn,false);
       if ((error_setup & ERROR_EEPROM_VARIABLES_INIT)!=0) {error_setup&=!ERROR_EEPROM_VARIABLES_INIT; error_setup|=timeOnCountersInit(error_setup,false,false,ntpSynced);} //This is in case during first boot was not wifi
       error_setup&=!ERROR_MQTT_SERVER; error_setup|=mqttClientInit(wifiEnabled,mqttServerEnabled,secureMqttEnabled,error_setup,false,false,mqttTopicName,device);
-      webLogsOn=auxWebLogsOn;syslogOn=auxSyslogOn;
+      webLogsOn=auxWebLogsOn;sysLogsOn=auxSysLogsOn;
       if (error_setup==0) printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi and network services successfully restarted . error_setup=0x"+String(error_setup,HEX)+"), heap="+String(ESP.getFreeHeap()));
       else printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi successfully restarted but there are network services errors: error_setup=0x"+String(error_setup,HEX)+"), heap="+String(ESP.getFreeHeap()));
     }
@@ -278,7 +287,7 @@ void loop() {
   //forceNTPCheck is true if:
   // 1) After NTP server config in firstSetup()
   nowTimeGlobal=millis();
-  if ((nowTimeGlobal-lastTimeNTPCheck) >= NTP_KO_CHECK_PERIOD || forceNTPCheck) {
+  if (((nowTimeGlobal-lastTimeNTPCheck) >= NTP_KO_CHECK_PERIOD || forceNTPCheck) && !webServerResponding) {
     
     ntp_ko_check_period(false);
     if ((error_setup & ERROR_EEPROM_VARIABLES_INIT)!=0) {error_setup&=!ERROR_EEPROM_VARIABLES_INIT; error_setup|=timeOnCountersInit(error_setup,false,false,ntpSynced);}
@@ -288,7 +297,7 @@ void loop() {
   //Regular actions every ONE_SECOND_PERIOD seconds
   // 1) Check if time on counters need to be updated
   nowTimeGlobal=millis();
-  if ((nowTimeGlobal-lastTimeSecondCheck) >= ONE_SECOND_PERIOD) {
+  if (((nowTimeGlobal-lastTimeSecondCheck) >= ONE_SECOND_PERIOD) && !webServerResponding) {
     
     one_second_check_period(false,nowTimeGlobal,ntpSynced);
   }
@@ -296,7 +305,7 @@ void loop() {
 
   //Regular actions every TIME_COUNTERS_EEPROM_UPDATE_PERIOD seconds
   nowTimeGlobal=millis();
-  if ((nowTimeGlobal-lastTimeTimerEepromUpdateCheck) >= TIME_COUNTERS_EEPROM_UPDATE_PERIOD) {
+  if (((nowTimeGlobal-lastTimeTimerEepromUpdateCheck) >= TIME_COUNTERS_EEPROM_UPDATE_PERIOD) && !webServerResponding) {
     
     time_counters_eeprom_update_check_period(true,nowTimeGlobal);
   }
@@ -305,7 +314,7 @@ void loop() {
   //Regular actions every MQTT_CHECK_PERIOD seconds to check on MQTT connection
   // or due to forceMQTTConnect (from webServer (/cloud form))
   nowTimeGlobal=millis();
-  if ((nowTimeGlobal-lastTimeMQTTCheck >= MQTT_CHECK_PERIOD) || forceMQTTConnect) {
+  if (((nowTimeGlobal-lastTimeMQTTCheck >= MQTT_CHECK_PERIOD) || forceMQTTConnect) && !webServerResponding) {
 
     //Connect to MQTT broker as it was enabled from the webserver
     //forceMQTTConnect is set from webServer (/cloud form)
@@ -326,8 +335,9 @@ void loop() {
   
   //Regular actions every SAMPLE_PERIOD if gas burning or SAMPLE_LONG_PERIOD seconds to take gas samples
   nowTimeGlobal=millis();
-  if (((boilerOn || thermostateOn || !gasClear) && (nowTimeGlobal-lastGasSample >= SAMPLE_PERIOD)) || 
-      ((!boilerOn && !thermostateOn && gasClear) && (nowTimeGlobal-lastGasSample >= SAMPLE_LONG_PERIOD))) { //
+  if ((((boilerOn || thermostateOn || !gasClear) && (nowTimeGlobal-lastGasSample >= SAMPLE_PERIOD)) || 
+      ((!boilerOn && !thermostateOn && gasClear) && (nowTimeGlobal-lastGasSample >= SAMPLE_LONG_PERIOD))) 
+      && !webServerResponding) { //
     gas_sample(false);   //Get GAS samples
     if (tempHumSensor.isConnected()) temperature_sample(false);  //Get Temp & Hum samples
 
@@ -341,8 +351,8 @@ void loop() {
 
   //Regular actions every CONNECTIVITY_CHECK_PERIOD seconds
   nowTimeGlobal=millis();
-  if ((nowTimeGlobal-lastTimeConnectiviyCheck >= CONNECTIVITY_CHECK_PERIOD) && WiFi.status()==WL_CONNECTED && 
-          wifiEnabled && !firstBoot ) {
+  if (((nowTimeGlobal-lastTimeConnectiviyCheck >= CONNECTIVITY_CHECK_PERIOD) && WiFi.status()==WL_CONNECTED && 
+          wifiEnabled && !firstBoot ) && !webServerResponding) {
     //Check connectivity and reset it if needed
     // WiFi.status()==WL_CONNECTED && no FQDN resolved and error in sample_upload && mqttClient not connected and error in checkURL and no GW ping
     // NTP status is not check as NTP checks take time (random period) and forcing NTP in here is avoided (as it may take several loop cycles = complexity)
@@ -367,7 +377,7 @@ void loop() {
   heapBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);if(heapBlockSize<minMaxHeapBlockSizeSinceBoot) minMaxHeapBlockSizeSinceBoot=heapBlockSize;
   
   //Check interrupt flags
-  if (gasInterrupt) {
+  if (gasInterrupt && !webServerResponding) {
     if (debugModeOn) {printLogln(String(millis())+"  - [loop] - GAS interrupt detected and gas_probe_triggered routine triggered: gasClear flag was '"+String(gasClear)+"' (1=NO GAS, 0=GAS)");}
     gas_sample(debugModeOn); //gasClear flag is updated
     
@@ -388,7 +398,7 @@ void loop() {
   //Regular actions after THERMOSTATE_INTERRUPT_DELAY milliseconds the thermostate interrupt was triggered to check the value of Thermostate pin
   //Delay of THERMOSTATE_INTERRUPT_DELAY milliseconds is needed to avoid bouncing
   nowTimeGlobal=millis();
-  if (thermostateInterrupt && (nowTimeGlobal-lastInterruptTime >= THERMOSTATE_INTERRUPT_DELAY)) {
+  if ((thermostateInterrupt && (nowTimeGlobal-lastInterruptTime >= THERMOSTATE_INTERRUPT_DELAY)) && !webServerResponding) {
     thermostate_interrupt_triggered(debugModeOn); //Sending HTTP Cloud, mqtt and web client updates is done from that function
   }
   heapBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);if(heapBlockSize<minMaxHeapBlockSizeSinceBoot) minMaxHeapBlockSizeSinceBoot=heapBlockSize;
@@ -398,13 +408,13 @@ void loop() {
   // - every SAMPLE_PERIOD
   // - Relays ON/OFF from HA (message received in topic: the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY)
   nowTimeGlobal=millis();
-  if (forceMQTTpublish) {
+  if (forceMQTTpublish && !webServerResponding) {
     mqtt_publish_samples(wifiEnabled,mqttServerEnabled,secureMqttEnabled,false);
     forceMQTTpublish=false;
   }
   heapBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);if(heapBlockSize<minMaxHeapBlockSizeSinceBoot) minMaxHeapBlockSizeSinceBoot=heapBlockSize;
 
-  if (forceWebEvent && wifiEnabled && webServerEnabled && WiFi.status()==WL_CONNECTED && webEvents.count()>0) {
+  if ((forceWebEvent && wifiEnabled && webServerEnabled && WiFi.status()==WL_CONNECTED && webEvents.count()>0) && !webServerResponding) {
     //webEvents.count()>0 it means clients connected
     webEvents.send("ping",NULL,nowTimeGlobal);
     webEvents.send(JSON.stringify(samples).c_str(),"new_samples",nowTimeGlobal);

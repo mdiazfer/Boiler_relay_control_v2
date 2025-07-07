@@ -1,9 +1,14 @@
 Change Log
 ----------
+v1.1.2  - Added syslog configuration in web page and syslong switch button in mqtt
+          + Added new variables to samples: debugModeOn, serialLogsOn, webLogsOn, sysLogsOn, sysLogServer, sysLogServerUDPPort
+        - Web forms based on json variable readings 
+        - Actions in the main loop are ignored if webserver is serving content (webServerResponding flag) to avoid risking heap leakage
 v1.1.1  - Dynamic mqtt icon for boiler and radiator in index.html. Icon change based on boilerOn or thermostateOn variables (flame on/off)
         - Heap size optimization:
           + mqtt buffers converted into global variables: bufferTopicHAName, bufferPayload, bufferMqttTopicName, bufferDeviceSufix, bufferIpAddress, bufferDevice,
              bufferMqttSensorTopicHAPrefixName,  bufferMqttBinarySensorTopicHAPrefixName,  bufferMqttSwitchTopicHAPrefixName,  bufferMqttButtonTopicHAPrefixName
+        - Added syslog support
 v1.1.0  - New approach based on updating html id tags with javascript for serving dynamic web content
           + graphs and container still with ~ processing
         - New boiler icon if it's burning gas (boilerOn or thermostateOn)
@@ -72,13 +77,12 @@ v0.8.9  - First stable version with HA support
 To do list for boiler relay control
 -----------------------------------
 - Check button to enable or disable logs
-- New variable to track the time the flame is on (boilerFlameTimeOnPreviousYear boilerFlameTimeOnYear heaterFlameTimeOnPreviousYear heaterFlameTimeOnYear)
-- syslog
+- New variable to track the time the flame is on (boilerFlameTimeOnPreviousYear boilerFlameTimeOnYear heaterFlameTimeOnPreviousYear heaterFlameTimeOnYear
+- In webserver, http_post, change if ()..., if()..., if ()... by if ()..., else if()..., else if ()...
 - Troubleshooting:
 
 - Get and Show Smart Plug's IP address in web page with link to it
-- Get Energy values on gas_sample periods and at boot time to update the index web page accordingly
-- Date in logs in addition to milliseconds
+- Get Energy values on gas_sample periods at boot time to update the index web page accordingly
 
 Done
 --------
@@ -162,6 +166,8 @@ Done
 - New strategy to create the mqtt HADiscovery message payload different than String to reduce heap consumption - v0.9.B
 - New approach based on updating html id tags with javascript for serving dynamic web content
   + graphs and container still with ~ processing
+- syslog v1.1.1
+- logs switches in both web and mqtt
 
   Discarded
   -------------

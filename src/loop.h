@@ -29,14 +29,14 @@ extern RTC_DATA_ATTR struct tm startTimeInfo;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
-extern bool boilerStatus,thermostateStatus,boilerOn,thermostateOn,thermostateInterrupt,gasInterrupt,gasClear,httpCloudEnabled,mqttServerEnabled,debugModeOn,webLogsOn,eepromUpdate;
+extern bool boilerStatus,thermostateStatus,boilerOn,thermostateOn,thermostateInterrupt,gasInterrupt,gasClear,httpCloudEnabled,mqttServerEnabled,debugModeOn,webLogsOn,sysLogsOn,eepromUpdate;
 extern uint8_t auxLoopCounter,auxLoopCounter2,auxCounter;
 extern enum CloudClockStatus previousCloudClockCurrentStatus;
-extern uint16_t rebounds;
+extern uint16_t rebounds,sysLogServerUDPPort;
 extern float gasSample,gasVoltCalibrated,RS_airCalibrated,RS_CurrentCalibrated,gasRatioSample;
 extern SHT2x tempHumSensor; //Temp and Hum sensor
 extern JSONVar samples;
-extern String device,mqttTopicName,iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus;
+extern String device,mqttTopicName,iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus,sysLogServer;
 
 
 extern IPAddress serverToUploadSamplesIPAddress;

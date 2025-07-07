@@ -15,7 +15,7 @@ extern RTC_DATA_ATTR uint64_t lastThermostatOnTime,lastBoilerOnTime;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;
 extern String mqttTopicPrefix,mqttTopicName,mqttServer,device,iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus,powerMqttTopic;
 extern JSONVar samples;
-extern bool gasClear,thermostateStatus,boilerStatus,boilerOn,thermostateOn;
+extern bool gasClear,thermostateStatus,boilerStatus,boilerOn,thermostateOn,webLogsOn,serialLogsOn,sysLogsOn;
 extern uint16_t voltage,power,powerMeasureId;
 extern float current,energyToday,energyYesterday,energyTotal;
 extern byte mac[6];

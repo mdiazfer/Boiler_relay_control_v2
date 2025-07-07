@@ -12,8 +12,9 @@ extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPrevious
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 
 extern String TZEnvVariable,TZName,device,
-        mqttServer,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,userName,userPssw,powerMqttTopic;
-extern bool debugModeOn;
+        mqttServer,mqttUserName,mqttUserPssw,mqttTopicPrefix,mqttTopicName,userName,userPssw,powerMqttTopic,sysLogServer;
+extern bool debugModeOn,webLogsOn,serialLogsOn,sysLogsOn;
+extern uint16_t sysLogServerUDPPort;
 extern wifiCredentials wifiCred;
 
 #ifndef _PRINT_LOG_DEFINITION_

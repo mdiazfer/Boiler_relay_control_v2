@@ -3,6 +3,9 @@
 #include "global_setup.h"
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
+#ifdef SYSLOG_SERVER
+  #include <PicoSyslog.h>
+#endif
 #include <WiFi.h>
 #include <EEPROM.h>
 #include <Arduino_JSON.h>
@@ -33,18 +36,21 @@ extern RTC_DATA_ATTR enum CloudClockStatus CloudClockCurrentStatus;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,boilerTimeOnYear,boilerTimeOnPreviousYear,heaterTimeOnPreviousYear;
 
-extern bool webServerResponding,debugModeOn,boilerStatus,thermostateStatus,gasClear;
+extern bool webServerResponding,debugModeOn,webLogsOn,serialLogsOn,sysLogsOn,boilerStatus,thermostateStatus,gasClear,forceMQTTpublish;
 extern char activeCookie[],currentSetCookie[];
 extern uint8_t fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
-extern uint16_t voltage,power;
+extern uint16_t voltage,power,sysLogServerUDPPort;
 extern int updateCommand;
 extern float current,energyToday,energyYesterday,energyTotal;
 extern size_t fileUpdateSize,OTAAvailableSize,SPIFFSAvailableSize;
 extern String device,lastURI,fileUpdateName,userName,userPssw,mqttTopicPrefix,mqttTopicName,mqttServer,mqttUserName,mqttUserPssw,
-              TZEnvVariable,TZName,ntpServers[4],powerMqttTopic;
+              TZEnvVariable,TZName,ntpServers[4],powerMqttTopic,sysLogServer;
 extern JSONVar samples;
 extern wifiCredentials wifiCred;
 extern IPAddress serverToUploadSamplesIPAddress;
+#ifdef SYSLOG_SERVER
+  extern PicoSyslog::Logger syslog;
+#endif
 
 #ifndef _PRINT_LOG_DEFINITION_
   extern void printLogln(String logMessage, unsigned char base=10);

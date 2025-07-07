@@ -20,14 +20,18 @@ void printLogln(String logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.println(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux+"\n");
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(aux);
+    #ifdef SYSLOG_SERVER
+      if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.println(aux);
+    #endif
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux+"\n";
   }
   else {
     if (serialLogsOn) boardSerialPort.println(logMessage);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(logMessage+"\n");
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(logMessage);
+    #ifdef SYSLOG_SERVER
+      if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.println(logMessage);
+    #endif
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage+"\n";
   }
   
@@ -48,14 +52,18 @@ void printLog(String logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.print(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux);
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(aux);
+    #ifdef SYSLOG_SERVER
+      if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.print(aux);
+    #endif
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux;
   }
   else {
     if (serialLogsOn) boardSerialPort.print(logMessage);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(logMessage);
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(logMessage);
+    #ifdef SYSLOG_SERVER
+      if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.print(logMessage);
+    #endif
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage;
   }
 
@@ -77,14 +85,16 @@ void printLogln(uint8_t logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.println(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux+"\n");
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(aux);
+    #ifdef SYSLOG_SERVER
+      if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.println(aux);
+    #endif
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux+"\n";
   }
   else {
     if (serialLogsOn) boardSerialPort.println(String(logMessage));
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(logMessage)+"\n");
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(logMessage);
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.println(logMessage);
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage+"\n";
   }
 
@@ -105,14 +115,18 @@ void printLog(uint8_t logMessage, unsigned char base) {
     if (serialLogsOn) boardSerialPort.print(aux);
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(aux);
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(aux);
+    #ifdef SYSLOG_SERVER
+      if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.print(aux);
+    #endif
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=aux;
   }
   else {
     if (serialLogsOn) boardSerialPort.print(String(logMessage));
     if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
          !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(logMessage));
-    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(logMessage);
+    #ifdef SYSLOG_SERVER
+      if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.print(logMessage);
+    #endif
     if (millis()<=BOOT_LOGS_TIME) bootLogs+=logMessage;
   }
 
@@ -134,7 +148,9 @@ void printLogln(tm * timeinfo, const char *format) {
   if (serialLogsOn) boardSerialPort.println(String(s));
   if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
        !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(s)+"\n");
-  if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.println(String(s));
+  #ifdef SYSLOG_SERVER
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.println(String(s));
+  #endif
   if (millis()<=BOOT_LOGS_TIME) bootLogs+=String(s)+"\n";
 
   if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
@@ -154,7 +170,9 @@ void printLog(tm * timeinfo, const char *format) {
   if (serialLogsOn) boardSerialPort.print(String(s));
   if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && webServerEnabled && !(error_setup & ERROR_WEB_SERVER) &&
        !(error_setup & ERROR_WEB_SOCKET) && webLogsOn) notifyClients(String(s));
-  if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && syslogOn) syslog.print(String(s));
+  #ifdef SYSLOG_SERVER
+    if ((wifiCurrentStatus!=wifiOffStatus || WiFi.status()==WL_CONNECTED) && sysLogsOn) syslog.print(String(s));
+  #endif
   if (millis()<=BOOT_LOGS_TIME) bootLogs+=String(s);
 
   if (millis()>BOOT_LOGS_TIME && !logTagged) {logTagged=true;bootLogs+="[................................]\n";}
@@ -766,7 +784,7 @@ bool ntpVariablesInit() {
 
 bool mqttVariablesInit() {
   /******************************************************
-   Function wifiVariablesInit
+   Function mqttVariablesInit
    Target: Get the MQTT Server variables from EEPROM or global_setup.h
             If variables exist in global_setup.h and doesn't exist in EEPPROM, then update EEPROM 
    Parameters: None
@@ -871,6 +889,48 @@ bool mqttVariablesInit() {
   return updateEEPROM;
 }
 
+bool syslogVariablesInit() {
+  /******************************************************
+   Function syslogVariablesInit
+   Target: Get the Syslog Server variables from EEPROM or global_setup.h
+            If variables exist in global_setup.h and doesn't exist in EEPPROM, then update EEPROM 
+   Parameters: None
+   Returns:
+    updateEEPROM: True if there are changes to be stored in the EEPROM
+  *****************************************************/
+
+  bool updateEEPROM=false;
+  char auxSYSLOG[SYSLOG_SERVER_NAME_MAX_LENGTH];
+  
+  //Get syslog server
+  memset(auxSYSLOG,'\0',SYSLOG_SERVER_NAME_MAX_LENGTH);EEPROM.get(0x60D,auxSYSLOG);
+  if (String(auxSYSLOG).compareTo("")==0) {
+    #ifdef SYSLOG_SERVER
+      sysLogServer=SYSLOG_SERVER;  
+      //Check if Syslog server must be updated in EEPROM
+      if (sysLogServer.compareTo(String(auxSYSLOG))!=0) {
+        uint8_t auxLength=sysLogServer.length()+1;
+        if (auxLength>SYSLOG_SERVER_NAME_MAX_LENGTH-1) { //Substring if greater that max length
+          auxLength=SYSLOG_SERVER_NAME_MAX_LENGTH-1;
+          sysLogServer=sysLogServer.substring(0,auxLength);
+        }
+        memset(auxSYSLOG,'\0',SYSLOG_SERVER_NAME_MAX_LENGTH);
+        memcpy(auxSYSLOG,sysLogServer.c_str(),auxLength);
+        EEPROM.put(0x60D,auxSYSLOG);
+        updateEEPROM=true;
+      }
+      sysLogServerUDPPort=SYSLOG_SERVER_UDP_PORT;
+      EEPROM.writeUShort(0x64D,sysLogServerUDPPort);
+      updateEEPROM=true;
+    #else
+      sysLogServer=auxSYSLOG;
+      sysLogServerUDPPort=514;
+    #endif
+  } else {sysLogServer=auxSYSLOG;sysLogServerUDPPort=EEPROM.readUShort(0x64D);}
+
+  return updateEEPROM;
+}
+
 void EEPROMInit() {
   /******************************************************
    Function EEPROMInit
@@ -943,7 +1003,13 @@ void EEPROMInit() {
 
     //Get the rest of variables from EEPROM
     configVariables=EEPROM.read(0x606);
-    powerMeasureEnabled=configVariables & 0x01; //Bit 0, powerMeasureEnabled
+    powerMeasureEnabled=configVariables & 0x01; //Bit 7, powerMeasureEnabled
+
+    //Log-related variables
+    debugModeOn=configVariables & 0x04; //Bit 5, debugModeOn
+    serialLogsOn=configVariables & 0x08; //Bit 4, serialLogsOn
+    webLogsOn=configVariables & 0x10; //Bit 3, webLogsOn
+    sysLogsOn=configVariables & 0x20; //Bit 2, sysLogsOn
 
     //Get the WiFi Credential-related variables from EEPROM or global_setup.h
     //If variables exist in global_setup.h and doesn't exit in EEPPROM, then update EEPROM 
@@ -961,7 +1027,10 @@ void EEPROMInit() {
     //If variables exist in global_setup.h and doesn't exist in EEPPROM, then update EEPROM 
     updateEEPROM|=mqttVariablesInit();
 
-    
+    //Get the Syslog Server variables from EEPROM or global_setup.h
+    //If variables exist in global_setup.h and doesn't exist in EEPPROM, then update EEPROM 
+    updateEEPROM|=syslogVariablesInit();
+
     //Get the WEB and MQTT User Credential-related variables from EEPROM
     char auxUserName[WEB_USER_CREDENTIAL_LENGTH],auxUserPssw[WEB_PW_CREDENTIAL_LENGTH];
     memset(auxUserName,'\0',WEB_USER_CREDENTIAL_LENGTH);EEPROM.get(0x2A8,auxUserName);userName=String(auxUserName);
@@ -1119,9 +1188,9 @@ void variablesInit() {
       lastMQTTChangeCheck=0,lastCloudClockChangeCheck=0;
 
       //bool
-      debugModeOn=DEBUG_MODE_ON;logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
+      logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
       boilerStatus=false;thermostateStatus=false;boilerOn=false;thermostateOn=false;thermostateInterrupt=false;gasClear=true;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
-      webLogsOn=false;eepromUpdate=false;powerMeasureSubscribed=false;
+      eepromUpdate=false;powerMeasureSubscribed=false;
       //webLogsOn=false;
       //uint8_t
       auxLoopCounter=0;auxLoopCounter2=0;auxCounter=0;fileUpdateError=0;errorOnActiveCookie=0;errorOnWrongCookie=0;
@@ -1235,7 +1304,12 @@ uint32_t wifiInit(boolean wifiEnabled,boolean debugModeOn) {
       else if (wifiNet.RSSI>=WIFI_025_RSSI) wifiCurrentStatus=wifi25Status;
       else if (wifiNet.RSSI<WIFI_000_RSSI) wifiCurrentStatus=wifi0Status;
 
-      syslog.server=SYSLOG_SERVER;
+      #ifdef SYSLOG_SERVER
+        if (sysLogsOn) {
+          if (syslog.server.compareTo(sysLogServer)!=0) syslog.server=sysLogServer;
+          if (syslog.port!=sysLogServerUDPPort) syslog.port=sysLogServerUDPPort;
+        }
+      #endif
     }
     else {
       if (debugModeOn) printLogln("  [wifiInit] - WiFi connection .......... [KO]");

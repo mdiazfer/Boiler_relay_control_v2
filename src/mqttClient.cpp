@@ -118,38 +118,112 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       
       forceMQTTpublish=true; //Force to publish the MQTT message from the loop
     }
-    if (gasClear) {
-      if (String(aux).equalsIgnoreCase(String("R1_ON"))) {
-        digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON");
-        printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
-        forceMQTTpublish=true; //Force to publish the MQTT message from the loop
-        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
-      }
-      else if (String(aux).equalsIgnoreCase(String("R1_OFF"))) {
-        digitalWrite(PIN_RL1,HIGH);samples["Relay1"] = String("R1_OFF");
-        printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 ON"); //Relay1 is set on to not allow Ext. Thermostat (R1_OFF)
-        forceMQTTpublish=true; //Force to publish the MQTT message from the loop
-        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
-      }
-      else if (String(aux).equalsIgnoreCase(String("R2_ON"))) {
-        digitalWrite(PIN_RL2,HIGH);samples["Relay2"] = String("R2_ON");
-        digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON"); //Relay1 is set off to allow Ext. Thermostat (R1_ON) when the Relay2 is set
-        printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
-        printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 ON"); //Relay2 is set on to shortcut Ext. Thermostat (R2_ON)
-        forceMQTTpublish=true; //Force to publish the MQTT message from the loop
-        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
-        //thermostateStatus=true;lastThermostatOnTime=millis(); //Only for testing
-      }
-      else if (String(aux).equalsIgnoreCase(String("R2_OFF"))) {
-        digitalWrite(PIN_RL2,LOW);samples["Relay2"] = String("R2_OFF");
-        printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 OFF"); //Relay2 is set off to not shortcut Ext. Thermostat (R2_OFF)
-        forceMQTTpublish=true; //Force to publish the MQTT message from the loop
-        forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
-        //thermostateStatus=false; //Only for testing
-      }
-      else printLogln(String(millis())+" - [onMqttMessage] - Unknown command");
+    else if (String(aux).equalsIgnoreCase(String("DEBUG_ON"))) {
+      uint8_t configVariables=0;
+      debugModeOn=true;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["debugModeOn"]="DEBUG_ON";
+      configVariables=EEPROM.read(0x606) | 0x04; //Set debugModeOn bit to true (enabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
     }
-    else printLogln(String(millis())+" - [onMqttMessage] - Gas leak situation detected, so no releay activation is allowed for security reasons");
+    else if (String(aux).equalsIgnoreCase(String("SERIAL_LOGS_ON"))) {
+      uint8_t configVariables=0;
+      serialLogsOn=true;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["serialLogsOn"]="SERIAL_LOGS_ON";
+      configVariables=EEPROM.read(0x606) | 0x08; //Set serialLogsOn bit to true (enabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
+    }
+    else if (String(aux).equalsIgnoreCase(String("WEB_LOGS_ON"))) {
+      uint8_t configVariables=0;
+      webLogsOn=true;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["webLogsOn"]="WEB_LOGS_ON";
+      configVariables=EEPROM.read(0x606) | 0x10; //Set webLogsOn bit to true (enabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
+    }
+    else if (String(aux).equalsIgnoreCase(String("SYS_LOGS_ON"))) {
+      uint8_t configVariables=0;
+      sysLogsOn=true;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["sysLogsOn"]="SYS_LOGS_ON";
+      configVariables=EEPROM.read(0x606) | 0x20; //Set sysLogsOn bit to true (enabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
+    }
+    else if (String(aux).equalsIgnoreCase(String("DEBUG_OFF"))) {
+      uint8_t configVariables=0;
+      debugModeOn=false;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["debugModeOn"]="DEBUG_OFF";
+      configVariables=EEPROM.read(0x606) & 0xFB; //Unset debugModeOn bit (disabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
+    }
+    else if (String(aux).equalsIgnoreCase(String("SERIAL_LOGS_OFF"))) {
+      uint8_t configVariables=0;
+      serialLogsOn=false;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["serialLogsOn"]="SERIAL_LOGS_OFF";
+      configVariables=EEPROM.read(0x606) & 0xF7; //Unset serialLogsOn bit (disabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
+    }
+    else if (String(aux).equalsIgnoreCase(String("WEB_LOGS_OFF"))) {
+      uint8_t configVariables=0;
+      webLogsOn=false;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["webLogsOn"]="WEB_LOGS_OFF";
+      configVariables=EEPROM.read(0x606) & 0xEF; //Unset webLogsOn bit (disabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
+    }
+    else if (String(aux).equalsIgnoreCase(String("SYS_LOGS_OFF"))) {
+      uint8_t configVariables=0;
+      sysLogsOn=false;
+      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      samples["sysLogsOn"]="SYS_LOGS_OFF";
+      configVariables=EEPROM.read(0x606) & 0xDF; //Unset sysLogsOn bit (disabled)
+      EEPROM.write(0x606,configVariables);
+      EEPROM.commit();
+    }
+    else {
+      if (gasClear) {
+        if (String(aux).equalsIgnoreCase(String("R1_ON"))) {
+          digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON");
+          printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
+          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+        }
+        else if (String(aux).equalsIgnoreCase(String("R1_OFF"))) {
+          digitalWrite(PIN_RL1,HIGH);samples["Relay1"] = String("R1_OFF");
+          printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 ON"); //Relay1 is set on to not allow Ext. Thermostat (R1_OFF)
+          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+        }
+        else if (String(aux).equalsIgnoreCase(String("R2_ON"))) {
+          digitalWrite(PIN_RL2,HIGH);samples["Relay2"] = String("R2_ON");
+          digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON"); //Relay1 is set off to allow Ext. Thermostat (R1_ON) when the Relay2 is set
+          printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
+          printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 ON"); //Relay2 is set on to shortcut Ext. Thermostat (R2_ON)
+          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+          //thermostateStatus=true;lastThermostatOnTime=millis(); //Only for testing
+        }
+        else if (String(aux).equalsIgnoreCase(String("R2_OFF"))) {
+          digitalWrite(PIN_RL2,LOW);samples["Relay2"] = String("R2_OFF");
+          printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 OFF"); //Relay2 is set off to not shortcut Ext. Thermostat (R2_OFF)
+          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
+          //thermostateStatus=false; //Only for testing
+        }
+        else printLogln(String(millis())+" - [onMqttMessage] - Unknown command: '"+String(aux)+"'");
+      }
+      else printLogln(String(millis())+" - [onMqttMessage] - Gas leak situation detected, so no releay activation is allowed for security reasons");
+    }
   }
   else if (String(topic) == powerMqttTopic) {
     printLogln(String(millis())+" - [onMqttMessage] - "+powerMqttTopic);
@@ -494,6 +568,15 @@ void mqttClientPublishHADiscovery_systemObjects2(String mqttTopicName, String de
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_ipAddress/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"WiFi: IP Address\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_ipAddress\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"ic\":\"mdi:ip-network\",\"val_tpl\":\"{{value_json['SAMPLES']['ipAddress']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
+
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_sysLogServer/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Syslog Server\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_sysLogServer\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"ic\":\"mdi:server-network-outline\",\"val_tpl\":\"{{value_json['SAMPLES']['sysLogServer']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_sysLogServerUDPPort/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Syslog Port\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_sysLogServerUDPPort\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['sysLogServerUDPPort']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
 } //mqttClientPublishHADiscovery_systemObjects2
@@ -1010,6 +1093,24 @@ void mqttClientPublishHADiscovery_relayObjects(String mqttTopicName, String devi
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_Relay2/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Relay: Force Heater\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"R2_OFF\",\"pl_on\":\"R2_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_Relay2\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Relay2']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
+
+  //Debug relay objects
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_debugModeOn/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Logs: Debug Mode\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"DEBUG_OFF\",\"pl_on\":\"DEBUG_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_debugModeOn\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['debugModeOn']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_serialLogsOn/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Logs: Serial\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"SERIAL_LOGS_OFF\",\"pl_on\":\"SERIAL_LOGS_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_serialLogsOn\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['serialLogsOn']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_sysLogsOn/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Logs: Syslog\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"SYS_LOGS_OFF\",\"pl_on\":\"SYS_LOGS_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_sysLogsOn\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['sysLogsOn']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_webLogsOn/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Logs: Web\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"WEB_LOGS_OFF\",\"pl_on\":\"WEB_LOGS_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_webLogsOn\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['webLogsOn']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
 } //mqttClientPublishHADiscovery_relayObjects

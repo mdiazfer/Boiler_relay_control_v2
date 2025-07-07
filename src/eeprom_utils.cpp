@@ -4,14 +4,14 @@
 //Address 0-5: Stores the firmware version char []*
 //Address 6-7: Stores checksum
 //Address 08: Stores Config Variable Valued (configVariables)
-//  - Bit 0: notFirstRun - 1=true, 0=false
-//  - Bit 1: configSavingEnergyMode variable - 1=reduced, 0=lowest
-//  - Bit 2: uploadSamplesEnabled - 1=true, 0=false
-//  - Bit 3: bluetoothEnabled - 1=true, 0=false
-//  - Bit 4: wifiEnabled - 1=true, 0=false
-//  - Bit 5: webServerEnable - 1=true, 0=false
-//  - Bit 6: mqttServerEnable - 1=true, 0=false
-//  - Bit 7: secureMmqttEnable - 1=true, 0=false
+//  - Bit 0: notFirstRun - 1=true, 0=false -  0x80
+//  - Bit 1: configSavingEnergyMode variable - 1=reduced, 0=lowest  -  0x40
+//  - Bit 2: uploadSamplesEnabled - 1=true, 0=false -  0x20
+//  - Bit 3: bluetoothEnabled - 1=true, 0=false -  0x10
+//  - Bit 4: wifiEnabled - 1=true, 0=false -  0x8
+//  - Bit 5: webServerEnable - 1=true, 0=false -  0x4
+//  - Bit 6: mqttServerEnable - 1=true, 0=false -  0x2
+//  - Bit 7: secureMmqttEnable - 1=true, 0=false -  0x1
 //Address 09-0C: Stores float_t batCharge (4 B)
 //Address 0D-2D:   SSID1 char []* (32 B+null=33 B)
 //Address 2E-6D:   PSSW1 char []* (63 B+null=64 B)
@@ -64,10 +64,18 @@
 //Address 53C: resetWebServerCnt - resets done due to  Web Server errors (being WiFi connected but not serving web pages)
 //Address 53D-605: powerMqttTopic - MQTT Power Topic name char []* (200 B+null=201 B)
 //Address 606: Stores Config variable flags
-//  - Bit 0: powerMeasureEnabled - 1=true, 0=false
-//  - Bit 1: powerMeasureSubscribed - 1=true, 0=false
+//  - Bit 0: Empty -  0x80
+//  - Bit 1: Empty -  0x40
+//  - Bit 2: sysLogsOn - 1=true, 0=false -  0x20
+//  - Bit 3: webLogsOn - 1=true, 0=false -  0x10
+//  - Bit 4: serialLogsOn - 1=true, 0=false  -  0x8
+//  - Bit 5: debugModeOn - 1=true, 0=false -  0x4
+//  - Bit 6: powerMeasureSubscribed  [Empty (?)] - 1=true, 0=false -  0x2
+//  - Bit 7: powerMeasureEnabled - 1=true, 0=false -  0x1
 //Address 607-608: powerOnFlameThreshold - Power Threshold to decide if the boiler is burning GAS or not
 //Address 609-60C: minMaxHeapBlockSizeSinceUpgrade uint32_t  4 B
+//Address 60D-64C: sysLogServer char []* (63 B+null=64 B)
+//Address 64D-64E: sysLogServerUDPPort, 2 B
 
 uint16_t checkSum(byte *addr, uint32_t count) {
   /******************************************************
@@ -131,12 +139,36 @@ void factoryConfReset() {
   if (webServerEnabled) configVariables|=0x20; //Bit 5: webServerEnabled
   if (mqttServerEnabled) configVariables|=0x40; //Bit 6: mqttServerEnabled
   if (secureMqttEnabled) configVariables|=0x80; //Bit 7: secureMqttEnabled
+
+  //Write Syslog variables
+  char auxSYSLOG[MQTT_SERVER_NAME_MAX_LENGTH];
+  memset(auxSYSLOG,'\0',SYSLOG_SERVER_NAME_MAX_LENGTH);
+  #ifdef SYSLOG_SERVER
+    String(SYSLOG_SERVER).toCharArray(auxSYSLOG,String(SYSLOG_SERVER).length()+1);
+    sysLogServerUDPPort=SYSLOG_SERVER_UDP_PORT;
+    sysLogsOn=SYSLOG_ENABLED;
+  #else
+    sysLogServerUDPPort=0;
+    sysLogsOn=false;
+    configVariables&=0xDF; //Unset Bit 2, sysLogsOn
+    EEPROM.write(0x606,configVariables);
+  #endif
+  //Write varialbes in EEPROM to be available the next boots up
+  EEPROM.put(0x60D,auxSYSLOG);sysLogServer=auxSYSLOG;
+  EEPROM.writeUShort(0x64D,sysLogServerUDPPort);
+
+  if (debugModeOn) {printLogln("  [factoryConfReset] - Wrote Syslog Server='"+String(auxSYSLOG)+"', Syslog UDP port="+String(sysLogServerUDPPort));}
   
   //Write variables in EEPROM to be available the next boots up
   EEPROM.write(0x08,configVariables);
 
   configVariables=0x0; 
-  if (powerMeasureEnabled) configVariables|=0x01; //Bit 0, powerMeasureEnabled=false
+  if (powerMeasureEnabled) configVariables|=0x01; //Bit 7, powerMeasureEnabled=false
+  //Log-related variables are init at main.cpp. Let's write those values
+  if (debugModeOn) configVariables|=0x04; //Bit 5, debugModeOn
+  if (serialLogsOn) configVariables|=0x08; //Bit 4, serialLogsOn
+  if (webLogsOn) configVariables|=0x10; //Bit 3, webLogsOn
+  if (sysLogsOn) configVariables|=0x20; //Bit 2, sysLogsOn
   
   //Write variables in EEPROM to be available the next boots up
   EEPROM.write(0x606,configVariables);

@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "1.1.0"
+#define VERSION "1.1.2"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -37,7 +37,8 @@
 //WiFi stuff
 #define WIFI_ENABLED  true
 #define MAX_CONNECTION_ATTEMPTS 10
-#define NTP_SERVER_NAME_MAX_LENGTH 64
+#define SERVER_NAME_MAX_LENGTH 64
+#define NTP_SERVER_NAME_MAX_LENGTH SERVER_NAME_MAX_LENGTH
 #ifndef NTP_SERVER
   #define NTP_SERVER  "time.google.com"
 #endif
@@ -81,7 +82,6 @@
 #define WIFI_MAX_SSID_LENGTH  33 //32 CHAR + NULL
 #define WIFI_MAX_PSSW_LENGTH  64 //63 CHAR + NULL
 #define WIFI_MAX_SITE_LENGTH  11 //10 CHAR + NULL
-#define SYSLOG_SERVER "10.88.50.5"
 
 //WEB SERVER Stuff
 #define WEBSERVER_ENABLED true
@@ -111,6 +111,7 @@
 #define WEBSERVER_FILE_EXTENSION ".bin"
 #define WEBSERVER_DEFAULTCONF_PAGE "/maintenance_default_values"
 #define WEBSERVER_DEVICERESET_PAGE "/maintenance_device_reset"
+#define WEBSERVER_LOGSCONFIG_PAGE "/logs_config"
 #define WEBSERVER_COUNTERRESET_PAGE "/reset_counters"
 #define WEBSERVER_SAMPLES_EVENT "/sampleEvents"
 #define WEBSERVER_SAMPLES_PAGE "/samples"
@@ -218,14 +219,14 @@
 #define MQTT_USER_CREDENTIAL_LENGTH 11 //10+null=11B
 #define MQTT_PW_CREDENTIAL_LENGTH 11 //10+null=11B
 
-//MQTT stuff
+//MQTT stuff - user_setup.h config has more precedence
 #define MQTTSERVER_ENABLED true
 #define SECURE_MQTT_ENABLED false
 #ifndef MQTT_SERVER
   #define MQTT_SERVER "10.88.50.5"
 #endif
 #define MQTTSERVER_PORT 1883
-#define MQTT_SERVER_NAME_MAX_LENGTH NTP_SERVER_NAME_MAX_LENGTH
+#define MQTT_SERVER_NAME_MAX_LENGTH SERVER_NAME_MAX_LENGTH
 #define MQTT_TOPIC_NAME_MAX_LENGTH 201 //200+null=201 B
 #ifndef MQTT_TOPIC_PREFIX
   #define MQTT_TOPIC_PREFIX "the-iot-factory/"
@@ -242,6 +243,14 @@
   #define MQTT_POWER_TOPIC "tele/tasmota_2EDC69/SENSOR"
 #endif
 #define BUFFER_PAYLOAD_SIZE 900
+
+//SYSLOG stuff - user_setup.h config has more precedence
+#define SYSLOG_ENABLED true
+#define SYSLOG_SERVER_NAME_MAX_LENGTH SERVER_NAME_MAX_LENGTH
+#ifndef SYSLOG_SERVER
+  #define SYSLOG_SERVER "10.88.50.5"
+  #define SYSLOG_SERVER_UDP_PORT 514
+#endif
 
 //POWER stuff
 #define BOILER_STATUS_ON_POWER_THRESHOLD 50  //Watts - Power threshold to decide whether the boiler is active (not necessarily burning gas)

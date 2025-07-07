@@ -151,11 +151,26 @@
             }
 
             function onload(event) {
-                initWebSocket();
+                getReadings();
             }
 
             function sendCommand(command){
                 websocket.send(command);
+            }
+
+            // Function to get current readings on the webpage when it loads for the first time
+            function getReadings(){
+              var xhr = new XMLHttpRequest();
+              xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                  jsonObject=JSON.parse(this.responseText);
+                  document.getElementById('web_logs_on_id').disabled=!jsonObject.webLogsOn;document.getElementById('web_logs_off_id').disabled=!jsonObject.webLogsOn;
+                  document.getElementById('web_logs_on_id').checked=jsonObject.webLogsOn;document.getElementById('web_logs_off_id').checked=!jsonObject.webLogsOn;
+                  initWebSocket();
+                }
+              }; 
+              xhr.open("GET", "/samples", true);
+              xhr.send();
             }
 
             function initWebSocket() {
@@ -172,11 +187,13 @@
                 if (document.getElementById('web_logs_on_id').checked && 
                   !document.getElementById('web_logs_off_id').checked) {
                       document.getElementById('stop_resume_logs_id').disabled=false;
+                      document.getElementById('get_boot_logs_id').disabled=false;
                       document.getElementById('clear_logs_id').disabled=false;
                 }
                 else if (!document.getElementById('web_logs_on_id').checked && 
                     document.getElementById('web_logs_off_id').checked) {
                         document.getElementById('stop_resume_logs_id').disabled=true;
+                        document.getElementById('get_boot_logs_id').disabled=true;
                         document.getElementById('clear_logs_id').disabled=true;
                 }
             }

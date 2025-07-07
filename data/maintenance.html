@@ -101,6 +101,62 @@
           </fieldset>
           <p></p>
           <br><br>
+          <form action="logs_config" method="post">
+            <fieldset name="Logs_fieldset" form="logs_form">
+              <legend> Logs configuration</legend>
+              <p></p>
+              <div id="tswlogs">
+                Debug mode:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="debug_mode_on_id">On</label>
+                <input name="debug_mode_enabled" id="debug_mode_on_id" value="on" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="debug_mode_off_id">Off</label>
+                <input name="debug_mode_enabled" id="debug_mode_off_id" value="off" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                <br><br>
+                Enable serial logs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="serial_logs_on_id">On</label>
+                <input name="serial_logs_enabled" id="serial_logs_on_id" value="on" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="serial_logs_off_id">Off</label>
+                <input name="serial_logs_enabled" id="serial_logs_off_id" value="off" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                <br>
+                Enable web console logs:&nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="console_logs_on_id">On</label>
+                <input name="console_logs_enabled" id="console_logs_on_id" value="on" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="console_logs_off_id">Off</label>
+                <input name="console_logs_enabled" id="console_logs_off_id" value="off" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                <br><br>
+                Enable syslogs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="syslogs_on_id">On</label>
+                <input name="syslogs_enabled" id="syslogs_on_id" value="on" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <label for="syslogs_off_id">Off</label>
+                <input name="syslogs_enabled" id="syslogs_off_id" value="off" required="required" type="radio" onclick="handleRadioButtonClick(this)">
+                <br>
+                <label for="SYSLOGSERVER">Syslog Server:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input id="SYSLOGSERVER_id" name="SYSLOGSERVER" size="25" type="text" 
+                  pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)+([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$"
+                >
+                <br>
+                <label for="SYSLOGPORT">Syslog UDP Port:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                <input id="SYSLOGPORT_id" name="SYSLOGPORT" pattern="^[0-9]+$" size="5" maxlength="5" min=0 max=65535
+                        placeholder="514" type="number" required value="514" 
+                >
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button name="Button_Reset" id="Button_Reset_id" onclick="handleResetButton(this)">Reset</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="submit" name="Button_Send" id="Button_Send_id"><strong>Submit</strong></button>
+              </div>
+            </fieldset>
+          </form>
+          <p></p>
+          <br><br>
           <div id="tswerrors">
             <fieldset name="Errors"> <legend> Counters since last upgrade or counter reset</legend>
               <p></p>

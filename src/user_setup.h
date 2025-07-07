@@ -45,6 +45,10 @@
 #define MQTT_PW_CREDENTIAL "adminCO2"
 #define MQTT_SERVER "10.88.50.5"
 
+//Syslog server
+#define SYSLOG_SERVER "10.88.50.5"
+#define SYSLOG_SERVER_UDP_PORT 514
+
 //Time zone stuff
 #define NTP_TZ_ENV_VARIABLE "CET-1CEST,M3.5.0,M10.5.0/3"  //POSIX.1 format for Europe/Madrid TZ env variable
 #define NTP_TZ_NAME "Europe/Madrid"  //POSIX.1 format for Europe/Madrid TZ env variable

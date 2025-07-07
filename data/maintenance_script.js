@@ -2,6 +2,7 @@
 window.addEventListener('load', init);
 var binAvailableSpace;
 var spiffsAvailableSpace;
+var jsonObject;
 
 function init() { //To hide/show the help when the mouse pass over
   initTipEvents("WIFIERRORS_id", "WIFIERRORS_TIP_id");
@@ -39,14 +40,15 @@ function hideTip (element, tipElement) {
 }
 // Function to get current readings on the webpage when it loads for the first time
 function getReadings(){
-var xhr = new XMLHttpRequest();
-xhr.onreadystatechange = function() {
-  if (this.readyState == 4 && this.status == 200) {
-    updateSite(JSON.parse(this.responseText));
-  }
-}; 
-xhr.open("GET", "/samples", true);
-xhr.send();
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      jsonObject=JSON.parse(this.responseText);
+      updateSite(jsonObject);
+    }
+  }; 
+  xhr.open("GET", "/samples", true);
+  xhr.send();
 }
 
 //File uploadings stuff
@@ -115,13 +117,42 @@ fileForm.addEventListener("formdata", ({ formData }) => {
 //Update of web fields
 function updateSite(myObj) {
   //var myObj = JSON.parse(e.data);
-  let val="";
+  let debugModeOn=false; if (myObj.debugModeOn=="DEBUG_ON") debugModeOn=true;
+  let serialLogsOn=false; if (myObj.serialLogsOn=="SERIAL_LOGS_ON") serialLogsOn=true;
+  let webLogsOn=false; if (myObj.webLogsOn=="WEB_LOGS_ON") webLogsOn=true;
+  let sysLogsOn=false; if (myObj.sysLogsOn=="SYS_LOGS_ON") sysLogsOn=true;
   console.log(myObj);
 
   document.getElementById("OTA_firmware_id").disabled=!myObj.OTAUpgradeBinAllowed;
   document.getElementById("OTA_system_file_id").disabled=!myObj.SPIFFSUpgradeBinAllowed;
   document.getElementById("OTA_system_file_id").checked=myObj.SPIFFSUpgradeBinAllowed;
   document.getElementById("select_file_id").disabled=(!myObj.OTAUpgradeBinAllowed && !myObj.SPIFFSUpgradeBinAllowed);
+  
+  document.getElementById("debug_mode_on_id").checked=debugModeOn;document.getElementById("debug_mode_off_id").checked=!debugModeOn;
+  document.getElementById("serial_logs_on_id").checked=serialLogsOn;document.getElementById("serial_logs_off_id").checked=!serialLogsOn;
+  document.getElementById("console_logs_on_id").checked=webLogsOn;document.getElementById("console_logs_off_id").checked=!webLogsOn;
+  document.getElementById("syslogs_on_id").checked=sysLogsOn;document.getElementById("syslogs_off_id").checked=!sysLogsOn;
+  document.getElementById("SYSLOGSERVER_id").placeholder=myObj.sysLogServer;document.getElementById("SYSLOGPORT_id").placeholder=myObj.sysLogServerUDPPort;
+  document.getElementById("SYSLOGSERVER_id").value=myObj.sysLogServer;document.getElementById("SYSLOGPORT_id").value=myObj.sysLogServerUDPPort;
+  if (debugModeOn) {
+    if (sysLogsOn) {
+      document.getElementById("SYSLOGSERVER_id").required=true;document.getElementById("SYSLOGPORT_id").required=true;
+      document.getElementById("SYSLOGSERVER_id").disabled=false;document.getElementById("SYSLOGPORT_id").disabled=false;
+    } else {
+      document.getElementById("SYSLOGSERVER_id").required=false;document.getElementById("SYSLOGPORT_id").required=false;
+      document.getElementById("SYSLOGSERVER_id").disabled=true;document.getElementById("SYSLOGPORT_id").disabled=true;  
+    }
+    document.getElementById("serial_logs_on_id").disabled=false;document.getElementById("serial_logs_off_id").disabled=false;
+    document.getElementById("console_logs_on_id").disabled=false;document.getElementById("console_logs_off_id").disabled=false;
+    document.getElementById("syslogs_on_id").disabled=false;document.getElementById("syslogs_off_id").disabled=false;
+    document.getElementById("SYSLOGSERVER_id").disabled=false;document.getElementById("SYSLOGPORT_id").disabled=false;
+  } else {
+    document.getElementById("serial_logs_on_id").disabled=true;document.getElementById("serial_logs_off_id").disabled=true;
+    document.getElementById("console_logs_on_id").disabled=true;document.getElementById("console_logs_off_id").disabled=true;
+    document.getElementById("syslogs_on_id").disabled=true;document.getElementById("syslogs_off_id").disabled=true;
+    document.getElementById("SYSLOGSERVER_id").disabled=true;document.getElementById("SYSLOGPORT_id").disabled=true;
+  }
+
   document.getElementById("LASTRESETREASON_id").innerHTML=String("0x")+myObj.resetReason.toString(16);
   document.getElementById("BOOTCOUNT_id").innerHTML=myObj.bootCount;
   document.getElementById("NORMALBOOTCOUNT_id").innerHTML=myObj.bootCount-myObj.resetSWCount-myObj.resetCount;
@@ -149,4 +180,57 @@ function updateSite(myObj) {
   document.getElementById("MINHEAPSIZEUPGRADE_id").innerHTML=myObj.minHeapSinceUpgrade;
   binAvailableSpace=myObj.OTAAvailableSize;
   spiffsAvailableSpace=myObj.SPIFFSAvailableSize;
+}
+
+//Handle radio button checks
+function handleRadioButtonClick(radioButton) {
+  switch (radioButton.id) {
+    case "debug_mode_on_id":
+      document.getElementById("serial_logs_on_id").disabled=false;document.getElementById("serial_logs_off_id").disabled=false;
+      document.getElementById("console_logs_on_id").disabled=false;document.getElementById("console_logs_off_id").disabled=false;
+      document.getElementById("syslogs_on_id").disabled=false;document.getElementById("syslogs_off_id").disabled=false;
+      if (document.getElementById("syslogs_on_id").checked) {document.getElementById("SYSLOGSERVER_id").disabled=false;document.getElementById("SYSLOGPORT_id").disabled=false;}
+      else {document.getElementById("SYSLOGSERVER_id").disabled=true;document.getElementById("SYSLOGPORT_id").disabled=true;}
+      break;
+    case "debug_mode_off_id":
+      document.getElementById("serial_logs_on_id").disabled=true;document.getElementById("serial_logs_off_id").disabled=true;
+      document.getElementById("console_logs_on_id").disabled=true;document.getElementById("console_logs_off_id").disabled=true;
+      document.getElementById("syslogs_on_id").disabled=true;document.getElementById("syslogs_off_id").disabled=true;
+      document.getElementById("SYSLOGSERVER_id").disabled=true;document.getElementById("SYSLOGPORT_id").disabled=true;
+      break;
+    case "serial_logs_on_id":
+      break;
+    case "serial_logs_off_id":
+      break;
+    case "console_logs_on_id":
+      break;
+    case "console_logs_off_id":
+      break;
+    case "syslogs_on_id":
+      document.getElementById("SYSLOGSERVER_id").disabled=false;document.getElementById("SYSLOGPORT_id").disabled=false;
+      break;
+    case "syslogs_off_id":
+      document.getElementById("SYSLOGSERVER_id").disabled=true;document.getElementById("SYSLOGPORT_id").disabled=true;
+      break;
+    default:
+      break;
+  }
+}
+
+//Handle reset button check
+function handleResetButton(resetButton) {
+  switch (resetButton.id) {
+    case "Button_Reset_id":
+      let debugModeOn=false; if (jsonObject.debugModeOn=="DEBUG_ON") debugModeOn=true;
+      let serialLogsOn=false; if (jsonObject.serialLogsOn=="SERIAL_LOGS_ON") serialLogsOn=true;
+      let webLogsOn=false; if (jsonObject.webLogsOn=="WEB_LOGS_ON") webLogsOn=true;
+      let sysLogsOn=false; if (jsonObject.sysLogsOn=="SYS_LOGS_ON") sysLogsOn=true;
+      document.getElementById("debug_mode_on_id").checked=debugModeOn;document.getElementById("debug_mode_off_id").checked=!debugModeOn;
+      document.getElementById("serial_logs_on_id").checked=serialLogsOn;document.getElementById("serial_logs_off_id").checked=!serialLogsOn;
+      document.getElementById("console_logs_on_id").checked=webLogsOn;document.getElementById("console_logs_off_id").checked=!webLogsOn;
+      document.getElementById("syslogs_on_id").checked=sysLogsOn;document.getElementById("syslogs_off_id").checked=!sysLogsOn;
+      document.getElementById("SYSLOGSERVER_id").placeholder=jsonObject.sysLogServer;document.getElementById("SYSLOGPORT_id").placeholder=jsonObject.sysLogServerUDPPort;
+      document.getElementById("SYSLOGSERVER_id").value=jsonObject.sysLogServer;document.getElementById("SYSLOGPORT_id").value=jsonObject.sysLogServerUDPPort;
+    break;
+  }
 }

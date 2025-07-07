@@ -1148,6 +1148,146 @@ uint32_t initWebServer() {
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
   });
 
+  webServer.on(WEBSERVER_LOGSCONFIG_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+
+    int params = request->params();
+    uint8_t configVariables=0;
+    bool updateEEPROM=false, sysLogServerChange=false;
+    AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
+    
+    //Authentication is required
+    if(!request->authenticate(userName.c_str(), userPssw.c_str())) {
+      //Setup a new response to send AuthenticationRequest headers in the container.html answer
+      lastURI=String(WEBSERVER_MAINTENANCE_PAGE); //To go back to the right page from CONTAINER if the authentication fails
+      auxResp->setCode(401);
+      auxResp->addHeader("WWW-Authenticate", "Basic realm=\"Login Required\"");
+      request->send(auxResp);
+    }
+    else 
+    {
+      //Checking the parameters
+      for(int i=0;i<params;i++) {
+        const AsyncWebParameter* p = request->getParam(i);
+        if(p->isPost()){
+          // HTTP POST Debug Mode value
+          if (p->name().compareTo("debug_mode_enabled")==0) {
+            if ((p->value().compareTo("on")==0) && !debugModeOn) {
+              debugModeOn=true;
+              printLogln(String(millis())+" - [webServer - logs_config] - Debug Mode ON");
+              samples["debugModeOn"]="DEBUG_ON";
+              configVariables=EEPROM.read(0x606) | 0x04; //Set debugModeOn bit to true (enabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+            if ((p->value().compareTo("off")==0) && debugModeOn) {
+              debugModeOn=false;
+              samples["debugModeOn"]="DEBUG_OFF";
+              printLogln(String(millis())+" - [webServer - logs_config] - Debug Mode OFF");
+              configVariables=EEPROM.read(0x606) & 0xFB; //Unset debugModeOn bit (disabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+          }
+          // HTTP POST Serial Logs value
+          else if (p->name().compareTo("serial_logs_enabled")==0) {
+            if ((p->value().compareTo("on")==0) && !serialLogsOn) {
+              serialLogsOn=true;
+              samples["serialLogsOn"]="SERIAL_LOGS_ON";
+              printLogln(String(millis())+" - [webServer - logs_config] - Serial Logs ON");
+              configVariables=EEPROM.read(0x606) | 0x08; //Set serialLogsOn bit to true (enabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+            if ((p->value().compareTo("off")==0) && serialLogsOn) {
+              serialLogsOn=false;
+              samples["serialLogsOn"]="SERIAL_LOGS_OFF";
+              printLogln(String(millis())+" - [webServer - logs_config] - Serial Logs OFF");
+              configVariables=EEPROM.read(0x606) & 0xF7; //Unset serialLogsOn bit (disabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+          }
+          // HTTP POST Console Logs value
+          else if (p->name().compareTo("console_logs_enabled")==0) {
+            if ((p->value().compareTo("on")==0) && !webLogsOn) {
+              webLogsOn=true;
+              samples["webLogsOn"]="WEB_LOGS_ON";
+              printLogln(String(millis())+" - [webServer - logs_config] - Web Console Logs ON");
+              configVariables=EEPROM.read(0x606) | 0x10; //Set webLogsOn bit to true (enabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+            if ((p->value().compareTo("off")==0) && webLogsOn) {
+              webLogsOn=false;
+              samples["webLogsOn"]="WEB_LOGS_OFF";
+              printLogln(String(millis())+" - [webServer - logs_config] - Web Console Logs OFF");
+              configVariables=EEPROM.read(0x606) & 0xEF; //Unset webLogsOn bit (disabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+          }
+          // HTTP POST Syslogs value
+          else if (p->name().compareTo("syslogs_enabled")==0) {
+            if ((p->value().compareTo("on")==0) && !sysLogsOn) {
+              sysLogsOn=true;
+              samples["sysLogsOn"]="SYS_LOGS_ON";
+              printLogln(String(millis())+" - [webServer - logs_config] - Syslog ON");
+              configVariables=EEPROM.read(0x606) | 0x20; //Set sysLogsOn bit to true (enabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+            if ((p->value().compareTo("off")==0) && sysLogsOn) {
+              sysLogsOn=false;
+              samples["sysLogsOn"]="SYS_LOGS_OFF";
+              printLogln(String(millis())+" - [webServer - logs_config] - Syslog OFF");
+              configVariables=EEPROM.read(0x606) & 0xDF; //Unset sysLogsOn bit (disabled)
+              EEPROM.write(0x606,configVariables);
+              updateEEPROM=true;forceMQTTpublish=true;
+            }
+          }
+          // HTTP POST SYSLOGSERVER value
+          else if (p->name().compareTo("SYSLOGSERVER")==0) {
+            char auxSYSLOG[SYSLOG_SERVER_NAME_MAX_LENGTH];
+            memset(auxSYSLOG,'\0',SYSLOG_SERVER_NAME_MAX_LENGTH);
+            memcpy(auxSYSLOG,p->value().c_str(),p->value().length()); //End null not included
+            if (sysLogServer.compareTo(auxSYSLOG)!=0) {
+              sysLogServer=p->value();
+              samples["sysLogServer"]=sysLogServer;
+              EEPROM.put(0x60D,auxSYSLOG);
+              updateEEPROM=true;forceMQTTpublish=true;
+              sysLogServerChange=true;
+            }
+          }
+          // HTTP POST SYSLOGPORT value
+          else if (p->name().compareTo("SYSLOGPORT")==0) {
+            uint16_t auxSysLogServerUDPPort=p->value().toInt();
+            if (auxSysLogServerUDPPort!=sysLogServerUDPPort) {
+              sysLogServerUDPPort=auxSysLogServerUDPPort;
+              samples["sysLogServerUDPPort"]=sysLogServerUDPPort;
+              EEPROM.writeUShort(0x64D,sysLogServerUDPPort);
+              updateEEPROM=true;forceMQTTpublish=true;
+              sysLogServerChange=true;
+            }
+          }
+        }
+      }
+    }
+
+    #ifdef SYSLOG_SERVER
+      if (sysLogsOn) {
+        if (syslog.server.compareTo(sysLogServer)!=0) syslog.server=sysLogServer;
+        if (syslog.port!=sysLogServerUDPPort) syslog.port=sysLogServerUDPPort;
+      }
+    #endif
+    if (updateEEPROM) EEPROM.commit();
+
+    request->send(auxResp);
+    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+  }); //HTTP_POST WEBSERVER_LOGSCONFIG_PAGE
+
   webServer.on(WEBSERVER_COUNTERRESET_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
@@ -1200,7 +1340,7 @@ uint32_t initWebServer() {
     //request->send(SPIFFS, WEBSERVER_CONTAINER_PAGE, String(), false, processor);
     request->send(auxResp);
     webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
-  });
+  }); //HTTP_POST WEBSERVER_COUNTERRESET_PAGE
   
   // Route for maintenance_upload_firmware
   webServer.on(WEBSERVER_UPLOADFILE_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
