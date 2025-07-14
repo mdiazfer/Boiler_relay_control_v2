@@ -4,6 +4,17 @@ v1.1.2  - Added syslog configuration in web page and syslong switch button in mq
           + Added new variables to samples: debugModeOn, serialLogsOn, webLogsOn, sysLogsOn, sysLogServer, sysLogServerUDPPort
         - Web forms based on json variable readings 
         - Actions in the main loop are ignored if webserver is serving content (webServerResponding flag) to avoid risking heap leakage
+        - Enriche logs to track heap size
+        - Track mqtt publish activity
+          + change forceMQTTpublish from bool to uint8_t to track the reasons to publish mqtt messages
+        - printLogs with heap memory in webServer funcions
+        - avoid serving web pages if other heavy processes are ongoing (mqtt publishing, send http updates) (new blockWebServer variable)
+          + Increase Task Watchdog Timeout to ESP_TASK_WDT_TIMEOUT - esp_task_wdt_init(ESP_TASK_WDT_TIMEOUT, true);
+        - Optimize HTTP_POST code
+          + In webserver, http_post, change if ()..., if()..., if ()... by if ()..., else if()..., else if ()...
+        - Checks heap size in webServer.cpp
+        - Heap check done in mqttClientPublishHADiscovery() rather than in mqtt_publish_samples()
+          + Check based on esp_get_free_heap_size() instead of heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)
 v1.1.1  - Dynamic mqtt icon for boiler and radiator in index.html. Icon change based on boilerOn or thermostateOn variables (flame on/off)
         - Heap size optimization:
           + mqtt buffers converted into global variables: bufferTopicHAName, bufferPayload, bufferMqttTopicName, bufferDeviceSufix, bufferIpAddress, bufferDevice,
@@ -76,10 +87,118 @@ v0.8.9  - First stable version with HA support
 
 To do list for boiler relay control
 -----------------------------------
-- Check button to enable or disable logs
 - New variable to track the time the flame is on (boilerFlameTimeOnPreviousYear boilerFlameTimeOnYear heaterFlameTimeOnPreviousYear heaterFlameTimeOnYear
-- In webserver, http_post, change if ()..., if()..., if ()... by if ()..., else if()..., else if ()...
+- Not serve web pages if heapSize, heapBlockSize are below thresholds
+- In Reset page, WSSE to detect the IoT is back to normal operation after restarting
 - Troubleshooting:
+  + ISS018: boiler icon not updated in web when power goes from 228 to 164
+    Jul 13 13:09:50 192.168.100.215 PicoSyslog 437195 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:09:51 192.168.100.215 PicoSyslog 438181 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:09:51","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.448,"Yesterday":0.294,"Today":0.136,"Power":239,"ApparentPower":324,"ReactivePower":219,"Factor":0.74,"Voltage":326,"Current":0.993}}', index: 4013043764, heapSize=114268B, heapBlock=58356 B
+    Jul 13 13:09:51 192.168.100.215 PicoSyslog 438222 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:09:52 192.168.100.215 PicoSyslog 439201 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:09:52","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.448,"Yesterday":0.294,"Today":0.136,"Power":237,"ApparentPower":324,"ReactivePower":221,"Factor":0.73,"Voltage":326,"Current":0.993}}', index: 4011994169, heapSize=114244B, heapBlock=58356 B
+    Jul 13 13:09:52 192.168.100.215 PicoSyslog 439242 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog 439584  - [loop] - GAS interrupt detected and gas_probe_triggered routine triggered: gasClear flag was '1' (1=NO GAS, 0=GAS)
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog 439584 - [loop - gas_sample] - GAS interrupt detected. Checking on GAS samples. heapSize=115044, heapBlockSize=58356, minHeapSeen=31456 - 
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog         [get_resistence_ratio] - GAS Samples taken.
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog              gasVoltCalibrated=142.47mv, RS_CurrentCalibrated=22.16, R0_CALIBRATED=3.42, ratio RS_CurrentCalibrated/R0_CALIBRATED=6.48
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog         [loop - gas_sample] - Clean air detected. Digital sensor input: 1 (1=NO GAS, 0=GAS)
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog 439658 - [loop - gas_sample] - Exit now. heapSize=115436, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog 439661  - [loop] - GAS clear after getting readings, so GAS interrupt was wrong, probably cause thermostast interrupt. Don't send MQTT message.
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog 439883 - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate=0 Status (thermostateStatus) was=OFF. heapSize=115416, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already OFF, rebounds=17. Consider to increase THERMOSTATE_INTERRUPT_DELAY (300 ms)
+    Jul 13 13:09:53 192.168.100.215 PicoSyslog 439913 - [loop - thermostate_interrupt_triggered] - Exit now. heapSize=115080, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440224 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:09:53","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.448,"Yesterday":0.294,"Today":0.136,"Power":226,"ApparentPower":322,"ReactivePower":230,"Factor":0.70,"Voltage":326,"Current":0.988}}', index: 4012860517, heapSize=114184B, heapBlock=58356 B
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440265 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440290 - [loop - mqtt_publish_samples] - Publishing message, reason=18, heapSize=115460, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440307 - [loop - mqtt_publish_samples] - Publish samples message now. heapSize=109612, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440316 - [loop - mqtt_publish_samples] - Exit. heapSize=103268, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440347 - [loop] - new_samples event sent to web clients. heapSize=93472, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440394 - [webServer.on] - /boiler-orange.png, heapSize=110824, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:54 192.168.100.215 PicoSyslog 440418 - [webServer.on] - /boiler-orange.png exit. heapSize=106136, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:09:55 192.168.100.215 PicoSyslog 441249 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:09:54","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.448,"Yesterday":0.294,"Today":0.136,"Power":227,"ApparentPower":322,"ReactivePower":228,"Factor":0.71,"Voltage":326,"Current":0.988}}', index: 4016989557, heapSize=114164B, heapBlock=58356 B
+    Jul 13 13:09:55 192.168.100.215 PicoSyslog 441290 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+
+    [..........]
+
+    Jul 13 13:10:29 192.168.100.215 PicoSyslog - - - 476172 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:29","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.450,"Yesterday":0.294,"Today":0.138,"Power":242,"ApparentPower":306,"ReactivePower":188,"Factor":0.79,"Voltage":326,"Current":0.938}}', index: 4016859503, heapSize=113424B, heapBlock=58356 B
+    Jul 13 13:10:29 192.168.100.215 PicoSyslog              gasVoltCalibrated=142.00mv, RS_CurrentCalibrated=22.24, R0_CALIBRATED=3.42, ratio RS_CurrentCalibrated/R0_CALIBRATED=6.50476230 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    [..........]
+    Jul 13 13:10:29 192.168.100.215 PicoSyslog - - - 476389 - [webServer.on] - /boiler-orange-flame.png, heapSize=110800, heapBlockSize=58356, minHeapSeen=31456
+    [..........]
+    Jul 13 13:10:30 192.168.100.215 PicoSyslog 477202 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:30","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.450,"Yesterday":0.294,"Today":0.138,"Power":238,"ApparentPower":324,"ReactivePower":220,"Factor":0.73,"Voltage":326,"Current":0.993}}', index: 4016335222, heapSize=103624B, heapBlock=58356 B
+    Jul 13 13:10:31 192.168.100.215 PicoSyslog 477244 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:10:32 192.168.100.215 PicoSyslog 478215 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:31","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.451,"Yesterday":0.294,"Today":0.138,"Power":239,"ApparentPower":323,"ReactivePower":219,"Factor":0.74,"Voltage":326,"Current":0.991}}', index: 0, heapSize=114224B, heapBlock=58356 B
+    [..........]
+    Jul 13 13:10:34 192.168.100.215 PicoSyslog 481185 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:34","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.451,"Yesterday":0.294,"Today":0.139,"Power":226,"ApparentPower":322,"ReactivePower":229,"Factor":0.70,"Voltage":326,"Current":0.988}}', index: 0, heapSize=113936B, heapBlock=58356 B
+    Jul 13 13:10:34 192.168.100.215 PicoSyslog 481226 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:10:35 192.168.100.215 PicoSyslog 481248 - [loop - mqtt_publish_samples] - Publishing message, reason=18, heapSize=114504, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:35 192.168.100.215 PicoSyslog 481265 - [loop - mqtt_publish_samples] - Publish samples message now. heapSize=109368, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:35 192.168.100.215 PicoSyslog 481273 - [loop - mqtt_publish_samples] - Exit. heapSize=104576, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:35 192.168.100.215 PicoSyslog 481304 - [loop] - new_samples event sent to web clients. heapSize=91604, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:35 192.168.100.215 PicoSyslog 481359 - [webServer.on] - /boiler-orange.png, heapSize=110568, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:35 192.168.100.215 PicoSyslog 481403 - [webServer.on] - /boiler-orange.png exit. heapSize=107336, heapBlockSize=58356, minHeapSeen=31456
+    
+    [..........]
+    Jul 13 13:10:40 192.168.100.215 PicoSyslog 486243 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:10:41 192.168.100.215 PicoSyslog 487227 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:40","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.451,"Yesterday":0.294,"Today":0.139,"Power":229,"ApparentPower":306,"ReactivePower":204,"Factor":0.75,"Voltage":326,"Current":0.938}}', index: 0, heapSize=113864B, heapBlock=58356 B
+    Jul 13 13:10:41 192.168.100.215 PicoSyslog 487267 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:10:42 192.168.100.215 PicoSyslog 488250 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:41","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.451,"Yesterday":0.294,"Today":0.139,"Power":228,"ApparentPower":307,"ReactivePower":206,"Factor":0.74,"Voltage":326,"Current":0.940}}', index: 0, heapSize=113868B, heapBlock=58356 B
+
+    [..........]
+
+    Jul 13 13:10:49 192.168.100.215 PicoSyslog 495214 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:48","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.452,"Yesterday":0.294,"Today":0.140,"Power":228,"ApparentPower":306,"ReactivePower":204,"Factor":0.74,"Voltage":326,"Current":0.936}}', index: 0, heapSize=113852B, heapBlock=58356 B
+    Jul 13 13:10:49 192.168.100.215 PicoSyslog 495255 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:10:49 192.168.100.215 PicoSyslog 495522 - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate=0 Status (thermostateStatus) was=OFF. heapSize=115124, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:49 192.168.100.215 PicoSyslog          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already OFF, rebounds=26. Consider to increase THERMOSTATE_INTERRUPT_DELAY (300 ms)
+    Jul 13 13:10:49 192.168.100.215 PicoSyslog 495550 - [loop - thermostate_interrupt_triggered] - Exit now. heapSize=114788, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:50 192.168.100.215 PicoSyslog 496238 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:49","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.452,"Yesterday":0.294,"Today":0.140,"Power":164,"ApparentPower":180,"ReactivePower":73,"Factor":0.91,"Voltage":326,"Current":0.550}}', index: 3203352660, heapSize=113884B, heapBlock=58356 B
+    Jul 13 13:10:50 192.168.100.215 PicoSyslog 496279 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:10:50 192.168.100.215 PicoSyslog 497116 - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus=0. heapSize=115148, heapBlockSize=58356, minHeapSeen=31456 - No need for NTP sync. Exit - Time: 13/07/2025 - 13:10:50.  - 10.88.50.5 - CloudClockCurrentStatus=0. heapSize=115160, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:10:50 192.168.100.215 PicoSyslog 497150 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:10:50","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.452,"Yesterday":0.294,"Today":0.140,"Power":164,"ApparentPower":180,"ReactivePower":73,"Factor":0.91,"Voltage":326,"Current":0.550}}', index: 0, heapSize=113848B, heapBlock=58356 B
+    Jul 13 13:10:50 192.168.100.215 PicoSyslog 497193 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+
+    [..........]
+
+    Jul 13 13:11:08 192.168.100.215 PicoSyslog 514301 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:11:08 192.168.100.215 PicoSyslog 515181 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:11:08","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.453,"Yesterday":0.294,"Today":0.140,"Power":164,"ApparentPower":180,"ReactivePower":75,"Factor":0.91,"Voltage":326,"Current":0.551}}', index: 0, heapSize=114028B, heapBlock=58356 B
+    Jul 13 13:11:08 192.168.100.215 PicoSyslog 515222 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 515788  - [loop] - GAS interrupt detected and gas_probe_triggered routine triggered: gasClear flag was '1' (1=NO GAS, 0=GAS)
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 515787 - [loop - gas_sample] - GAS interrupt detected. Checking on GAS samples. heapSize=114800, heapBlockSize=58356, minHeapSeen=31456 - 
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog         [get_resistence_ratio] - GAS Samples taken.
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog              gasVoltCalibrated=142.00mv, RS_CurrentCalibrated=22.24, R0_CALIBRATED=3.42, ratio RS_CurrentCalibrated/R0_CALIBRATED=6.50
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog         [loop - gas_sample] - Clean air detected. Digital sensor input: 1 (1=NO GAS, 0=GAS)
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 515861 - [loop - gas_sample] - Exit now. heapSize=115316, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 515864  - [loop] - GAS clear after getting readings, so GAS interrupt was wrong, probably cause thermostast interrupt. Don't send MQTT message.
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 516090 - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate=0 Status (thermostateStatus) was=OFF. heapSize=115268, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already OFF, rebounds=28. Consider to increase THERMOSTATE_INTERRUPT_DELAY (300 ms)
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 516118 - [loop - thermostate_interrupt_triggered] - Exit now. heapSize=114932, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 516174 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:11:09","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.453,"Yesterday":0.294,"Today":0.140,"Power":59,"ApparentPower":164,"ReactivePower":153,"Factor":0.36,"Voltage":326,"Current":0.501}}', index: 3203363442, heapSize=114040B, heapBlock=58356 B
+    Jul 13 13:11:09 192.168.100.215 PicoSyslog 516219 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:11:11 192.168.100.215 PicoSyslog 517229 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:11:10","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.453,"Yesterday":0.294,"Today":0.140,"Power":10,"ApparentPower":163,"ReactivePower":163,"Factor":0.06,"Voltage":326,"Current":0.501}}', index: 3203363442, heapSize=114060B, heapBlock=58356 B
+    Jul 13 13:11:11 192.168.100.215 PicoSyslog 517271 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:11:11 192.168.100.215 PicoSyslog 517296 - [loop - mqtt_publish_samples] - Publishing message, reason=18, heapSize=115348, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:11:11 192.168.100.215 PicoSyslog 517314 - [loop - mqtt_publish_samples] - Publish samples message now. heapSize=109480, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:11:11 192.168.100.215 PicoSyslog 517321 - [loop - mqtt_publish_samples] - Exit. heapSize=102780, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:11:11 192.168.100.215 PicoSyslog 517353 - [loop] - new_samples event sent to web clients. heapSize=93264, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:11:22 192.168.100.215 PicoSyslog 528852 - [webEvents.onConnect] - Client reconnected! Last message ID that it got is: 481248
+    Jul 13 13:11:22 192.168.100.215 PicoSyslog 528858 - [webEvents.onConnect] - Client reconnected! client->client()->remoteIP()=192.168.1.46
+    Jul 13 13:11:22 192.168.100.215 PicoSyslog 528864 - [webEvents.onConnect] - Client reconnected! client->client()->remotePort()=64299
+    Jul 13 13:11:22 192.168.100.215 PicoSyslog 528880 - [webEvents.onConnect] - Client reconnected! Last message ID that it got is:481248
+
+    [..........]
+
+    Jul 13 13:11:50 192.168.100.215 PicoSyslog 557117 - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus=0. heapSize=115288, heapBlockSize=58356, minHeapSeen=31456 - No need for NTP sync. Exit - Time: 13/07/2025 - 13:11:50.  - 10.88.50.5 - CloudClockCurrentStatus=0. heapSize=115304, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:12:50 192.168.100.215 PicoSyslog 617118 - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus=0. heapSize=115324, heapBlockSize=58356, minHeapSeen=31456 - No need for NTP sync. Exit - Time: 13/07/2025 - 13:12:50.  - 10.88.50.5 - CloudClockCurrentStatus=0. heapSize=115348, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624236 - [onMqttMessage] - MQTT published message received on topic='tele/tasmota_2EDC69/SENSOR', mesage: '{"Time":"2025-07-13T13:12:57","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":10.453,"Yesterday":0.294,"Today":0.141,"Period":12,"Power": 9,"ApparentPower":23,"ReactivePower":21,"Factor":0.40,"Voltage":324,"Current":0.070}}', index: 0, heapSize=114000B, heapBlock=58356 B
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624280 - [onMqttMessage] - tele/tasmota_2EDC69/SENSOR
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624303 - [loop - mqtt_publish_samples] - Publishing message, reason=18, heapSize=114464, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624320 - [loop - mqtt_publish_samples] - Publish samples message now. heapSize=107936, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624327 - [loop - mqtt_publish_samples] - Exit. heapSize=102744, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624361 - [loop] - new_samples event sent to web clients. heapSize=92808, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624413 - [webServer.on] - /boiler-blue.png, heapSize=109156, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:12:58 192.168.100.215 PicoSyslog 624445 - [webServer.on] - /boiler-blue.png exit. heapSize=105920, heapBlockSize=58356, minHeapSeen=31456
+    Jul 13 13:13:50 192.168.100.215 PicoSyslog 677118 - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus=0. heapSize=115312, heapBlockSize=58356, minHeapSeen=31456 - No need for NTP sync. Exit - Time: 13/07/2025 - 13:13:50.  - 10.88.50.5 - CloudClockCurrentStatus=0. heapSize=115328, heapBlockSize=58356, minHeapSeen=31456
+
 
 - Get and Show Smart Plug's IP address in web page with link to it
 - Get Energy values on gas_sample periods at boot time to update the index web page accordingly

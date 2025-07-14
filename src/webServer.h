@@ -13,6 +13,7 @@
 #include "Update.h"
 #include "wifiConnection.h"
 #include "SHT2x.h"
+#include <esp_task_wdt.h>
 
 extern RTC_DATA_ATTR boolean deviceReset,factoryReset,OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,httpCloudEnabled,
                       mqttServerEnabled,secureMqttEnabled,forceMQTTConnect,forceWifiReconnect,forceNTPCheck,
@@ -36,9 +37,9 @@ extern RTC_DATA_ATTR enum CloudClockStatus CloudClockCurrentStatus;
 extern RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,boilerTimeOnYear,boilerTimeOnPreviousYear,heaterTimeOnPreviousYear;
 
-extern bool webServerResponding,debugModeOn,webLogsOn,serialLogsOn,sysLogsOn,boilerStatus,thermostateStatus,gasClear,forceMQTTpublish;
+extern bool webServerResponding,debugModeOn,webLogsOn,serialLogsOn,sysLogsOn,boilerStatus,thermostateStatus,gasClear,blockWebServer;
 extern char activeCookie[],currentSetCookie[];
-extern uint8_t fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
+extern uint8_t forceMQTTpublish,fileUpdateError,errorOnActiveCookie,errorOnWrongCookie;
 extern uint16_t voltage,power,sysLogServerUDPPort;
 extern int updateCommand;
 extern float current,energyToday,energyYesterday,energyTotal;
@@ -67,7 +68,7 @@ extern String roundFloattoString(float_t number, uint8_t decimals);
 extern void detachNetwork(void);
 
 extern SHT2x tempHumSensor; //Temp and Hum sensor
-extern void gas_sample(bool debugModeOn);
+extern void gas_sample(bool debugModeOn, uint8_t reason);
 extern void temperature_sample(bool debugModeOn);
 
 extern void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics);

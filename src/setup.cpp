@@ -3,6 +3,7 @@
 */
 
 #include "setup.h"
+#include <esp_task_wdt.h>
 
 void printLogln(String logMessage, unsigned char base) {
   /******************************************************
@@ -1187,10 +1188,13 @@ void variablesInit() {
     //Variable init
       lastMQTTChangeCheck=0,lastCloudClockChangeCheck=0;
 
+      //Initialize the Task Watchdog Timeout
+      esp_task_wdt_init(ESP_TASK_WDT_TIMEOUT, true);
+
       //bool
       logMessageTOFF=false;logMessageTRL1_ON=false;logMessageTRL2_ON=false;logMessageGAP_OFF=false;
       boilerStatus=false;thermostateStatus=false;boilerOn=false;thermostateOn=false;thermostateInterrupt=false;gasClear=true;gasInterrupt=false;isBeaconAdvertising=false;webServerResponding=false;
-      eepromUpdate=false;powerMeasureSubscribed=false;
+      eepromUpdate=false;powerMeasureSubscribed=false;blockWebServer=false;
       //webLogsOn=false;
       //uint8_t
       auxLoopCounter=0;auxLoopCounter2=0;auxCounter=0;fileUpdateError=0;errorOnActiveCookie=0;errorOnWrongCookie=0;
@@ -1308,6 +1312,7 @@ uint32_t wifiInit(boolean wifiEnabled,boolean debugModeOn) {
         if (sysLogsOn) {
           if (syslog.server.compareTo(sysLogServer)!=0) syslog.server=sysLogServer;
           if (syslog.port!=sysLogServerUDPPort) syslog.port=sysLogServerUDPPort;
+          if (debugModeOn) syslog.println(bootLogs); //Send the first logs produced while no connectivity
         }
       #endif
     }

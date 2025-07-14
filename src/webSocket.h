@@ -8,8 +8,8 @@
 extern RTC_DATA_ATTR AsyncWebServer webServer;
 extern RTC_DATA_ATTR AsyncWebSocket webSocket;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
-extern RTC_DATA_ATTR bool forceMQTTpublish,forceWebEvent;
-
+extern RTC_DATA_ATTR bool forceWebEvent;
+extern RTC_DATA_ATTR uint8_t forceMQTTpublish;
 extern bool webServerResponding,debugModeOn,webLogsOn;
 extern String bootLogs;
 extern JSONVar samples;

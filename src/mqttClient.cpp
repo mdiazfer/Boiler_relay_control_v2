@@ -116,12 +116,12 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       samples["boilerOnPreviousYearJan"] = "0";samples["boilerOnPreviousYearFeb"] = "0";samples["boilerOnPreviousYearMar"] = "0";samples["boilerOnPreviousYearApr"] = "0";samples["boilerOnPreviousYearMay"] = "0";samples["boilerOnPreviousYearJun"] = "0";
       samples["boilerOnPreviousYearJul"] = "0";samples["boilerOnPreviousYearAug"] = "0";samples["boilerOnPreviousYearSep"] = "0";samples["boilerOnPreviousYearOct"] = "0";samples["boilerOnPreviousYearNov"] = "0";samples["boilerOnPreviousYearDec"] = "0";
       
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=4; //Force to publish the MQTT message from the loop
     }
     else if (String(aux).equalsIgnoreCase(String("DEBUG_ON"))) {
       uint8_t configVariables=0;
       debugModeOn=true;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=6; //Force to publish the MQTT message from the loop
       samples["debugModeOn"]="DEBUG_ON";
       configVariables=EEPROM.read(0x606) | 0x04; //Set debugModeOn bit to true (enabled)
       EEPROM.write(0x606,configVariables);
@@ -130,7 +130,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     else if (String(aux).equalsIgnoreCase(String("SERIAL_LOGS_ON"))) {
       uint8_t configVariables=0;
       serialLogsOn=true;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=8; //Force to publish the MQTT message from the loop
       samples["serialLogsOn"]="SERIAL_LOGS_ON";
       configVariables=EEPROM.read(0x606) | 0x08; //Set serialLogsOn bit to true (enabled)
       EEPROM.write(0x606,configVariables);
@@ -139,7 +139,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     else if (String(aux).equalsIgnoreCase(String("WEB_LOGS_ON"))) {
       uint8_t configVariables=0;
       webLogsOn=true;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=10; //Force to publish the MQTT message from the loop
       samples["webLogsOn"]="WEB_LOGS_ON";
       configVariables=EEPROM.read(0x606) | 0x10; //Set webLogsOn bit to true (enabled)
       EEPROM.write(0x606,configVariables);
@@ -148,7 +148,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     else if (String(aux).equalsIgnoreCase(String("SYS_LOGS_ON"))) {
       uint8_t configVariables=0;
       sysLogsOn=true;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=12; //Force to publish the MQTT message from the loop
       samples["sysLogsOn"]="SYS_LOGS_ON";
       configVariables=EEPROM.read(0x606) | 0x20; //Set sysLogsOn bit to true (enabled)
       EEPROM.write(0x606,configVariables);
@@ -157,7 +157,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     else if (String(aux).equalsIgnoreCase(String("DEBUG_OFF"))) {
       uint8_t configVariables=0;
       debugModeOn=false;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=6; //Force to publish the MQTT message from the loop
       samples["debugModeOn"]="DEBUG_OFF";
       configVariables=EEPROM.read(0x606) & 0xFB; //Unset debugModeOn bit (disabled)
       EEPROM.write(0x606,configVariables);
@@ -166,7 +166,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     else if (String(aux).equalsIgnoreCase(String("SERIAL_LOGS_OFF"))) {
       uint8_t configVariables=0;
       serialLogsOn=false;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=8; //Force to publish the MQTT message from the loop
       samples["serialLogsOn"]="SERIAL_LOGS_OFF";
       configVariables=EEPROM.read(0x606) & 0xF7; //Unset serialLogsOn bit (disabled)
       EEPROM.write(0x606,configVariables);
@@ -175,7 +175,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     else if (String(aux).equalsIgnoreCase(String("WEB_LOGS_OFF"))) {
       uint8_t configVariables=0;
       webLogsOn=false;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=10; //Force to publish the MQTT message from the loop
       samples["webLogsOn"]="WEB_LOGS_OFF";
       configVariables=EEPROM.read(0x606) & 0xEF; //Unset webLogsOn bit (disabled)
       EEPROM.write(0x606,configVariables);
@@ -184,7 +184,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     else if (String(aux).equalsIgnoreCase(String("SYS_LOGS_OFF"))) {
       uint8_t configVariables=0;
       sysLogsOn=false;
-      forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+      forceMQTTpublish=12; //Force to publish the MQTT message from the loop
       samples["sysLogsOn"]="SYS_LOGS_OFF";
       configVariables=EEPROM.read(0x606) & 0xDF; //Unset sysLogsOn bit (disabled)
       EEPROM.write(0x606,configVariables);
@@ -195,13 +195,13 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
         if (String(aux).equalsIgnoreCase(String("R1_ON"))) {
           digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON");
           printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
-          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceMQTTpublish=14; //Force to publish the MQTT message from the loop
           forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
         }
         else if (String(aux).equalsIgnoreCase(String("R1_OFF"))) {
           digitalWrite(PIN_RL1,HIGH);samples["Relay1"] = String("R1_OFF");
           printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 ON"); //Relay1 is set on to not allow Ext. Thermostat (R1_OFF)
-          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceMQTTpublish=14; //Force to publish the MQTT message from the loop
           forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
         }
         else if (String(aux).equalsIgnoreCase(String("R2_ON"))) {
@@ -209,14 +209,14 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
           digitalWrite(PIN_RL1,LOW);samples["Relay1"] = String("R1_ON"); //Relay1 is set off to allow Ext. Thermostat (R1_ON) when the Relay2 is set
           printLogln(String(millis())+" - [onMqttMessage] - Set Relay1 OFF"); //Relay1 is set off to allow Ext. Thermostat (R1_ON)
           printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 ON"); //Relay2 is set on to shortcut Ext. Thermostat (R2_ON)
-          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceMQTTpublish=16; //Force to publish the MQTT message from the loop
           forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
           //thermostateStatus=true;lastThermostatOnTime=millis(); //Only for testing
         }
         else if (String(aux).equalsIgnoreCase(String("R2_OFF"))) {
           digitalWrite(PIN_RL2,LOW);samples["Relay2"] = String("R2_OFF");
           printLogln(String(millis())+" - [onMqttMessage] - Set Relay2 OFF"); //Relay2 is set off to not shortcut Ext. Thermostat (R2_OFF)
-          forceMQTTpublish=true; //Force to publish the MQTT message from the loop
+          forceMQTTpublish=16; //Force to publish the MQTT message from the loop
           forceWebEvent=true; //Force to send webEvent from the loop to update Relay Switch Icon
           //thermostateStatus=false; //Only for testing
         }
@@ -319,7 +319,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 
       //Update web and mqtt only if boiler gets active or inactive.
       //Rest of situatios, updates are done every SAMPLE_PERIO
-      if (updateMQTT) {forceMQTTpublish=true; forceWebEvent=true;}
+      if (updateMQTT) {forceMQTTpublish=18; forceWebEvent=true;}
       /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Exit - boilerStatus="+String(boilerStatus)+", thermostateStatus="+String(thermostateStatus)+", boilerOn="+String(boilerOn)+", thermostateOn="+String(thermostateOn));*/  //----->
     }
   }
@@ -331,7 +331,13 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
 
 void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics) {
   //Break up the MQTT messages to avoid leaking heap - IS0016 - v0.9.B
-  
+
+  uint32_t auxHeap=esp_get_free_heap_size(); //ESP.getMaxAllocHeap(); //ESP.getFreeHeap();
+  if (auxHeap < MQTT_HA_MIN_HEAP_SIZE) { //100000B Based on log analysis
+    if (debugModeOn) printLogln(String(millis())+" - [mqttClientPublishHADiscovery] - NOT sending HADiscovery due to heap constraints, heapSize="+String(auxHeap)+" < "+String(MQTT_HA_MIN_HEAP_SIZE)+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
+    return;
+  }
+
   //System Objects: Device, Signals, System (Counters), WiFi
   //if (debugModeOn) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery] - heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())+", Calling mqttClientPublishHADiscovery_systemObjects1");}
   mqttClientPublishHADiscovery_systemObjects1(mqttTopicName,device,ipAddress,removeTopics);
@@ -396,6 +402,10 @@ void mqttClientPublishHADiscovery_systemObjects1(String mqttTopicName, String de
             device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
   
+
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_systemObjects1] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
+
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_startTime/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device  : Boot Time\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_startTime\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"mdi:clock-time-five\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['startTime']}}\"}");
@@ -483,6 +493,9 @@ void mqttClientPublishHADiscovery_systemObjects2(String mqttTopicName, String de
             device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
   
+  
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_systemObjects2] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
   
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_resetPreventiveCount/config");
@@ -611,6 +624,9 @@ void mqttClientPublishHADiscovery_sensorsObjects(String mqttTopicName, String de
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
   
   
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_sensorsObjects] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
+  
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_tempSensor/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: TempSensor\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_tempSensor\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"unit_of_meas\":\"°C\",\"dev_cla\":\"temperature\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['tempSensor'] | float  | round (1)}}\"}");
@@ -674,6 +690,9 @@ void mqttClientPublishHADiscovery_boilerTimeOnObjects(String mqttTopicName, Stri
             "/cmnd/RELAY\",\"payload_press\":\"RESET_TIME_COUNTERS\",\"uniq_id\":\""+deviceSufix+"_reset_time_counters\",\"dev\":{\"ids\":[\""+deviceSufix+"\"],\"configuration_url\":\"http://"+ipAddress+"\",\"name\":\""+
             device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
+  
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_boilerTimeOnObjects] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
   
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_boilerPreviousYear/config");
@@ -846,6 +865,9 @@ void mqttClientPublishHADiscovery_heaterTimeOnObjects(String mqttTopicName, Stri
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
   
   
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_heaterTimeOnObjects] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
+  
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_heaterPreviousYear/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Heater Previous Year: \",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_heaterPreviousYear\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"ic\":\"mdi:calendar-clock-outline\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['heaterPreviousYear']}}\"}");
@@ -1016,6 +1038,9 @@ void mqttClientPublishHADiscovery_binaryObjects(String mqttTopicName, String dev
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
   
   
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_binaryObjects] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
+  
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttBinarySensorTopicHAPrefixName,"_Clean_air/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Environment: Gas Detection\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_Clean_air\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"dev_cla\":\"gas\",\"ic\":\"mdi:meter-gas\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Clean_air']}}\"}");
@@ -1086,6 +1111,9 @@ void mqttClientPublishHADiscovery_relayObjects(String mqttTopicName, String devi
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
   
   
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_relayObjects] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
+  
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSwitchTopicHAPrefixName,"_Relay1/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Relay: Allow Ext. Therm.\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"cmd_t\":\"",bufferMqttTopicName,"/cmnd/RELAY\",\"pl_off\":\"R1_OFF\",\"pl_on\":\"R1_ON\",\"uniq_id\":\"",bufferDeviceSufix,"_Relay1\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['Relay1']}}\"}");
@@ -1144,6 +1172,9 @@ void mqttClientPublishHADiscovery_buttonObjects(String mqttTopicName, String dev
             device+"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\""+
             String(DEVICE_NAME_PREFIX)+"\",\"sw_version\":\""+String(VERSION)+"\"},\"dev_cla\":\"restart\",\"frc_upd\":true,\"val_tpl\":\"{{value_json['SAMPLES']['reset_time_counters']}}\"}").c_str()); //Discovery message for Reboot value, not retain in the broker*/
   
+  
+  uint32_t auxHeapSize=esp_get_free_heap_size(), auxHeapLargestBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
+  if (auxHeapSize<ABSULUTE_MIN_HEAP_THRESHOLD || auxHeapLargestBlockSize<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) {printLogln(String(millis())+" - [mqttClientPublishHADiscovery_buttonObjects] - heapSize ("+String(auxHeapSize)+")<"+String(ABSULUTE_MIN_HEAP_THRESHOLD)+" or heapSize ("+String(auxHeapLargestBlockSize)+")<"+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+". Can't publish MQTT message");return;}
   
   //Device, Environment, GAS, Signals, System (Counters), WiFi
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttButtonTopicHAPrefixName,"_reboot/config");

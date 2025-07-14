@@ -7,9 +7,9 @@
 
 extern RTC_DATA_ATTR AsyncMqttClient mqttClient;
 extern RTC_DATA_ATTR enum MqttSyncStatus MqttSyncCurrentStatus;
-extern RTC_DATA_ATTR boolean debugModeOn,wifiEnabled,mqttServerEnabled,forceMQTTpublish,forceWebEvent,thermostateStatus,updateHADiscovery,powerMeasureEnabled,powerMeasureSubscribed;
+extern RTC_DATA_ATTR boolean debugModeOn,wifiEnabled,mqttServerEnabled,forceWebEvent,thermostateStatus,updateHADiscovery,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot;
-extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,errorsHTTPUptsCnt,errorsMQTTCnt;
+extern RTC_DATA_ATTR uint8_t forceMQTTpublish,bootCount,resetCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,errorsHTTPUptsCnt,errorsMQTTCnt;
 extern RTC_DATA_ATTR uint16_t year;
 extern RTC_DATA_ATTR uint64_t lastThermostatOnTime,lastBoilerOnTime;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;

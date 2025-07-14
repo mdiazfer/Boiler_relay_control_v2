@@ -188,6 +188,7 @@
 #define CONNECTIVITY_CHECK_PERIOD 240000 //Millisecons - Interval between connectiviy checks
 #define ADC_SAMPLES 100
 #define HA_ADVST_WINDOW 15000 //Milliseconds - Time gap to send MQTT HA messages since bootup to make sure all the topics are processed - v0.9.7
+#define ESP_TASK_WDT_TIMEOUT  10 // Seconds. - Task watchdog timeout
 
 //Binary header stuff
 //https://github.com/espressif/esp-idf/blob/8fbb63c2a701c22ccf4ce249f43aded73e134a34/components/bootloader_support/include/esp_image_format.h#L58
@@ -239,6 +240,7 @@
 #define MQTT_HA_SWITCH_TOPIC_PREFIX "homeassistant/switch"
 #define MQTT_HA_B_AND_LWT_TOPIC_PREFIX "homeassistant/status"
 #define MQTT_POWER_MEASURE_ENABLED false
+#define MQTT_HA_MIN_HEAP_SIZE  100000 //Based on logs analisys. Below this, there's high risk of heap leak
 #ifndef MQTT_POWER_TOPIC
   #define MQTT_POWER_TOPIC "tele/tasmota_2EDC69/SENSOR"
 #endif

@@ -93,62 +93,89 @@ uint32_t initWebServer() {
   // Route for root / web page
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
-    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - Http request / received");}
+    //if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - Http request / received, heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route for root index.html web page
   webServer.on(WEBSERVER_INDEX_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route for root test.html web page
   webServer.on(WEBSERVER_TEST_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
-    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    //blockWebServer is not checked to avoid inter-lock during connectivity checks
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_TEST_PAGE, String(),false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route for root console.html web page
   webServer.on(WEBSERVER_CONSOLE_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS,WEBSERVER_CONSOLE_PAGE, String(),false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   // Route to load style.css file
   webServer.on(WEBSERVER_CSSSTYLES_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_CSSSTYLES_PAGE, "text/css");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to load tswnavbar.css file
   webServer.on(WEBSERVER_CSSNAVBAR_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_CSSNAVBAR_PAGE, "text/css");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin   
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin   
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to load The_IoT_Factory.png file
   webServer.on(WEBSERVER_LOGO_ICON, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_LOGO_ICON, "image/png");
 
@@ -177,16 +204,21 @@ uint32_t initWebServer() {
       if (deviceReset) ESP.restart();
     });
 
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to load favicon.ico file
   webServer.on(WEBSERVER_FAVICON_ICON, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_FAVICON_ICON, "image/x-icon");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to load maintenance_upload_firmware/identity file
@@ -195,62 +227,92 @@ uint32_t initWebServer() {
     id.toUpperCase();
     
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(200, "application/json", "{\"id\": \""+id+"\", \"hardware\": \"ESP32\"}");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on(WEBSERVER_GRAPHS_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_GRAPHS_PAGE, String(), false, processorGraphs);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on(WEBSERVER_STATS_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_STATS_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   // Route for info.html web page
   webServer.on(WEBSERVER_INFO_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_INFO_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   // Route for  basic.html web page
   webServer.on(WEBSERVER_BASICCONFIG_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_BASICCONFIG_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   // Route for cloud.html web page
   webServer.on(WEBSERVER_CLOUDCONFIG_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_CLOUDCONFIG_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   // Route for bluetooth.html web page
   webServer.on(WEBSERVER_BLUETOOTHCONFIG_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_BLUETOOTHCONFIG_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   // Route for maintenance.html web page
@@ -258,9 +320,12 @@ uint32_t initWebServer() {
     fileUpdateError=0; //To check POST parameters & File Upload process
 
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-
+    
     //Setup a new response to send Set Cookie headers in the maintenance.html answer
     AsyncWebServerResponse * auxResp=new AsyncFileResponse(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
 
@@ -282,221 +347,322 @@ uint32_t initWebServer() {
       auxResp->addHeader("Set-Cookie", setCookie);
     }
     request->send(auxResp);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route for container.html web page
   webServer.on(WEBSERVER_CONTAINER_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-    
+
     updateCommand=-1;
     fileUpdateError=ERROR_UPLOAD_FILE_NOERROR;
     request->send(SPIFFS, WEBSERVER_CONTAINER_PAGE, String(), false, processorContainer);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin   
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin   
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route for /maintenance_default_values web page
   webServer.on(WEBSERVER_DEFAULTCONF_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     fileUpdateError=ERROR_UPLOAD_FILE_NOERROR; //To check POST parameters & File Upload process
     request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route for /maintenance_device_reset web page
   webServer.on(WEBSERVER_DEVICERESET_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     fileUpdateError=ERROR_UPLOAD_FILE_NOERROR; //To check POST parameters & File Upload process
     request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin   
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin   
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   // Route for updatefile.html web page
   webServer.on(WEBSERVER_UPLOADFILE_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
-    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+  
     fileUpdateError=0; //To check POST parameters & File Upload process
     request->send(SPIFFS, WEBSERVER_MAINTENANCE_PAGE, String(), false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to WEBSERVER_SAMPLES_PAGE file
   webServer.on(WEBSERVER_SAMPLES_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    
     //Update JSON objects needed for this web page
-    gas_sample(false);   //Get GAS samples
+    gas_sample(false,6);   //Get GAS samples
     if (tempHumSensor.isConnected()) temperature_sample(false);  //Get Temp & Hum samples
     request->send(200, "application/json", JSON.stringify(samples));
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to gauge.min.js file
   webServer.on(WEBSERVER_GAUGESCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_GAUGESCRIPT_PAGE, "text/javascript");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to WIFI_PSSWs file
   webServer.on("/wpsw", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(200, "application/json", String("{\"PSSW\":\"")+wifiCred.wifiPSSWs[0]+String("\",\"PSSW_BK1\":\"")+wifiCred.wifiPSSWs[1]+String("\",\"PSSW_BK2\":\"")+wifiCred.wifiPSSWs[2]+String("\"}"));
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to index_script.js file
   webServer.on(WEBSERVER_INDEX_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_INDEX_SCRIPT_PAGE, "text/javascript");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to stats_script.js file
   webServer.on(WEBSERVER_STATS_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_STATS_SCRIPT_PAGE, "text/javascript");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to info_script.js file
   webServer.on(WEBSERVER_INFO_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_INFO_SCRIPT_PAGE, "text/javascript");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to basic_script.js file
   webServer.on(WEBSERVER_BASIC_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_BASIC_SCRIPT_PAGE, "text/javascript");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to cloud_script.js file
   webServer.on(WEBSERVER_CLOUD_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_CLOUD_SCRIPT_PAGE, "text/javascript");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Route to maintenance_script.js file
   webServer.on(WEBSERVER_MAINTENANCE_SCRIPT_PAGE, HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, WEBSERVER_MAINTENANCE_SCRIPT_PAGE, "text/javascript");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   webServer.on("/boiler-blue.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/boiler-blue.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/boiler-orange.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/boiler-orange.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/boiler-orange-flame.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/boiler-orange-flame.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/boiler-grey.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/boiler-grey.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/leaf-circle-green.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/leaf-circle-green.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/leaf-circle-red.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/leaf-circle-red.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   webServer.on("/radiator-blue.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    //Wait for other blocking tasks in the loop to finish
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/radiator-blue.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   webServer.on("/radiator-orange.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/radiator-orange.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   webServer.on("/radiator-disabled-off.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/radiator-disabled-off.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   webServer.on("/radiator-orange-on.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     request->send(SPIFFS, "/radiator-orange-on.png", "image/png");
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/basic1", HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     int params = request->params();
@@ -516,7 +682,7 @@ uint32_t initWebServer() {
             EEPROM.write(0x08,configVariables);
             EEPROM.commit();
           }
-          if ((String(p->value().c_str()).compareTo("off")==0) && wifiEnabled) {
+          else if ((String(p->value().c_str()).compareTo("off")==0) && wifiEnabled) {
             wifiEnabled=false;
             if(WiFi.status()!=WL_DISCONNECTED) {
               WiFi.disconnect();
@@ -537,12 +703,16 @@ uint32_t initWebServer() {
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(), false, processor);
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
     request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/basic4", HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     int params = request->params();
@@ -573,7 +743,7 @@ uint32_t initWebServer() {
               updateEEPROM=true;
             }
           }
-          if (String(p->name()).compareTo("UserPssw")==0) {
+          else if (String(p->name()).compareTo("UserPssw")==0) {
             memset(auxUserPssw,'\0',WEB_PW_CREDENTIAL_LENGTH);
             memcpy(auxUserPssw,p->value().c_str(),p->value().length()); //End null not included
             if (userPssw.compareTo(auxUserPssw)!=0) {
@@ -591,12 +761,16 @@ uint32_t initWebServer() {
       request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
     }
 
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   webServer.on("/basic2", HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
-    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow    
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     reconnectWifiAndRestartWebServer=false;
@@ -622,7 +796,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST PSSW value
-        if (String(p->name()).compareTo("PSSW")==0) {
+        else if (String(p->name()).compareTo("PSSW")==0) {
           memset(auxPSSW,'\0',WIFI_MAX_PSSW_LENGTH);
           memcpy(auxPSSW,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiPSSWs[0].compareTo(auxPSSW)!=0) {
@@ -633,7 +807,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST SITE value
-        if (String(p->name()).compareTo("SITE")==0) {
+        else if (String(p->name()).compareTo("SITE")==0) {
           memset(auxSITE,'\0',WIFI_MAX_SITE_LENGTH);
           memcpy(auxSITE,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiSITEs[0].compareTo(auxSITE)!=0) {
@@ -643,7 +817,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST SSID_BK1 value
-        if (String(p->name()).compareTo("SSID_BK1")==0) {
+        else if (String(p->name()).compareTo("SSID_BK1")==0) {
           memset(auxSSID,'\0',WIFI_MAX_SSID_LENGTH);
           memcpy(auxSSID,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiSSIDs[1].compareTo(auxSSID)!=0) {
@@ -654,7 +828,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST PSSW_BK1 value
-        if (String(p->name()).compareTo("PSSW_BK1")==0) {
+        else if (String(p->name()).compareTo("PSSW_BK1")==0) {
           memset(auxPSSW,'\0',WIFI_MAX_PSSW_LENGTH);
           memcpy(auxPSSW,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiPSSWs[1].compareTo(auxPSSW)!=0) {
@@ -665,7 +839,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST SITE_BK1 value
-        if (String(p->name()).compareTo("SITE_BK1")==0) {
+        else if (String(p->name()).compareTo("SITE_BK1")==0) {
           memset(auxSITE,'\0',WIFI_MAX_SITE_LENGTH);
           memcpy(auxSITE,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiSITEs[1].compareTo(auxSITE)!=0) {
@@ -675,7 +849,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST SSID_BK2 value
-        if (String(p->name()).compareTo("SSID_BK2")==0) {
+        else if (String(p->name()).compareTo("SSID_BK2")==0) {
           memset(auxSSID,'\0',WIFI_MAX_SSID_LENGTH);
           memcpy(auxSSID,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiSSIDs[2].compareTo(auxSSID)!=0) {
@@ -686,7 +860,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST PSSW_BK2 value
-        if (String(p->name()).compareTo("PSSW_BK2")==0) {
+        else if (String(p->name()).compareTo("PSSW_BK2")==0) {
           memset(auxPSSW,'\0',WIFI_MAX_PSSW_LENGTH);
           memcpy(auxPSSW,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiPSSWs[2].compareTo(auxPSSW)!=0) {
@@ -697,7 +871,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST SITE_BK2 value
-        if (String(p->name()).compareTo("SITE_BK2")==0) {
+        else if (String(p->name()).compareTo("SITE_BK2")==0) {
           memset(auxSITE,'\0',WIFI_MAX_SITE_LENGTH);
           memcpy(auxSITE,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (wifiCred.wifiSITEs[2].compareTo(auxSITE)!=0) {
@@ -707,7 +881,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST NTP1 value
-        if (String(p->name()).compareTo("NTP1")==0) {
+        else if (String(p->name()).compareTo("NTP1")==0) {
           memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
           memcpy(auxNTP,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (ntpServers[0].compareTo(auxNTP)!=0) {
@@ -718,7 +892,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST NTP2 value
-        if (String(p->name()).compareTo("NTP2")==0) {
+        else if (String(p->name()).compareTo("NTP2")==0) {
           memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
           memcpy(auxNTP,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (ntpServers[1].compareTo(auxNTP)!=0) {
@@ -729,7 +903,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST NTP3 value
-        if (String(p->name()).compareTo("NTP3")==0) {
+        else if (String(p->name()).compareTo("NTP3")==0) {
           memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
           memcpy(auxNTP,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (ntpServers[2].compareTo(auxNTP)!=0) {
@@ -740,7 +914,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST NTP4 value
-        if (String(p->name()).compareTo("NTP4")==0) {
+        else if (String(p->name()).compareTo("NTP4")==0) {
           memset(auxNTP,'\0',NTP_SERVER_NAME_MAX_LENGTH);
           memcpy(auxNTP,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           if (ntpServers[3].compareTo(auxNTP)!=0) {
@@ -751,7 +925,7 @@ uint32_t initWebServer() {
           }
         }
         // HTTP POST TimeZone value
-        if (String(p->name()).compareTo("TimeZone")==0) {
+        else if (String(p->name()).compareTo("TimeZone")==0) {
           memset(auxTZEnvVar,'\0',TZ_ENV_VARIABLE_MAX_LENGTH);
           //memcpy(auxTZEnvVar,p->value().c_str(),String(p->value().c_str()).length()); //End null not included
           memcpy(auxTZEnvVar,
@@ -783,12 +957,16 @@ uint32_t initWebServer() {
     //request->send(SPIFFS, WEBSERVER_INDEX_PAGE, "text/html");
     request->send(SPIFFS, WEBSERVER_INDEX_PAGE, String(),false);
 
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on("/cloud", HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     int params = request->params();
@@ -852,7 +1030,7 @@ uint32_t initWebServer() {
               EEPROM.write(0x08,configVariables);
               updateEEPROM=true;
             }
-            if ((p->value().compareTo("off")==0) && httpCloudEnabled) {
+            else if ((p->value().compareTo("off")==0) && httpCloudEnabled) {
               httpCloudEnabled=false;
               if (CloudSyncCurrentStatus==CloudSyncOnStatus) CloudSyncCurrentStatus=CloudSyncOffStatus;
               configVariables=EEPROM.read(0x08) & 0xFB;
@@ -861,7 +1039,7 @@ uint32_t initWebServer() {
             }
           }
           // HTTP POST MQTT_enabled value
-          if (p->name().compareTo("MQTT_enabled")==0) {
+          else if (p->name().compareTo("MQTT_enabled")==0) {
             if ((p->value().compareTo("on")==0) && !mqttServerEnabled) {
               mqttServerEnabled=true;
               connectMqtt=true;auxCounter|=0x01;
@@ -869,7 +1047,7 @@ uint32_t initWebServer() {
               EEPROM.write(0x08,configVariables);
               updateEEPROM=true;
             }
-            if ((p->value().compareTo("off")==0) && mqttServerEnabled) {
+            else if ((p->value().compareTo("off")==0) && mqttServerEnabled) {
               mqttServerEnabled=false;
               disconnectMqtt=true;
               configVariables=EEPROM.read(0x08) & 0xBF;
@@ -878,7 +1056,7 @@ uint32_t initWebServer() {
             }
           }
           // HTTP POST Secure_MQTT_enabled value
-          if (p->name().compareTo("Secure_MQTT_enabled")==0) {
+          else if (p->name().compareTo("Secure_MQTT_enabled")==0) {
             if ((p->value().compareTo("on")==0) && !secureMqttEnabled) {
               secureMqttEnabled=true;
               if (mqttServerEnabled) {connectMqtt=true;auxCounter|=0x02;}  //Connect with authentication
@@ -886,7 +1064,7 @@ uint32_t initWebServer() {
               EEPROM.write(0x08,configVariables);
               updateEEPROM=true;
             }
-            if ((p->value().compareTo("off")==0) && secureMqttEnabled) {
+            else if ((p->value().compareTo("off")==0) && secureMqttEnabled) {
               secureMqttEnabled=false;
               if (mqttServerEnabled) {connectMqtt=true;auxCounter|=0x04;} //Connect without authentication
               configVariables=EEPROM.read(0x08) & 0x7F;
@@ -895,7 +1073,7 @@ uint32_t initWebServer() {
             }
           }
           // HTTP POST MQTTSERVER value
-          if (p->name().compareTo("MQTTSERVER")==0) {
+          else if (p->name().compareTo("MQTTSERVER")==0) {
             char auxMQTT[MQTT_SERVER_NAME_MAX_LENGTH];
             memset(auxMQTT,'\0',MQTT_SERVER_NAME_MAX_LENGTH);
             memcpy(auxMQTT,p->value().c_str(),p->value().length()); //End null not included
@@ -907,7 +1085,7 @@ uint32_t initWebServer() {
             }
           }
           // HTTP POST MQTTTOPIC value
-          if (p->name().compareTo("MQTTTOPIC")==0) {
+          else if (p->name().compareTo("MQTTTOPIC")==0) {
             char auxMqttTopicPrefix[MQTT_TOPIC_NAME_MAX_LENGTH];
             memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
             memcpy(auxMqttTopicPrefix,p->value().c_str(),p->value().length()); //End null not included
@@ -922,7 +1100,7 @@ uint32_t initWebServer() {
             }
           }
           // HTTP POST MQTT_Power_enabled value
-          if (p->name().compareTo("MQTT_Power_enabled")==0) {
+          else if (p->name().compareTo("MQTT_Power_enabled")==0) {
             if ((p->value().compareTo("on")==0) && !powerMeasureEnabled && mqttClient.connected()) {
               powerMeasureEnabled=true;  //Subscription is done later in MQTTPOWERTOPIC
               if (debugModeOn) printLogln(String(millis())+" - [webServer cloud] - MQTT_Power_enabled - Request to subscribe to "+powerMqttTopic);
@@ -930,7 +1108,7 @@ uint32_t initWebServer() {
               EEPROM.write(0x606,configVariables);
               updateEEPROM=true;
             }
-            if ((p->value().compareTo("off")==0) && powerMeasureEnabled && mqttClient.connected()) {
+            else if ((p->value().compareTo("off")==0) && powerMeasureEnabled && mqttClient.connected()) {
               if (powerMqttTopic.compareTo("")!=0) {
                 powerMeasureEnabled=false;
                 //Unsubscribe
@@ -949,7 +1127,7 @@ uint32_t initWebServer() {
             }
           }
           // HTTP POST MQTTPOWERTOPIC value
-          if (p->name().compareTo("MQTTPOWERTOPIC")==0) {
+          else if (p->name().compareTo("MQTTPOWERTOPIC")==0) {
             char auxMqttTopicPrefix[MQTT_TOPIC_NAME_MAX_LENGTH];
             memset(auxMqttTopicPrefix,'\0',MQTT_TOPIC_NAME_MAX_LENGTH);
             memcpy(auxMqttTopicPrefix,p->value().c_str(),p->value().length()); //End null not included
@@ -994,7 +1172,7 @@ uint32_t initWebServer() {
           }
 
           // HTTP POST POWERTHRESHOLD value
-          if (p->name().compareTo("POWERTHRESHOLD")==0) {
+          else if (p->name().compareTo("POWERTHRESHOLD")==0) {
             uint16_t auxPowerOnFlameThreshold=p->value().toInt();
             if (auxPowerOnFlameThreshold!=powerOnFlameThreshold) {
               powerOnFlameThreshold=auxPowerOnFlameThreshold;
@@ -1004,7 +1182,7 @@ uint32_t initWebServer() {
           }
 
           // HTTP POST MQTTUserName value
-          if (String(p->name()).compareTo("MQTTUserName")==0) {
+          else if (String(p->name()).compareTo("MQTTUserName")==0) {
             memset(auxUserName,'\0',MQTT_USER_CREDENTIAL_LENGTH);
             memcpy(auxUserName,p->value().c_str(),p->value().length()); //End null not included
             if (mqttUserName.compareTo(auxUserName)!=0) {
@@ -1015,7 +1193,7 @@ uint32_t initWebServer() {
             }
           }
           // HTTP POST MQTTUserPssw value
-          if (String(p->name()).compareTo("MQTTUserPssw")==0) {
+          else if (String(p->name()).compareTo("MQTTUserPssw")==0) {
             memset(auxUserPssw,'\0',MQTT_PW_CREDENTIAL_LENGTH);
             memcpy(auxUserPssw,p->value().c_str(),p->value().length()); //End null not included
             if (mqttUserPssw.compareTo(auxUserPssw)!=0) {
@@ -1061,12 +1239,16 @@ uint32_t initWebServer() {
       samples["powerMeasureEnabled"]=powerMeasureEnabled;
       samples["powerMeasureSubscribed"]=powerMeasureSubscribed;
     }
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   }); // /cloud HTTP_POST form
   
   webServer.on(WEBSERVER_DEFAULTCONF_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
-    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow  
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     //reconnectWifiAndRestartWebServer=false;
@@ -1105,13 +1287,17 @@ uint32_t initWebServer() {
     //request->send(200,String("text/html"),String("<!DOCTYPE html><html lang=\"en\"><head><meta http-equiv=\"refresh\" content=\"0; URL=http://192.168.100.103\"/></head><body style=\"background-color:#34383b;\"></body></html>"));
     //request->send(SPIFFS, WEBSERVER_CONTAINER_PAGE, String(), false, processor);
     request->send(auxResp);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
   
   webServer.on(WEBSERVER_DEVICERESET_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
     //This code is run after uploading the file
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     deviceReset=false;
@@ -1145,14 +1331,18 @@ uint32_t initWebServer() {
       }
     }
     request->send(auxResp);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   webServer.on(WEBSERVER_LOGSCONFIG_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
     webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
-
+    
     int params = request->params();
     uint8_t configVariables=0;
     bool updateEEPROM=false, sysLogServerChange=false;
@@ -1180,15 +1370,15 @@ uint32_t initWebServer() {
               samples["debugModeOn"]="DEBUG_ON";
               configVariables=EEPROM.read(0x606) | 0x04; //Set debugModeOn bit to true (enabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=7;
             }
-            if ((p->value().compareTo("off")==0) && debugModeOn) {
+            else if ((p->value().compareTo("off")==0) && debugModeOn) {
               debugModeOn=false;
               samples["debugModeOn"]="DEBUG_OFF";
               printLogln(String(millis())+" - [webServer - logs_config] - Debug Mode OFF");
               configVariables=EEPROM.read(0x606) & 0xFB; //Unset debugModeOn bit (disabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=7;
             }
           }
           // HTTP POST Serial Logs value
@@ -1199,15 +1389,15 @@ uint32_t initWebServer() {
               printLogln(String(millis())+" - [webServer - logs_config] - Serial Logs ON");
               configVariables=EEPROM.read(0x606) | 0x08; //Set serialLogsOn bit to true (enabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=9;
             }
-            if ((p->value().compareTo("off")==0) && serialLogsOn) {
+            else if ((p->value().compareTo("off")==0) && serialLogsOn) {
               serialLogsOn=false;
               samples["serialLogsOn"]="SERIAL_LOGS_OFF";
               printLogln(String(millis())+" - [webServer - logs_config] - Serial Logs OFF");
               configVariables=EEPROM.read(0x606) & 0xF7; //Unset serialLogsOn bit (disabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=9;
             }
           }
           // HTTP POST Console Logs value
@@ -1218,15 +1408,15 @@ uint32_t initWebServer() {
               printLogln(String(millis())+" - [webServer - logs_config] - Web Console Logs ON");
               configVariables=EEPROM.read(0x606) | 0x10; //Set webLogsOn bit to true (enabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=11;
             }
-            if ((p->value().compareTo("off")==0) && webLogsOn) {
+            else if ((p->value().compareTo("off")==0) && webLogsOn) {
               webLogsOn=false;
               samples["webLogsOn"]="WEB_LOGS_OFF";
               printLogln(String(millis())+" - [webServer - logs_config] - Web Console Logs OFF");
               configVariables=EEPROM.read(0x606) & 0xEF; //Unset webLogsOn bit (disabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=11;
             }
           }
           // HTTP POST Syslogs value
@@ -1237,15 +1427,15 @@ uint32_t initWebServer() {
               printLogln(String(millis())+" - [webServer - logs_config] - Syslog ON");
               configVariables=EEPROM.read(0x606) | 0x20; //Set sysLogsOn bit to true (enabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=13;
             }
-            if ((p->value().compareTo("off")==0) && sysLogsOn) {
+            else if ((p->value().compareTo("off")==0) && sysLogsOn) {
               sysLogsOn=false;
               samples["sysLogsOn"]="SYS_LOGS_OFF";
               printLogln(String(millis())+" - [webServer - logs_config] - Syslog OFF");
               configVariables=EEPROM.read(0x606) & 0xDF; //Unset sysLogsOn bit (disabled)
               EEPROM.write(0x606,configVariables);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=13;
             }
           }
           // HTTP POST SYSLOGSERVER value
@@ -1257,7 +1447,7 @@ uint32_t initWebServer() {
               sysLogServer=p->value();
               samples["sysLogServer"]=sysLogServer;
               EEPROM.put(0x60D,auxSYSLOG);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=13;
               sysLogServerChange=true;
             }
           }
@@ -1268,7 +1458,7 @@ uint32_t initWebServer() {
               sysLogServerUDPPort=auxSysLogServerUDPPort;
               samples["sysLogServerUDPPort"]=sysLogServerUDPPort;
               EEPROM.writeUShort(0x64D,sysLogServerUDPPort);
-              updateEEPROM=true;forceMQTTpublish=true;
+              updateEEPROM=true;forceMQTTpublish=13;
               sysLogServerChange=true;
             }
           }
@@ -1285,12 +1475,16 @@ uint32_t initWebServer() {
     if (updateEEPROM) EEPROM.commit();
 
     request->send(auxResp);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   }); //HTTP_POST WEBSERVER_LOGSCONFIG_PAGE
 
   webServer.on(WEBSERVER_COUNTERRESET_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
-    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow  
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     //reconnectWifiAndRestartWebServer=false;
@@ -1330,6 +1524,7 @@ uint32_t initWebServer() {
             SPIFFSErrors=0; EEPROM.write(0x539,SPIFFSErrors); //Counter for SPIFFS errors
             errorsConnectivityCnt=0; EEPROM.write(0x53A,errorsConnectivityCnt); //Counter for Connectivity errors (being WiFi connected)
             errorsWebServerCnt=0; EEPROM.write(0x53B,errorsWebServerCnt); //Counter for Web Server errors (being WiFi connected but not serving web pages)
+            forceMQTTpublish=5;
             EEPROM.commit();
           }
           //Factory Reset is done after serving WEBSERVER_CONTAINER_PAGE
@@ -1339,13 +1534,17 @@ uint32_t initWebServer() {
     //request->send(200,String("text/html"),String("<!DOCTYPE html><html lang=\"en\"><head><meta http-equiv=\"refresh\" content=\"0; URL=http://192.168.100.103\"/></head><body style=\"background-color:#34383b;\"></body></html>"));
     //request->send(SPIFFS, WEBSERVER_CONTAINER_PAGE, String(), false, processor);
     request->send(auxResp);
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   }); //HTTP_POST WEBSERVER_COUNTERRESET_PAGE
   
   // Route for maintenance_upload_firmware
   webServer.on(WEBSERVER_UPLOADFILE_PAGE, HTTP_POST, [](AsyncWebServerRequest *request) {
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
-    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow  
+    if (debugModeOn && Update.progress()==0) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
     //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
     
     //This code is run after uploading the file
@@ -1470,7 +1669,7 @@ uint32_t initWebServer() {
     if(!request->authenticate(userName.c_str(), userPssw.c_str())){
       errorOnWrongCookie=ERROR_UPLOAD_FILE_NOAUTH;
       lastURI=String(WEBSERVER_MAINTENANCE_PAGE); //To go back to the right page from CONTAINER if the authentication fails
-      if (debugModeOn) printLogln(String(millis())+" - [maintenance_upload_firmware upload] - Authentication required, index="+String(index)+"\n   - Faulty cookie="+request->getHeader("Cookie")->value());
+      if (debugModeOn && Update.progress()==0) printLogln(String(millis())+" - [maintenance_upload_firmware upload] - Authentication required, index="+String(index)+"\n   - Faulty cookie="+request->getHeader("Cookie")->value());
       return;
     }
 
@@ -1668,7 +1867,8 @@ uint32_t initWebServer() {
       }
     }
 
-    webServerResponding=false;   //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed agin
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    if (debugModeOn && Update.progress()==0) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
   // Handle Web Server Events
@@ -1687,8 +1887,9 @@ uint32_t initWebServer() {
   webServer.addHandler(&webEvents);
   
   // Start web server
-  if (debugModeOn) {printLogln(String(millis())+" - [initWebServer] - Begin webServer");}
+  if (debugModeOn) {printLogln(String(millis())+" - [initWebServer] - Begin webServer. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));} // ---->
   webServer.begin();
 
+  if (debugModeOn) {printLogln(String(millis())+" - [initWebServer] - Exit now. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));} // ---->
   return NO_ERROR;
-}
+} // -- initWebServer --

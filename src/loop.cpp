@@ -32,8 +32,9 @@ void wifi_reconnect_period(bool debugModeOn) {
     printLogln("           + !firstBoot="+String(!firstBoot));
     printLogln("           + wifiCurrentStatus="+String(wifiCurrentStatus)+", wifiOffStatus=0");
     printLogln("           + WiFi.status()="+String(WiFi.status())+", WL_CONNECTED=3");
+    printLogln("           + heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
   }
-  else printLogln(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - wifiCurrentStatus="+String(wifiCurrentStatus));
+  else printLogln(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - wifiCurrentStatus="+String(wifiCurrentStatus)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
 
   //Update at begining to prevent accumulating delays in CHECK periods as this code might take long
   if (!wifiResuming) lastTimeWifiReconnectionCheck=nowTimeGlobal; //Only if the WiFi reconnection didn't ABORT or BREAK in the previous interaction
@@ -86,8 +87,8 @@ void wifi_reconnect_period(bool debugModeOn) {
     lastTimeMQTTCheck=nowTimeGlobal-MQTT_CHECK_PERIOD;
   }
 
-  if (debugModeOn) {printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiReconnectPeriod - exit, lastTimeWifiReconnectionCheck="+String(lastTimeWifiReconnectionCheck));}
-  else printLogln(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - Exit. wifiCurrentStatus="+String(wifiCurrentStatus));
+  if (debugModeOn) {printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - wifiReconnectPeriod - exit, lastTimeWifiReconnectionCheck="+String(lastTimeWifiReconnectionCheck)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+  else printLogln(String(nowTimeGlobal)+" - [loop - WIFI_RECONNECT_PERIOD] - Exit. wifiCurrentStatus="+String(wifiCurrentStatus)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
 }
 
 void ntp_ko_check_period(bool debugModeOn) {
@@ -102,8 +103,8 @@ void ntp_ko_check_period(bool debugModeOn) {
     debugModeOn: Print out the logs or not
    *****************************************************/
 
-  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - Last lastTimeNTPCheck="+String(lastTimeNTPCheck)+", auxLoopCounter2="+String(auxLoopCounter2)+", whileLoopTimeLeft="+String(whileLoopTimeLeft));}
-  else printLog(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));
+  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - Last lastTimeNTPCheck="+String(lastTimeNTPCheck)+", auxLoopCounter2="+String(auxLoopCounter2)+", whileLoopTimeLeft="+String(whileLoopTimeLeft)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+  else printLog(String(nowTimeGlobal)+" - [loop - NTP_KO_CHECK_PERIOD] - CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
     
   //Update at begining to prevent accumulating delays in CHECK periods as this code might take long
   lastTimeNTPCheck=nowTimeGlobal;
@@ -148,18 +149,20 @@ void ntp_ko_check_period(bool debugModeOn) {
     getLocalTime(&nowTimeInfo);
     if (debugModeOn) {
       //printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - errorsNTPCnt="+String(errorsNTPCnt)+", CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck));
-      printLog("        [loop - NTP_KO_CHECK_PERIOD] - "+String(ntpServers[ntpServerIndex])+" - ");printLogln(&nowTimeInfo,"- NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S"); //boardSerialPort.println(&nowTimeInfo,"- NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S");
+      printLog("        [loop - NTP_KO_CHECK_PERIOD] - "+String(ntpServers[ntpServerIndex])+" - ");printLog(&nowTimeInfo,"- NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S"); //boardSerialPort.println(&nowTimeInfo,"- NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S");
+      printLogln(". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
     }
-    else {printLog(&nowTimeInfo," - NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S. ");printLogln(" - "+String(ntpServers[ntpServerIndex])+" - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));}
+    else {printLog(&nowTimeInfo," - NTP sync done. Exit - Time: %d/%m/%Y - %H:%M:%S. ");printLogln(" - "+String(ntpServers[ntpServerIndex])+" - CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   }
   else {
     if( wifiCurrentStatus==wifiOffStatus || !wifiEnabled) {if (forceNTPCheck) forceNTPCheck=false;} //v0.9.9 If no WiFi, don't enter in NTP_KO_CHECK_PERIOD even if it was BREAK or ABORT in previous intercation
     getLocalTime(&nowTimeInfo);
     if (debugModeOn) {
       ///printLogln(String(millis())+" - [loop - NTP_KO_CHECK_PERIOD] - errorsNTPCnt="+String(errorsNTPCnt)+", CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+", lastTimeNTPCheck="+String(lastTimeNTPCheck));
-      printLog("        [loop - NTP_KO_CHECK_PERIOD] - "+String(ntpServers[ntpServerIndex])+" - ");printLogln(&nowTimeInfo,"- No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S");
+      printLog("        [loop - NTP_KO_CHECK_PERIOD] - "+String(ntpServers[ntpServerIndex])+" - ");printLog(&nowTimeInfo,"- No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S");
+      printLogln(". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
     }
-    else {printLog(&nowTimeInfo," - No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S. "); printLogln(" - "+String(ntpServers[ntpServerIndex])+" - CloudClockCurrentStatus="+String(CloudClockCurrentStatus));}
+    else {printLog(&nowTimeInfo," - No need for NTP sync. Exit - Time: %d/%m/%Y - %H:%M:%S. "); printLogln(" - "+String(ntpServers[ntpServerIndex])+" - CloudClockCurrentStatus="+String(CloudClockCurrentStatus)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   }
 }
 
@@ -175,11 +178,11 @@ int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String ht
    Return: status
   *****************************************************/ 
 
-  if (fromSetup) printLog(String(millis())+" -"); //no from Setup
-  else printLog("       "); //from setup
+  if (fromSetup) printLog(String(millis())+" - "); //from Setup
+  else printLog("       "); //no from setup
   printLog("[loop - sendHttpRequest] - Sending HTTP request");
-  if (!fromSetup) printLogln("");
-  else printLogln(" '"+httpRequest+"', server="+IpAddress2String(server));
+  if (!fromSetup) printLogln(". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
+  else printLogln(" '"+httpRequest+"', server="+IpAddress2String(server)+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
 
   if (httpCloudEnabled && wifiCurrentStatus!=wifiOffStatus && wifiEnabled) {  //Only if HTTP Cloud is enabled and WiFi is connected
     if (client.connect(server, port)) {
@@ -227,14 +230,14 @@ int sendHttpRequest(bool debugModeOn, IPAddress server, uint16_t port, String ht
 
     // if the server's disconnected, stop the client:
     if (!client.connected()) {
-      if (debugModeOn && fromSetup) {printLogln("       [loop - sendHttpRequest] - Disconnecting from server. Bye!");}
+      if (debugModeOn) {printLogln("       [loop - sendHttpRequest] - Disconnecting from server. Bye!. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
       client.stop();
     }
 
     return (NO_ERROR);
   }
   else {
-    if (debugModeOn) {printLogln("       [loop - sendHttpRequest] - No WiFi or HTTP Cloud updates are disabled.");}
+    if (debugModeOn) {printLogln("       [loop - sendHttpRequest] - No WiFi or HTTP Cloud updates are disabled. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
     return (ERROR_CLOUD_SERVER);
   }
 }
@@ -251,10 +254,10 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
   String auxStatus,httpRequest=String(GET_REQUEST_TO_UPLOAD_SAMPLES);
   thermostateInterrupt=false;
   int32_t auxRebounds; //int32 instead of uint16 because auxRebouds might have negaative values. To construct the http request
-  bool updateCloudServer=false;
+  bool updateNeeded=false;
   
   if (thermostateStatus) {auxStatus="ON";} else {auxStatus="OFF";}
-  printLogln(String(millis())+" - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate="+String(auxThermostatInterrupt)+" Status (thermostateStatus) was="+auxStatus);
+  printLogln(String(millis())+" - [loop - thermostate_interrupt_triggered] - Interrupt detected - Reason: Thermostate="+String(auxThermostatInterrupt)+" Status (thermostateStatus) was="+auxStatus+". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
   
   //Update rebouds according to the current status
   if (auxThermostatInterrupt==1) {
@@ -266,7 +269,7 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
       thermostateStatus=true; auxStatus="ON";
       if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}
       rebounds=0;
-      updateCloudServer=true;
+      updateNeeded=true;
     }
   }
   else {
@@ -275,19 +278,19 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
       thermostateStatus=false; auxStatus="OFF";
       if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Thermostate status goes to "+auxStatus+", rebounds="+String(rebounds/2));}  
       rebounds=0;
-      updateCloudServer=true;
+      updateNeeded=true;
     }
     else {
       if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - Strange, thermostate status was already "+auxStatus+", rebounds="+String(rebounds/2)+". Consider to increase THERMOSTATE_INTERRUPT_DELAY ("+String(THERMOSTATE_INTERRUPT_DELAY)+" ms)");}
     }
   }
 
-  //if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - updateCloudServer="+String(updateCloudServer)+", httpCloudEnabled="+String(httpCloudEnabled)+", CloudSyncCurrentStatus="+String(CloudSyncCurrentStatus)+" (0=CloudSyncOnStatus, 1=CloudSyncSendStatus, 2=CloudSyncOffStatus), wifiCred.activeIndex="+String(wifiCred.activeIndex));}
+  //if (debugModeOn) {printLogln("          [loop - thermostate_interrupt_triggered] - updateNeeded="+String(updateNeeded)+", httpCloudEnabled="+String(httpCloudEnabled)+", CloudSyncCurrentStatus="+String(CloudSyncCurrentStatus)+" (0=CloudSyncOnStatus, 1=CloudSyncSendStatus, 2=CloudSyncOffStatus), wifiCred.activeIndex="+String(wifiCred.activeIndex));}
   //if (debugModeOn) {for (int i=0; i<=2; i++) printLogln("          [loop - thermostate_interrupt_triggered] - wifiCred.wifiSSIDs["+String(i)+"]="+String(wifiCred.wifiSSIDs[i])+", wifiCred.wifiSITEs["+String(i)+"]="+String(wifiCred.wifiSITEs[i])+", wifiCred.SiteAllow["+String(i)+"]="+String(wifiCred.SiteAllow[i]));}
   
   //Send the updates to http cloud, web client and mqtt broker
-  if (updateCloudServer) {
-    samples["Thermostate_status"] = thermostateStatus==true?"ON":"OFF";
+  if (updateNeeded) {
+    samples["Thermostate_status"] = thermostateStatus?"ON":"OFF";
     forceWebEvent=true; forceMQTTpublish=true;  //Web client and MQTT update to inform about the thermostateStatus status
     if (httpCloudEnabled && (CloudSyncCurrentStatus==CloudSyncOnStatus) && wifiCred.SiteAllow[wifiCred.activeIndex]) {
       /*
@@ -302,9 +305,10 @@ void thermostate_interrupt_triggered(bool debugModeOn) {
       lastTimeHTTPClouCheck=millis();
     }
   }
+  printLogln(String(millis())+" - [loop - thermostate_interrupt_triggered] - Exit now. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
 }
 
-void gas_sample(bool debugModeOn) {
+void gas_sample(bool debugModeOn, uint8_t reason) {
  /******************************************************
    Function gas_sample
    Target: Regular actions every SAMPLE_PERIOD seconds to take gas samples. 
@@ -312,6 +316,13 @@ void gas_sample(bool debugModeOn) {
            With no gas burning (neither boiler nor heater), gas samples are updated every SAMPLE_LONG_PERIOD (long period, typically 5m)
    Parameters:
     debugModeOn: Print out the logs or not
+    reason: reason for sample readings
+      1: Frist loop
+      2: Send HA Discovery
+      3: SAMPLE_PERIOD
+      4: SAMPLE_LONG_PERIOD
+      5: gasInterrupt detected
+      6: /samples requested from web page
    *****************************************************/ 
 
   float h2_ppm=0,lpg_ppm=0,ch4_ppm=0,co_ppm=0,alcohol_ppm=0;
@@ -319,21 +330,21 @@ void gas_sample(bool debugModeOn) {
     boilerOn => Burning gas (flame), due to warming water 
     thermostateStatus => Thermostate is active (or relay active)
     thermostateOn => Burning gas due to heater */
-  if (gasInterrupt) printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - GAS interrupt detected. Checking on GAS samples. - ");
-  else if (boilerOn || thermostateOn) printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_PERIOD] - Boiler burning gas. Taking GAS samples. - ");
-  else if (nowTimeGlobal-firstLoopTime < 2*HA_ADVST_WINDOW) printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - First sample reading to send MQTT message. - ");
-  else if (nowTimeGlobal-lastGasSample >= SAMPLE_LONG_PERIOD) printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_LONG_PERIOD] - No gas burning. Taking GAS samples. - ");
-  else printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - Taking samples to update web request. - ");
+  if (gasInterrupt) printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - GAS interrupt detected. Checking on GAS samples. reason="+String(reason)+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())+" - ");
+  else if (boilerOn || thermostateOn) printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_PERIOD] - Boiler burning gas. Taking GAS samples. reason="+String(reason)+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())+" - ");
+  else if (nowTimeGlobal-firstLoopTime < 2*HA_ADVST_WINDOW) printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - First sample reading to send MQTT message. reason="+String(reason)+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())+" - ");
+  else if (nowTimeGlobal-lastGasSample >= SAMPLE_LONG_PERIOD) printLog(String(nowTimeGlobal)+" - [loop - SAMPLE_LONG_PERIOD - gas_sample] - No gas burning. Taking GAS samples. reason="+String(reason)+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())+" - ");
+  else printLog(String(nowTimeGlobal)+" - [loop - gas_sample] - Taking samples to update web request. heapSize="+String(esp_get_free_heap_size())+", reason="+String(reason)+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())+" - ");
   
   //calculate_R0(); //This is to calculate R0 when the MQ5 sensor is replaced. Don't use it for regular working
   gasRatioSample=get_resistence_ratio(debugModeOn); //This is the current ratio RS/R0 - 6.5 for clean air
   if (gasRatioSample>4.5) {
-    gasClear=1;
+    gasClear=true;
     if (debugModeOn) printLogln("\n         [loop - gas_sample] - Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
     else printLogln("Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
   }
   else {
-    gasClear=0;
+    gasClear=false;
     // 0 0 0 0  0 0 0 0 => gasTypes
     //     | |  | | | +----> H2   (0x01)
     //     | |  | | +------> LPG  (0x02)
@@ -391,22 +402,22 @@ void gas_sample(bool debugModeOn) {
   samples["device_name"] = device;
   samples["version"] = String(VERSION);
   samples["ipAddress"] = WiFi.localIP().toString();
-  samples["boilerStatus"] = boilerStatus==true?"ON":"OFF";
-  samples["boilerOn"] = boilerOn==true?"ON":"OFF";
+  samples["boilerStatus"] = boilerStatus?"ON":"OFF";
+  samples["boilerOn"] = boilerOn?"ON":"OFF";
   samples["H2"] = h2_ppm;
   samples["LPG"] = lpg_ppm;
   samples["CH4"] = ch4_ppm;
   samples["CO"] = co_ppm;
   samples["ALCOHOL"] = alcohol_ppm;
-  samples["Clean_air"] = gasClear==1?"OFF":"ON";
-  samples["GAS_interrupt"] = gasInterrupt==1?"ON":"OFF";
-  iconGasInterrupt=gasInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
-  samples["Thermostate_interrupt"] = thermostateInterrupt==true?"ON":"OFF";
-  iconThermInterrupt=thermostateInterrupt==1?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
-  samples["Thermostate_status"] = thermostateStatus==true?"ON":"OFF";
+  samples["Clean_air"] = gasClear?"OFF":"ON";
+  samples["GAS_interrupt"] = gasInterrupt?"ON":"OFF";
+  iconGasInterrupt=gasInterrupt?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
+  samples["Thermostate_interrupt"] = thermostateInterrupt?"ON":"OFF";
+  iconThermInterrupt=thermostateInterrupt?String("mdi:electric-switch-closed"):String("mdi:electric-switch");
+  samples["Thermostate_status"] = thermostateStatus?"ON":"OFF";
   if (thermostateStatus) iconThermStatus=String("mdi:radiator");
   else {if (digitalRead(PIN_RL1) && !digitalRead(PIN_RL2)) iconThermStatus=String("mdi:radiator-off"); else iconThermStatus=String("mdi:radiator-disabled");}
-  samples["Thermostate_on"] = thermostateOn==true?"ON":"OFF";
+  samples["Thermostate_on"] = thermostateOn?"ON":"OFF";
   samples["SSID"] = WiFi.SSID();
   wifiNet.RSSI=WiFi.RSSI();
   samples["SIGNAL"] = wifiNet.RSSI;
@@ -624,6 +635,8 @@ void gas_sample(bool debugModeOn) {
   samples["serialLogsOn"]=serialLogsOn?"SERIAL_LOGS_ON":"SERIAL_LOGS_OFF";
   samples["webLogsOn"]=webLogsOn?"WEB_LOGS_ON":"WEB_LOGS_OFF";samples["sysLogsOn"]=sysLogsOn?"SYS_LOGS_ON":"SYS_LOGS_OFF";
   samples["sysLogServer"]=sysLogServer;samples["sysLogServerUDPPort"]=sysLogServerUDPPort;
+
+  printLogln(String(millis())+" - [loop - gas_sample] - Exit now. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
 } // -- gas_sample -- 
 
 void temperature_sample(bool debugModeOn) {
@@ -634,7 +647,7 @@ void temperature_sample(bool debugModeOn) {
     debugModeOn: Print out the logs or not
    *****************************************************/ 
 
-  printLog(String(millis())+" - [loop - temperature_sample] - Taking Temp & Hum samples.");
+  printLog(String(millis())+" - [loop - temperature_sample] - Taking Temp & Hum samples. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
   
   tempHumSensor.read();
    
@@ -650,10 +663,12 @@ void temperature_sample(bool debugModeOn) {
   samples["tempSensor"] = tempSensor; //Non-calibrated temp
   samples["temperature"] = valueT;    //Calibrated temp
   samples["humidity"] =  valueHum;    //Non-calibrated = calibrated hum
-}
+
+  printLogln(String(millis())+" - [loop - temperature_sample] - Exit now. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
+} // -- temperature_sample --
 
 
-void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolean secureMqttEnabled, bool debugModeOn) {
+void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolean secureMqttEnabled, bool debugModeOn, uint8_t reason) {
   /******************************************************
    Function mqtt_publish_samples
    Target: Publish the samples to the MQTT server
@@ -661,11 +676,34 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
     wifiEnabled: True if wifi is enabled
     mqttServerEnabled: True if mqtt is enabled
     debugModeOn: Print out the logs or not
+    reason: Event that triggered the need to message publish
+       0: Don't publish mqtt
+       1: Thermostate interrupt
+       2: SAMPLE_PERIOD
+       3: Gas detected (gas interrupt)
+       4: Reset time counters (from Home Assistant - MQTT)
+       5: Reset time counters (from web)
+       6: Configure debug flag (from Home Assistant - MQTT)
+       7: Configure debug flag (from web)
+       8: Configure serial logs (from Home Assistant - MQTT)
+       9: Configure serial logs (from web)
+      10: Configure web logs (from Home Assistant - MQTT)
+      11: Configure web logs (from web)
+      12: Configure sys logs (from Home Assistant - MQTT)
+      13: Configure sys logs (from web)
+      14: Configure R1 (from Home Assistant - MQTT)
+      15: Configure R1 (from web)
+      16: Configure R2 (from Home Assistant - MQTT)
+      17: Configure R2 (from web)
+      18: MQTT POWER message received
+      19: Sending the first HA Discovery after booting up
+      255: Default, so SAMPLE_PERIOD
    *****************************************************/ 
 
   struct tm nowTimeInfo; //36 B
   char s[100];
-  printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Publishing samples.");
+  printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Publishing message, reason="+String(reason)+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
+  if (reason==0) {printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Don't publish message. Exit . heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));return;}
   
   if (wifiEnabled && mqttServerEnabled && WiFi.status()==WL_CONNECTED) {
     MqttSyncCurrentStatus=MqttSyncSendStatus;
@@ -679,27 +717,33 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
       mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Online\0"); //Availability message, not retain in the broker. This makes HA to subscribe to the */SENSOR topic if not already done
       getLocalTime(&nowTimeInfo);strftime(s,sizeof(s),"%Y-%m-%dT%H:%M:%S",&nowTimeInfo); //Time in format 2024-08-24T07:56:25
       String message=String("{\"Time\":\""+String(s)+"\",\"SAMPLES\":"+JSON.stringify(samples)+"}");
+      printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Publish samples message now. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //---->
       mqttClient.publish(String(mqttTopicName+"/SENSOR").c_str(), 0, false, message.c_str());
 
-      if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - new MQTT messages published");
+      if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - samples MQTT messages published");
       /*if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - samples[\"boilerToday\"]="+JSON.stringify(samples["boilerToday"])+"samples[\"heaterToday\"]="+JSON.stringify(samples["heaterToday"]));*/ //----->
  
       //Home Assistant support
       //Publish HA Discovery messages at random basis to make sure HA always recives the Discovery Packet
       // even if it didn't receive it after it rebooted due to network issues or whatever - v1.9.2
-      long auxRandom=random(0,4);
-      //printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Evaluating [((auxRandom < 2) || updateHADiscovery) && !boilerStatus], auxRandom="+String(auxRandom)+", updateHADiscovery="+String(updateHADiscovery)+", boilerStatus="+String(boilerStatus)); //----->
-      if (((auxRandom < 2) || updateHADiscovery) && !boilerStatus) { //random < 2 ==> probability ~50%, ==> ~1 every 10 min (at samples/5m rate))
+      //long auxRandom=random(0,4);
+      //if (((auxRandom < 2) || updateHADiscovery) && !boilerStatus) { //random < 2 ==> probability ~50%, ==> ~1 every 10 min (at samples/5m rate))
+      long auxRandom=random(0,47); 
+      if (((auxRandom < 1) || updateHADiscovery) && !boilerStatus) { //random < 1 ==> probability ~2,1%, ==> ~1 every 240 min (4 hours) (at samples/5m rate))
                                                     //updateHADiscovery: True if year changed or firstLoop. Update Timer Counters Year in HA MQTT
                                                     //HADiscovery is sent several times (HA_ADVST_WINDOW) after boot up to make sure all the topics are processed - v0.9.7 - ISS007
                                                     //boilerStatus is true if receiving MQTT messages storm from the SmartPlug
-        uint32_t auxHeap=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT); //ESP.getMaxAllocHeap(); //ESP.getFreeHeap();
-        if (auxHeap >= 40000) {
+        /*uint32_t auxHeap=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT); //ESP.getMaxAllocHeap(); //ESP.getFreeHeap();
+        if (auxHeap >= 40000) { //Based on guess
           //printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Sending HADiscovery. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+" > 40000. minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
           mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); 
           printLogln(String(millis())+" - [loop - mqtt_publish_samples] - HADiscovery sent. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
         }
-        else printLogln(String(millis())+" - [loop - mqtt_publish_samples] - NOT sending HADiscovery. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+" < 40000. minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
+        else printLogln(String(millis())+" - [loop - mqtt_publish_samples] - NOT sending HADiscovery due to heap constraints, heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(auxHeap)+" < 40000. minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
+        */
+        //Heap checks done in mqttClientPublishHADiscovery()
+        printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Sending HADiscovery. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
+        mqttClientPublishHADiscovery(mqttTopicName,device,WiFi.localIP().toString(),false); 
         
         if (updateHADiscovery) updateHADiscovery=false;
       }
@@ -714,6 +758,8 @@ void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolea
       errorsMQTTCnt++;EEPROM.write(0x538,errorsMQTTCnt);eepromUpdate=true;
     }
   }
+
+  printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
 }
 
 void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpSynced) {
@@ -758,7 +804,7 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
 */
   
 
-  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - ONE_SECOND_PERIOD] - Doing actions every second.");}
+  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - ONE_SECOND_PERIOD] - Doing actions every second. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   /*debugModeOn=true;
     if (debugModeOn) {printLogln(String(millis())+" - [loop - ONE_SECOND_PERIOD] - boilerStatus="+String(boilerStatus)+", thermostateStatus="+String(thermostateStatus)+", boilerOn="+String(boilerOn)+", thermostateOn="+String(thermostateOn)+
         "                                      \nlastThermostatOnTime="+String(lastThermostatOnTime)+", lastBoilerOnTime="+String(lastBoilerOnTime)+
@@ -871,6 +917,7 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
   samples["boilerOnPreviousYearJul"] = boilerTimeOnPreviousYear.counterMonths[6];samples["boilerOnPreviousYearAug"] = boilerTimeOnPreviousYear.counterMonths[7];samples["boilerOnPreviousYearSep"] = boilerTimeOnPreviousYear.counterMonths[8];samples["boilerOnPreviousYearOct"] = boilerTimeOnPreviousYear.counterMonths[9];samples["boilerOnPreviousYearNov"] = boilerTimeOnPreviousYear.counterMonths[10];samples["boilerOnPreviousYearDec"] = boilerTimeOnPreviousYear.counterMonths[11];
 
   /*if (debugModeOn) printLogln(String(millis())+" - [loop - mqtt_publish_samples] - Exit - samples[\"boilerToday\"]="+JSON.stringify(samples["boilerToday"])+"samples[\"heaterToday\"]="+JSON.stringify(samples["heaterToday"]));*/ //----->
+  if (debugModeOn) printLogln(String(millis())+" - [loop - ONE_SECOND_PERIOD] - Exit now. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
   
   //No time on counter update if there is no NTP sync  
   //Update with nowTimeGlobal to prevent accumulating delays in CHECK periods as this code might take long
@@ -893,11 +940,11 @@ void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTime
     EEPROM.put(0x421,heaterTimeOnYear); EEPROM.put(0x465,heaterTimeOnPreviousYear);
     EEPROM.put(0x4A9,boilerTimeOnYear); EEPROM.put(0x4ED,boilerTimeOnPreviousYear);
     EEPROM.commit();
-    if (debugModeOn) printLogln(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - EEPROM updated with variables and counters");
+    if (debugModeOn) printLogln(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - EEPROM updated with variables and counters. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
     timersEepromUpdate=false;
   }
   else {
-    if (debugModeOn) printLogln(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - No need to update EEPROM with variables and counters");
+    if (debugModeOn) printLogln(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - No need to update EEPROM with variables and counters. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
   }
 
   lastTimeTimerEepromUpdateCheck=nowTimeGlobal;
@@ -918,7 +965,7 @@ uint32_t checkURL(boolean debugModeOn,boolean fromSetup,uint32_t error_setup,IPA
    *****************************************************/
   uint64_t timeLeft=0;
   
-  if (debugModeOn) {printLogln(String(millis())+" - [checkURL] - Trying connection to "+String(IpAddress2String(server))+" to send httpRequest: '"+httpRequest+"'");}
+  if (debugModeOn) {printLogln(String(millis())+" - [checkURL] - Trying connection to "+String(IpAddress2String(server))+" to send httpRequest: '"+httpRequest+"'. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
 
   if (client.connect(server, port)) {
     if (debugModeOn) {printLogln("      [checkURL] - connected");}
@@ -931,7 +978,7 @@ uint32_t checkURL(boolean debugModeOn,boolean fromSetup,uint32_t error_setup,IPA
     client.println();
   }
   else {
-    if (debugModeOn) {printLog("      [checkURL] - No server connection. ERROR_WEB_SERVER - Exit - Time: ");getLocalTime(&nowTimeInfo);printLogln(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");}
+    if (debugModeOn) {printLog("      [checkURL] - No server connection. ERROR_WEB_SERVER - Exit - Time: ");getLocalTime(&nowTimeInfo);printLog(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");printLogln(". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
     return(ERROR_WEB_SERVER); //No WEB server connection
   }
 
@@ -946,7 +993,7 @@ uint32_t checkURL(boolean debugModeOn,boolean fromSetup,uint32_t error_setup,IPA
   if (timeLeft==0) { //Case if while() loop timeout.
     //Too long with no server answer. Something was wrong
     if (!client.connected()) client.stop();
-    if (debugModeOn) {printLog("      [checkURL] - No server connection. ERROR_WEB_SERVER - Exit - Time: ");getLocalTime(&nowTimeInfo);printLogln(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");}
+    if (debugModeOn) {printLog("      [checkURL] - No server connection. ERROR_WEB_SERVER - Exit - Time: ");getLocalTime(&nowTimeInfo);printLog(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");printLogln(". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
     return(ERROR_WEB_SERVER); //No WEB server connection
   }
   else { 
@@ -963,11 +1010,11 @@ uint32_t checkURL(boolean debugModeOn,boolean fromSetup,uint32_t error_setup,IPA
   
   // if the server's disconnected, stop the client:
   if (!client.connected()) {
-    if (debugModeOn) {printLogln("      [checkURL] - Disconnecting from server. Bye!");}
+    if (debugModeOn) {printLogln("      [checkURL] - Disconnecting from server. Bye!.");}
     client.stop();
   }
 
-  if (debugModeOn) {printLog(String("      [checkURL] - GOT URL. NO_ERROR - Exit - Time: "));getLocalTime(&nowTimeInfo);printLogln(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");}
+  if (debugModeOn) {printLog(String("      [checkURL] - GOT URL. NO_ERROR - Exit - Time: "));getLocalTime(&nowTimeInfo);printLog(&nowTimeInfo, "%d/%m/%Y - %H:%M:%S");printLogln(". heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   return(NO_ERROR); //WEB server connection fine
 }
 
@@ -984,7 +1031,7 @@ uint32_t connectiviy_check_period(bool debugModeOn, uint64_t nowTimeGlobal) {
    Returns: Nothing
    *****************************************************/
 
-  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - CONNECTIVITY_CHECK_PERIOD] - Checking connectivity.");}
+  if (debugModeOn) {printLogln(String(nowTimeGlobal)+" - [loop - CONNECTIVITY_CHECK_PERIOD] - Checking connectivity. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   
   IPAddress auxServer;
   bool connectivityOK=true, webServerOK=true;
@@ -1036,14 +1083,14 @@ uint32_t connectiviy_check_period(bool debugModeOn, uint64_t nowTimeGlobal) {
         //Local web server KO
         errorsWebServerCnt++; //Stats - Variable is written in EEPROM in the main loop
         webServerOK=false;
-        if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connectivity is OK, but web server is KO.  Reinit network services, heap="+String(esp_get_free_heap_size()));}
+        if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connectivity is OK, but web server is KO.  Reinit network services. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
     }
     else {
-      if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connectivity and web server are OK, heap="+String(esp_get_free_heap_size()));}
+      if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - Connectivity and web server are OK. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
     }
   }
   else {
-    if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - All network checks are KO. Reinit network services, heap="+String(esp_get_free_heap_size()));}
+    if (debugModeOn) {printLogln("     [loop - CONNECTIVITY_CHECK_PERIOD] - All network checks are KO. Reinit network services. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   }
   
   lastTimeConnectiviyCheck=nowTimeGlobal;
