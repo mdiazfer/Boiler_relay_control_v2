@@ -45,7 +45,7 @@ RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestChec
 RTC_DATA_ATTR byte mac[6];
 RTC_DATA_ATTR uint64_t nowTimeGlobal=0,firstLoopTime=0,lastCheckTime=0,lastTimeWifiReconnectionCheck=0,lastTimeHTTPClouCheck=0,lastTimeNTPCheck=0,
                       lastCloudClockChangeCheck=0,lastTimeHeapReadingCheck=0,lastInterruptTime=0,lastGasSample=0,lastTimeMQTTCheck=0,lastTimeConnectiviyCheck=0,
-                      lastMQTTChangeCheck=0,lastTimeSecondCheck=0,lastThermostatOnTime=0,lastBoilerOnTime=0,lastTimeTimerEepromUpdateCheck=0;
+                      lastMQTTChangeCheck=0,lastTimeSecondCheck=0,lastThermostatOnTime=0,lastBoilerOnTime=0,lastTimeTimerEepromUpdateCheck=0,lastTimeWebPageServed=0;
 RTC_DATA_ATTR ulong wifiReconnectPeriod=WIFI_RECONNECT_PERIOD;
 RTC_DATA_ATTR String tempHumSensorType=String(TEMP_HUM_SENSOR_TYPE);
 RTC_DATA_ATTR float valueHum=0,tempSensor=0,valueT=0;
@@ -231,7 +231,7 @@ void loop() {
 
   //Pubish the first MQTT message and HA Discovery. Wait HA_ADVST_WINDOW seconds to avoid heap leaking
   nowTimeGlobal=millis();
-  if ((nowTimeGlobal > firstLoopTime+HA_ADVST_WINDOW) && !firstHASent && !webServerResponding) {
+  if ((nowTimeGlobal > firstLoopTime+HA_ADVST_WINDOW) && !firstHASent && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     //HA Discovery is sent again just right after booting up cause sometimes, some objects are missed.
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
     
@@ -264,7 +264,10 @@ void loop() {
     else {
       printLogln(String(millis())+" - [loop - WIFI_RECONNECT_PERIOD] - WiFi restart required to either free heap memory up or restart web server. error_setup=0x"+String(error_setup,HEX)+"), heapSize="+String(heapSize));
     }
-    bool auxWebLogsOn=webLogsOn,auxSysLogsOn=sysLogsOn;
+    
+    uint8_t auxConfigVariables=EEPROM.read(0x606);
+    bool auxWebLogsOn=configVariables & 0x10; //Bit 3, webLogsOn
+    bool auxSysLogsOn=configVariables & 0x20; //Bit 2, sysLogsOn
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
     webLogsOn=false;
     sysLogsOn=false;
@@ -296,7 +299,7 @@ void loop() {
   //forceNTPCheck is true if:
   // 1) After NTP server config in firstSetup()
   nowTimeGlobal=millis();
-  if (((nowTimeGlobal-lastTimeNTPCheck) >= NTP_KO_CHECK_PERIOD || forceNTPCheck) && !webServerResponding) {
+  if (((nowTimeGlobal-lastTimeNTPCheck) >= NTP_KO_CHECK_PERIOD || forceNTPCheck) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
     ntp_ko_check_period(false);
@@ -308,7 +311,7 @@ void loop() {
   //Regular actions every ONE_SECOND_PERIOD seconds
   // 1) Check if time on counters need to be updated
   nowTimeGlobal=millis();
-  if (((nowTimeGlobal-lastTimeSecondCheck) >= ONE_SECOND_PERIOD) && !webServerResponding) {
+  if (((nowTimeGlobal-lastTimeSecondCheck) >= ONE_SECOND_PERIOD) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     
     one_second_check_period(false,nowTimeGlobal,ntpSynced);
   }
@@ -316,7 +319,7 @@ void loop() {
 
   //Regular actions every TIME_COUNTERS_EEPROM_UPDATE_PERIOD seconds
   nowTimeGlobal=millis();
-  if (((nowTimeGlobal-lastTimeTimerEepromUpdateCheck) >= TIME_COUNTERS_EEPROM_UPDATE_PERIOD) && !webServerResponding) {
+  if (((nowTimeGlobal-lastTimeTimerEepromUpdateCheck) >= TIME_COUNTERS_EEPROM_UPDATE_PERIOD) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     
     time_counters_eeprom_update_check_period(true,nowTimeGlobal);
   }
@@ -325,7 +328,7 @@ void loop() {
   //Regular actions every MQTT_CHECK_PERIOD seconds to check on MQTT connection
   // or due to forceMQTTConnect (from webServer (/cloud form))
   nowTimeGlobal=millis();
-  if (((nowTimeGlobal-lastTimeMQTTCheck >= MQTT_CHECK_PERIOD) || forceMQTTConnect) && !webServerResponding) {
+  if (((nowTimeGlobal-lastTimeMQTTCheck >= MQTT_CHECK_PERIOD) || forceMQTTConnect) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
 
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
     //Connect to MQTT broker as it was enabled from the webserver
@@ -350,7 +353,7 @@ void loop() {
   nowTimeGlobal=millis();
   if ((((boilerOn || thermostateOn || !gasClear) && (nowTimeGlobal-lastGasSample >= SAMPLE_PERIOD)) || 
       ((!boilerOn && !thermostateOn && gasClear) && (nowTimeGlobal-lastGasSample >= SAMPLE_LONG_PERIOD))) 
-      && !webServerResponding) { //
+      && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
     if (nowTimeGlobal-lastGasSample >= SAMPLE_LONG_PERIOD) gas_sample(false,4);   //Get GAS samples
     else gas_sample(false,3);   //Get GAS samples
@@ -368,7 +371,15 @@ void loop() {
   //Regular actions every CONNECTIVITY_CHECK_PERIOD seconds
   nowTimeGlobal=millis();
   if (((nowTimeGlobal-lastTimeConnectiviyCheck >= CONNECTIVITY_CHECK_PERIOD) && WiFi.status()==WL_CONNECTED && 
-          wifiEnabled && !firstBoot ) && !webServerResponding && Update.progress()==0) {
+          wifiEnabled && !firstBoot ) ) { //ISS019 - v1.1.3 - lastTimeWebPageServed
+    
+    //If a web page was served recently, no need for connectiviy checks
+    if ((nowTimeGlobal-lastTimeWebPageServed >= CONNECTIVITY_CHECK_PERIOD)) {
+      printLogln(String(millis())+" - [loop - CONNECTIVITY_CHECK_PERIOD] - A web page was served "+String(uint8_t ((nowTimeGlobal-lastTimeWebPageServed)/1000))+" secons ago, so no need for additional connectivity checks.");
+      lastTimeConnectiviyCheck=nowTimeGlobal;
+      return;
+    }
+
     //Check connectivity and reset it if needed
     // WiFi.status()==WL_CONNECTED && no FQDN resolved and error in sample_upload && mqttClient not connected and error in checkURL and no GW ping
     // NTP status is not check as NTP checks take time (random period) and forcing NTP in here is avoided (as it may take several loop cycles = complexity)
@@ -395,7 +406,7 @@ void loop() {
   heapBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);if(heapBlockSize<minMaxHeapBlockSizeSinceBoot) minMaxHeapBlockSizeSinceBoot=heapBlockSize;
   
   //Check interrupt flags
-  if (gasInterrupt && !webServerResponding) {
+  if (gasInterrupt && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     if (debugModeOn) {printLogln(String(millis())+"  - [loop] - GAS interrupt detected and gas_probe_triggered routine triggered: gasClear flag was '"+String(gasClear)+"' (1=NO GAS, 0=GAS)");}
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
     gas_sample(debugModeOn,5); //gasClear flag is updated
@@ -418,7 +429,7 @@ void loop() {
   //Regular actions after THERMOSTATE_INTERRUPT_DELAY milliseconds the thermostate interrupt was triggered to check the value of Thermostate pin
   //Delay of THERMOSTATE_INTERRUPT_DELAY milliseconds is needed to avoid bouncing
   nowTimeGlobal=millis();
-  if ((thermostateInterrupt && (nowTimeGlobal-lastInterruptTime >= THERMOSTATE_INTERRUPT_DELAY)) && !webServerResponding) {
+  if ((thermostateInterrupt && (nowTimeGlobal-lastInterruptTime >= THERMOSTATE_INTERRUPT_DELAY)) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
     thermostate_interrupt_triggered(debugModeOn); //Sending HTTP Cloud, mqtt and web client updates is done from that function
     blockWebServer=false;
@@ -427,7 +438,7 @@ void loop() {
 
   //Check if mqtt samples must be published
   nowTimeGlobal=millis();
-  if ((forceMQTTpublish>0) && !webServerResponding) {
+  if ((forceMQTTpublish>0) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     /* Situations for forceMQTTpublish != 0
        0: Don't publish mqtt
        1: Thermostate interrupt
@@ -458,7 +469,7 @@ void loop() {
   }
   heapBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);if(heapBlockSize<minMaxHeapBlockSizeSinceBoot) minMaxHeapBlockSizeSinceBoot=heapBlockSize;
 
-  if ((forceWebEvent && wifiEnabled && webServerEnabled && WiFi.status()==WL_CONNECTED && webEvents.count()>0) && !webServerResponding) {
+  if ((forceWebEvent && wifiEnabled && webServerEnabled && WiFi.status()==WL_CONNECTED && webEvents.count()>0) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     //webEvents.count()>0 it means clients connected
     webEvents.send("ping",NULL,nowTimeGlobal);
     webEvents.send(JSON.stringify(samples).c_str(),"new_samples",nowTimeGlobal);

@@ -22,7 +22,7 @@ extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPrev
                               errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
 extern RTC_DATA_ATTR uint16_t powerOnFlameThreshold;
 extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot,minMaxHeapBlockSizeSinceBoot,minMaxHeapBlockSizeSinceUpgrade;
-extern RTC_DATA_ATTR uint64_t nowTimeGlobal,lastTimeHTTPClouCheck;
+extern RTC_DATA_ATTR uint64_t nowTimeGlobal,lastTimeHTTPClouCheck,lastTimeWebPageServed;
 extern RTC_DATA_ATTR float valueT,valueHum;
 extern RTC_DATA_ATTR AsyncWebServer webServer;
 extern RTC_DATA_ATTR AsyncEventSource webEvents;

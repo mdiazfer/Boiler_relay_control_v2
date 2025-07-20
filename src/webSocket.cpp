@@ -13,6 +13,7 @@ void notifyClients(String logMessage) {
   //webSocket->textAll(logMessage);
   webSocket.textAll(logMessage);
   webServerResponding=false; //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed again
+  lastTimeWebPageServed=millis();  //ISS019 - v1.1.3 - lastTimeWebPageServed
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t id) {
@@ -87,6 +88,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t id) {
     }
   }
   webServerResponding=false; //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed againAwsFrameInfo *info = (AwsFrameInfo*)arg;
+  lastTimeWebPageServed=millis();  //ISS019 - v1.1.3 - lastTimeWebPageServed
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
@@ -131,6 +133,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
       break;  
   }
   webServerResponding=false; //WebServer ends, heap is goint to be realeased, so BLE iBeacons are allowed again
+  lastTimeWebPageServed=millis();  //ISS019 - v1.1.3 - lastTimeWebPageServed
 }
 
 uint32_t initWebSocket() {

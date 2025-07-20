@@ -10,6 +10,7 @@ extern RTC_DATA_ATTR AsyncWebSocket webSocket;
 extern RTC_DATA_ATTR HardwareSerial boardSerialPort;
 extern RTC_DATA_ATTR bool forceWebEvent;
 extern RTC_DATA_ATTR uint8_t forceMQTTpublish;
+extern RTC_DATA_ATTR uint64_t lastTimeWebPageServed;
 extern bool webServerResponding,debugModeOn,webLogsOn;
 extern String bootLogs;
 extern JSONVar samples;
