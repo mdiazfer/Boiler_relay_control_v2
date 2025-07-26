@@ -9,9 +9,9 @@ extern RTC_DATA_ATTR AsyncMqttClient mqttClient;
 extern RTC_DATA_ATTR enum MqttSyncStatus MqttSyncCurrentStatus;
 extern RTC_DATA_ATTR boolean debugModeOn,wifiEnabled,mqttServerEnabled,forceWebEvent,thermostateStatus,updateHADiscovery,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot;
-extern RTC_DATA_ATTR uint8_t forceMQTTpublish,bootCount,resetCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,errorsHTTPUptsCnt,errorsMQTTCnt;
+extern RTC_DATA_ATTR uint8_t forceMQTTpublish,bootCount,resetCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,errorsHTTPUptsCnt,errorsMQTTCnt,errorsJSONCnt,resetPreventiveJSONCount,lastErrorsJSONCnt;
 extern RTC_DATA_ATTR uint16_t year;
-extern RTC_DATA_ATTR uint64_t lastThermostatOnTime,lastBoilerOnTime;
+extern RTC_DATA_ATTR uint64_t lastThermostatOnTime,lastBoilerOnTime,lastTimeErrorsJSON;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;
 extern String mqttTopicPrefix,mqttTopicName,mqttServer,device,iconWifi,iconGasInterrupt,iconThermInterrupt,iconThermStatus,powerMqttTopic;
 extern JSONVar samples;
@@ -36,6 +36,8 @@ extern char bufferTopicHAName[100],bufferPayload[BUFFER_PAYLOAD_SIZE],bufferMqtt
   static const char hex_digits[] = "0123456789ABCDEF";
   #define __hex_digits__
 #endif
+
+extern void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool forceUpdateTimers);
 
 void onMqttConnect(bool sessionPresent);
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);

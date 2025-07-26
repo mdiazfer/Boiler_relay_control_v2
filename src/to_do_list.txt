@@ -1,5 +1,8 @@
 Change Log
 ----------
+v1.1.4  - Preventive reset in case of MQTT payload JSON parsing errors exceeds JSON_ERRORS_LIMIT_THERSHOLD limit in JSON_ERRORS_GAP_THERSHOLD milliseconds
+          + maintenance.html, maintenance_script.js and styles.css modifyed accordingly
+        - Boiler and Heater timers are saved in EEPROM before every ESP.restart();
 v1.1.3  - Not serve web pages if heapSize, heapBlockSize are below thresholds
         - Automatic web server availability check after rebooting
         - Troubleshooting

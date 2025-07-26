@@ -1063,6 +1063,8 @@ void EEPROMInit() {
     errorsConnectivityCnt=EEPROM.read(0x53A); //Counter for Connectivity errors (being WiFi connected)
     errorsWebServerCnt=EEPROM.read(0x53B); //Counter for Web Server errors (being WiFi connected but not serving web pages)
     resetWebServerCnt=EEPROM.read(0x53C); //Counter for Web Server resets (being WiFi connected but not serving web pages)
+    errorsJSONCnt=EEPROM.read(0x64F); // Counter for JSON errors
+    resetPreventiveJSONCount=EEPROM.read(0x650); //Counter for JSON resets duet to error limit exceeded
 
     esp_reset_reason_t resetReason=esp_reset_reason();
     /*
@@ -1185,8 +1187,8 @@ void variablesInit() {
       //EEPROM init
       EEPROMInit(); //Wifi, ntp, web server and mqtt variables updated from that function
       
-    //Variable init
-      lastMQTTChangeCheck=0,lastCloudClockChangeCheck=0;
+      //Variable init
+      lastMQTTChangeCheck=0,lastCloudClockChangeCheck=0,lastTimeErrorsJSON=0,lastErrorsJSONCnt=errorsJSONCnt==0?errorsJSONCnt:errorsJSONCnt-1;
 
       //Initialize the Task Watchdog Timeout
       esp_task_wdt_init(ESP_TASK_WDT_TIMEOUT, true);
@@ -1888,6 +1890,11 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
     updateEeprom=true;*/
   } 
 
+  /* Manual timer updates // ---> 
+    boilerTimeOnYear.counterMonths[6]+=286;
+    updateEeprom=true;
+  */
+
   //Save variables in EEPROM
   if (updateEeprom) {
     EEPROM.put(0x421,heaterTimeOnYear); EEPROM.put(0x465,heaterTimeOnPreviousYear);
@@ -1926,8 +1933,6 @@ uint32_t timeOnCountersInit(uint32_t error_setup,bool debugModeOn,bool fromSetup
   samples["boilerOnPreviousYear"] = auxTimeOn;
   samples["boilerOnPreviousYearJan"] = boilerTimeOnPreviousYear.counterMonths[0];samples["boilerOnPreviousYearFeb"] = boilerTimeOnPreviousYear.counterMonths[1];samples["boilerOnPreviousYearMar"] = boilerTimeOnPreviousYear.counterMonths[2];samples["boilerOnPreviousYearApr"] = boilerTimeOnPreviousYear.counterMonths[3];samples["boilerOnPreviousYearMay"] = boilerTimeOnPreviousYear.counterMonths[4];samples["boilerOnPreviousYearJun"] = boilerTimeOnPreviousYear.counterMonths[5];
   samples["boilerOnPreviousYearJul"] = boilerTimeOnPreviousYear.counterMonths[6];samples["boilerOnPreviousYearAug"] = boilerTimeOnPreviousYear.counterMonths[7];samples["boilerOnPreviousYearSep"] = boilerTimeOnPreviousYear.counterMonths[8];samples["boilerOnPreviousYearOct"] = boilerTimeOnPreviousYear.counterMonths[9];samples["boilerOnPreviousYearNov"] = boilerTimeOnPreviousYear.counterMonths[10];samples["boilerOnPreviousYearDec"] = boilerTimeOnPreviousYear.counterMonths[11];
-
-  //samples.printTo(boardSerialPort); Print out the JSON variable
 
   if (debugModeOn) {
     if (fromSetup) {printLogln("  [timeOnCountersInit] - Counter variables got from EEPROM.\n  [timeOnCountersInit] - [OK]");}

@@ -23,11 +23,11 @@
 extern RTC_DATA_ATTR byte mac[6];
 extern RTC_DATA_ATTR String tempHumSensorType,bootLogs;
 extern RTC_DATA_ATTR AsyncMqttClient mqttClient;
-extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetWebServerCnt,
-                              errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
+extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetWebServerCnt,resetPreventiveJSONCount,
+                              errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt,errorsJSONCnt,lastErrorsJSONCnt;
 extern RTC_DATA_ATTR uint16_t year,previousYear,powerOnFlameThreshold;
 extern RTC_DATA_ATTR uint32_t minMaxHeapBlockSizeSinceUpgrade,minHeapSinceUpgrade,minHeapSinceBoot,minMaxHeapBlockSizeSinceBoot,minHeapSeen;
-extern RTC_DATA_ATTR uint64_t lastTimeHTTPClouCheck,lastTimeNTPCheck,lastMQTTChangeCheck,lastCloudClockChangeCheck,lastTimeMQTTSampleCheck;
+extern RTC_DATA_ATTR uint64_t lastTimeHTTPClouCheck,lastTimeNTPCheck,lastMQTTChangeCheck,lastCloudClockChangeCheck,lastTimeMQTTSampleCheck,lastTimeErrorsJSON;
 extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled,ntpSynced,
                               OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,logTagged,forceWifiReconnect,forceWebServerInit,powerMeasureEnabled,powerMeasureSubscribed;
 extern RTC_DATA_ATTR struct timeOnCounters heaterTimeOnYear,heaterTimeOnPreviousYear,boilerTimeOnYear,boilerTimeOnPreviousYear;

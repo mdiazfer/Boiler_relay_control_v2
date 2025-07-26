@@ -11,7 +11,7 @@
 #include <ESP32Ping.h>
 
 extern RTC_DATA_ATTR boolean forceWifiReconnect,forceWebServerInit,firstBoot,wifiResuming,forceWEBTestCheck,forceNTPCheck,wifiEnabled,timersEepromUpdate,updateHADiscovery,powerMeasureEnabled,powerMeasureSubscribed;
-extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetSWCount,resetPreventiveWebServerCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
+extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetSWCount,resetPreventiveWebServerCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,resetPreventiveJSONCount,
                               errorsHTTPUptsCnt,errorsMQTTCnt,errorsConnectivityCnt,errorsWebServerCnt;
 extern RTC_DATA_ATTR uint16_t year;
 extern RTC_DATA_ATTR uint64_t nowTimeGlobal,firstLoopTime,lastTimeWifiReconnectionCheck,whileLoopTimeLeft,lastCloudClockChangeCheck,lastTimeMQTTCheck,lastThermostatOnTime,
@@ -50,5 +50,5 @@ void gas_sample(bool debugModeOn, uint8_t reason=255);
 void temperature_sample(bool debugModeOn);
 void mqtt_publish_samples(boolean wifiEnabled, boolean mqttServerEnabled, boolean secureMqttEnabled, bool debugModeOn, uint8_t reason=255);
 void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal,bool ntpSynced);
-void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal);
+void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool forceUpdateTimers=false);
 uint32_t  connectiviy_check_period(bool debugModeOn, uint64_t nowTimeGlobal);

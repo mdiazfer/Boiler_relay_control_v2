@@ -18,8 +18,8 @@
 extern RTC_DATA_ATTR boolean deviceReset,factoryReset,OTAUpgradeBinAllowed,SPIFFSUpgradeBinAllowed,httpCloudEnabled,
                       mqttServerEnabled,secureMqttEnabled,forceMQTTConnect,forceWifiReconnect,forceNTPCheck,
                       bluetoothEnabled,wifiEnabled,reconnectWifiAndRestartWebServer,resyncNTPServer,powerMeasureEnabled,powerMeasureSubscribed;
-extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
-                              errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
+extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetPreventiveWebServerCount,resetSWCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,resetPreventiveJSONCount,
+                              errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt,errorsJSONCnt;
 extern RTC_DATA_ATTR uint16_t powerOnFlameThreshold;
 extern RTC_DATA_ATTR uint32_t error_setup,minHeapSinceUpgrade,minHeapSinceBoot,minMaxHeapBlockSizeSinceBoot,minMaxHeapBlockSizeSinceUpgrade;
 extern RTC_DATA_ATTR uint64_t nowTimeGlobal,lastTimeHTTPClouCheck,lastTimeWebPageServed;
@@ -72,6 +72,7 @@ extern void gas_sample(bool debugModeOn, uint8_t reason);
 extern void temperature_sample(bool debugModeOn);
 
 extern void mqttClientPublishHADiscovery(String mqttTopicName, String device, String ipAddress, bool removeTopics);
+extern void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool forceUpdateTimers);
 
 String processorInfo(const String& var);
 uint32_t initWebServer();

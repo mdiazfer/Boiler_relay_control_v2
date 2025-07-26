@@ -36,8 +36,8 @@ RTC_DATA_ATTR enum wifiStatus wifiCurrentStatus;
 RTC_DATA_ATTR struct tm startTimeInfo;
 RTC_DATA_ATTR char TZEnvVar[TZ_ENV_VARIABLE_MAX_LENGTH];
 RTC_DATA_ATTR uint32_t error_setup=NO_ERROR,minMaxHeapBlockSizeSinceBoot=0xFFFFFFFF,minMaxHeapBlockSizeSinceUpgrade=0xFFFFFFFF,minHeapSinceUpgrade=0xFFFFFFFF,minHeapSinceBoot=0xFFFFFFFF; //1*4=4B
-RTC_DATA_ATTR uint8_t forceMQTTpublish=0,bootCount=255,resetCount=0,resetPreventiveCount=0,resetPreventiveWebServerCount=0,resetSWCount=0,resetSWWebCount=0,resetSWMqttCount=0,resetSWUpgradeCount=0,resetWebServerCnt=0,
-                      errorsWiFiCnt=0,errorsNTPCnt=0,errorsHTTPUptsCnt=0,errorsMQTTCnt=0,SPIFFSErrors=0,errorsWebServerCnt=0,errorsConnectivityCnt=0;
+RTC_DATA_ATTR uint8_t forceMQTTpublish=0,bootCount=255,resetCount=0,resetPreventiveCount=0,resetPreventiveWebServerCount=0,resetPreventiveJSONCount=0,resetSWCount=0,resetSWWebCount=0,resetSWMqttCount=0,resetSWUpgradeCount=0,resetWebServerCnt=0,
+                      errorsWiFiCnt=0,errorsNTPCnt=0,errorsHTTPUptsCnt=0,errorsMQTTCnt=0,SPIFFSErrors=0,errorsWebServerCnt=0,errorsConnectivityCnt=0,errorsJSONCnt=0,lastErrorsJSONCnt=0;
 RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestCheck=false,forceWebServerInit=false,forceWebEvent=false,
                       ntpEnabled=true,httpCloudEnabled=true,forceNTPCheck=false,ntpSynced=false,
                       mqttServerEnabled=true,forceMQTTConnect=false,secureMqttEnabled=false,bluetoothEnabled=false,webServerEnabled=false,timersEepromUpdate=false,
@@ -45,7 +45,7 @@ RTC_DATA_ATTR boolean wifiEnabled=true,forceWifiReconnect=false,forceWEBTestChec
 RTC_DATA_ATTR byte mac[6];
 RTC_DATA_ATTR uint64_t nowTimeGlobal=0,firstLoopTime=0,lastCheckTime=0,lastTimeWifiReconnectionCheck=0,lastTimeHTTPClouCheck=0,lastTimeNTPCheck=0,
                       lastCloudClockChangeCheck=0,lastTimeHeapReadingCheck=0,lastInterruptTime=0,lastGasSample=0,lastTimeMQTTCheck=0,lastTimeConnectiviyCheck=0,
-                      lastMQTTChangeCheck=0,lastTimeSecondCheck=0,lastThermostatOnTime=0,lastBoilerOnTime=0,lastTimeTimerEepromUpdateCheck=0,lastTimeWebPageServed=0;
+                      lastMQTTChangeCheck=0,lastTimeSecondCheck=0,lastThermostatOnTime=0,lastBoilerOnTime=0,lastTimeTimerEepromUpdateCheck=0,lastTimeWebPageServed=0,lastTimeErrorsJSON=0;
 RTC_DATA_ATTR ulong wifiReconnectPeriod=WIFI_RECONNECT_PERIOD;
 RTC_DATA_ATTR String tempHumSensorType=String(TEMP_HUM_SENSOR_TYPE);
 RTC_DATA_ATTR float valueHum=0,tempSensor=0,valueT=0;
@@ -214,10 +214,10 @@ void loop() {
   }
   if (heapSize<ABSULUTE_MIN_HEAP_THRESHOLD || minMaxHeapBlockSizeSinceBoot<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD) { //Preventive reset to avoid crash
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaks
-    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize)+")<ABSULUTE_MIN_HEAP_THRESHOLD ("+String(ABSULUTE_MIN_HEAP_THRESHOLD)+"). Restart needed");
+    printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize)+")<ABSULUTE_MIN_HEAP_THRESHOLD ("+String(ABSULUTE_MIN_HEAP_THRESHOLD)+") or Heap Block Size ("+String(minMaxHeapBlockSizeSinceBoot)+")<ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD ("+String(ABSULUTE_MIN_MAX_HEAP_BLOCK_THRESHOLD)+"). Restart needed");
     resetPreventiveCount++; //preventive resets (mainly becuase low heap situation)
     EEPROM.write(0x41B,resetPreventiveCount);
-    EEPROM.commit();
+    time_counters_eeprom_update_check_period(true,millis(),true); //Force to write timers
     ESP.restart(); //Rebooting
   }
   /*else if(heapSize<WEBSERVER_MIN_HEAP_SIZE) {
@@ -225,7 +225,7 @@ void loop() {
     printLogln(String(millis())+" - [loop - heapCheck] - HeapSize ("+String(heapSize)+")<WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Restart needed");
     resetPreventiveWebServerCount++; //preventive web reset resets (mainly becuase low heap situation)
     EEPROM.write(0x531,resetPreventiveWebServerCount);
-    EEPROM.commit();
+    time_counters_eeprom_update_check_period(true,millis(),true); //Force to write timers
     ESP.restart(); //Rebooting
   }*/ //Check don in webServer.cpp
 
@@ -321,7 +321,7 @@ void loop() {
   nowTimeGlobal=millis();
   if (((nowTimeGlobal-lastTimeTimerEepromUpdateCheck) >= TIME_COUNTERS_EEPROM_UPDATE_PERIOD) && !webServerResponding) { // ISS019 - v1.1.2 - webServerResponding
     
-    time_counters_eeprom_update_check_period(true,nowTimeGlobal);
+    time_counters_eeprom_update_check_period(true,nowTimeGlobal,false);
   }
   heapBlockSize=heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);if(heapBlockSize<minMaxHeapBlockSizeSinceBoot) minMaxHeapBlockSizeSinceBoot=heapBlockSize;
 
@@ -390,7 +390,7 @@ void loop() {
         resetWebServerCnt++; //Stats
         EEPROM.write(0x53B,errorsWebServerCnt);
         EEPROM.write(0x53C,resetWebServerCnt);
-        EEPROM.commit();
+        time_counters_eeprom_update_check_period(true,millis(),true); //Force to write timers
         ESP.restart(); //Rebooting
       break;
       case ERROR_NO_CONNECTIVITY:

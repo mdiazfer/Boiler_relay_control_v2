@@ -3,8 +3,8 @@
 #include "wifiConnection.h"
 
 extern RTC_DATA_ATTR boolean wifiEnabled,httpCloudEnabled,mqttServerEnabled,secureMqttEnabled,webServerEnabled,bluetoothEnabled,powerMeasureEnabled;
-extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetSWCount,resetPreventiveWebServerCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,
-                              errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt;
+extern RTC_DATA_ATTR uint8_t bootCount,resetCount,resetPreventiveCount,resetSWCount,resetPreventiveWebServerCount,resetSWWebCount,resetSWMqttCount,resetSWUpgradeCount,resetWebServerCnt,resetPreventiveJSONCount,
+                              errorsWiFiCnt,errorsNTPCnt,errorsHTTPUptsCnt,errorsMQTTCnt,SPIFFSErrors,errorsWebServerCnt,errorsConnectivityCnt,errorsJSONCnt;
 extern RTC_DATA_ATTR uint32_t minHeapSinceUpgrade,minMaxHeapBlockSizeSinceUpgrade; //1*4=4B
 extern RTC_DATA_ATTR uint16_t powerOnFlameThreshold;
 extern RTC_DATA_ATTR uint32_t yesterday,today;

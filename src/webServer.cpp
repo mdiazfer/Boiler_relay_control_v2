@@ -209,7 +209,10 @@ uint32_t initWebServer() {
       }
   
       //Device reset
-      if (deviceReset) ESP.restart();
+      if (deviceReset) {
+        time_counters_eeprom_update_check_period(true,millis(),true); //Force to write timers
+        ESP.restart();
+      }
     });
 
     webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
@@ -1565,6 +1568,7 @@ uint32_t initWebServer() {
             resetSWMqttCount=0; EEPROM.write(0x533,resetSWMqttCount); //resets done from the HA (mqqtt) page
             resetSWUpgradeCount=0; EEPROM.write(0x534,resetSWUpgradeCount); //resets done due to firmware upgrade from maintenance web page
             resetWebServerCnt=0; EEPROM.write(0x53C,resetWebServerCnt); //Counter for Web Server resets (being WiFi connected but not serving web pages)
+            resetPreventiveJSONCount=0; EEPROM.write(0x650,resetPreventiveJSONCount); //Counter for JSON resets due to JSORN error limit exceeded
             errorsWiFiCnt=0; EEPROM.write(0x535,errorsWiFiCnt); //Counter for WiFi errors
             errorsNTPCnt=0; EEPROM.write(0x536,errorsNTPCnt); // Counter for NTP sync errors
             errorsHTTPUptsCnt=0; EEPROM.write(0x537,errorsHTTPUptsCnt); // Counter for HTTP Cloud uploads errors
@@ -1572,6 +1576,7 @@ uint32_t initWebServer() {
             SPIFFSErrors=0; EEPROM.write(0x539,SPIFFSErrors); //Counter for SPIFFS errors
             errorsConnectivityCnt=0; EEPROM.write(0x53A,errorsConnectivityCnt); //Counter for Connectivity errors (being WiFi connected)
             errorsWebServerCnt=0; EEPROM.write(0x53B,errorsWebServerCnt); //Counter for Web Server errors (being WiFi connected but not serving web pages)
+            errorsJSONCnt=0; EEPROM.write(0x64F,errorsJSONCnt); // Counter for JSON errors
             forceMQTTpublish=5;
             EEPROM.commit();
           }

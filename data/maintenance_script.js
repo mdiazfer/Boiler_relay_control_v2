@@ -11,6 +11,7 @@ function init() { //To hide/show the help when the mouse pass over
   initTipEvents("MQTTERRORS_id", "MQTTERRORS_TIP_id");
   initTipEvents("NTPERRORS_id", "NTPERRORS_TIP_id");
   initTipEvents("WEBSERVERERRORS_id", "WEBSERVERERRORS_TIP_id");
+  initTipEvents("JSONERRORS_id", "JSONERRORS_TIP_id");
 
   getReadings(); //To get the JSON objects
 }
@@ -161,9 +162,10 @@ function updateSite(myObj) {
   document.getElementById("SWRESETMQTTCOUNT_id").innerHTML=myObj.resetSWMqttCount;
   document.getElementById("SWRESETFIRMWARECOUNT_id").innerHTML=myObj.resetSWUpgradeCount;
   document.getElementById("WEBSERVERRESETCOUNT_id").innerHTML=myObj.resetWebServerCnt;
-  document.getElementById("PREVENTIVERESETCOUNT_id").innerHTML=myObj.resetPreventiveCount+myObj.resetPreventiveWebServerCount;
+  document.getElementById("PREVENTIVERESETCOUNT_id").innerHTML=myObj.resetPreventiveCount+myObj.resetPreventiveWebServerCount+myObj.resetPreventiveJSONCount;
   document.getElementById("PREVENTIVEABSOLUTERESETCOUNT_id").innerHTML=myObj.resetPreventiveCount;
   document.getElementById("PREVENTIVEWEBSERVERRESETCOUNT_id").innerHTML=myObj.resetPreventiveWebServerCount;
+  document.getElementById("PREVENTIVEJSONRESETCOUNT_id").innerHTML=myObj.resetPreventiveJSONCount;
   document.getElementById("UNCONTROLLEDRESETCOUNT_id").innerHTML=myObj.resetCount;
   document.getElementById("SETUPERRORS_id").innerHTML=String("0x")+myObj.error_setup.toString(16);
   document.getElementById("WIFIERRORS_id").innerHTML="Connection Errors: "+myObj.errorsWiFiCnt+"   ";
@@ -171,7 +173,8 @@ function updateSite(myObj) {
   document.getElementById("SAMPLEUPDTERRORS_id").innerHTML="Sample Update Errors: "+myObj.errorsHTTPUptsCnt+"   ";
   document.getElementById("MQTTERRORS_id").innerHTML="MQTT Errors: "+myObj.errorsMQTTCnt+"   ";
   document.getElementById("NTPERRORS_id").innerHTML="NTP Sync Errors: "+myObj.errorsNTPCnt+"   "; 
-  document.getElementById("WEBSERVERERRORS_id").innerHTML="Web Server Errors:"+myObj.errorsWebServerCnt+"   ";
+  document.getElementById("WEBSERVERERRORS_id").innerHTML="Web Server Errors: "+myObj.errorsWebServerCnt+"   ";
+  document.getElementById("JSONERRORS_id").innerHTML="JSON Errors: "+myObj.errorsJSONCnt+"   ";
   document.getElementById("SPIFFSERRORS_id").innerHTML=myObj.SPIFFSErrors;
   document.getElementById("CURRENTHEAPSIZE_id").innerHTML=myObj.heapSize; 
   document.getElementById("MINMAXHEAPBLOCKSIZE_id").innerHTML=myObj.minMaxHeapBlockSizeSinceBoot; 

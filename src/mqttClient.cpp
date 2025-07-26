@@ -80,7 +80,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       mqttClient.publish(String(mqttTopicName+"/LWT").c_str(), 0, false, "Offline\0"); //Availability message, not retain in the broker. This makes HA to subscribe to the */SENSOR topic if not already done
       resetSWMqttCount++; //Increase the counter for resets from mqtt
       EEPROM.write(0x533,resetSWMqttCount);
-      EEPROM.commit();
+      time_counters_eeprom_update_check_period(true,millis(),true); //Force to write timers
       ESP.restart(); //Rebooting
     }
     else if (String(aux).equalsIgnoreCase(String("RESET_TIME_COUNTERS"))) {
@@ -232,7 +232,26 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     */
     JSONVar auxEnergyJson=JSON.parse(aux);
     if (JSON.typeof(auxEnergyJson) == "undefined") {
-      printLogln(String(millis())+" - [onMqttMessage] - Parsing input failed!");
+      
+      uint64_t now=millis();
+      if ((now-lastTimeErrorsJSON) > JSON_ERRORS_GAP_THERSHOLD) {lastErrorsJSONCnt=errorsJSONCnt; lastTimeErrorsJSON=now;}
+      errorsJSONCnt++;
+      samples["errorsJSONCnt"] = errorsJSONCnt;
+
+      printLogln(String(millis())+" - [onMqttMessage] - Parsing input failed!, payload='"+String(aux)+"', errorsJSONCnt="+String(errorsJSONCnt));
+
+      if (errorsJSONCnt-lastErrorsJSONCnt >= JSON_ERRORS_LIMIT_THERSHOLD)
+      {
+        //If there are JSON_ERRORS_LIMIT_THERSHOLD in JSON_ERRORS_GAP_THERSHOLD ms, then something's wrong. Reset the device.
+        printLogln(String(millis())+" - [onMqttMessage] - errorsJSONCnt ("+String(errorsJSONCnt)+") >= JSON_ERRORS_LIMIT_THERSHOLD ("+String(JSON_ERRORS_LIMIT_THERSHOLD)+") within JSON_ERRORS_GAP_THERSHOLD ("+String(JSON_ERRORS_GAP_THERSHOLD)+") ms since "+String(lastTimeErrorsJSON)+". Preventive restart needed.");
+        resetPreventiveJSONCount++; //Stats
+        EEPROM.write(0x64f,errorsJSONCnt);
+        EEPROM.write(0x650,resetPreventiveJSONCount);
+        time_counters_eeprom_update_check_period(true,millis(),true); //Force to write timers
+        ESP.restart(); //Rebooting
+      }
+      else { EEPROM.write(0x64f,errorsJSONCnt); EEPROM.commit(); }
+      
     }
     else {
       /*printLogln(String(millis())+" - [onMqttMessage] - Time="+JSON.stringify(auxEnergyJson["Time"])+
@@ -451,6 +470,11 @@ void mqttClientPublishHADiscovery_systemObjects1(String mqttTopicName, String de
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device Counter: errorsWebServerCnt\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_errorsWebServerCnt\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"ic\":\"mdi:counter\",\"val_tpl\":\"{{value_json['SAMPLES']['errorsWebServerCnt']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload); //errorsWebServerCnt  value - //Discovery message for errorsWebServerCnt value, not retain in the broker
+
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_errorsJSONCnt/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device Counter: errorsJSON\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_errorsJSONCnt\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"ic\":\"mdi:counter\",\"val_tpl\":\"{{value_json['SAMPLES']['errorsJSONCnt']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload); //errorsJSONCnt  value - //Discovery message for errorsJSONCnt value, not retain in the broker
   
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_bootCount/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device Boots:  since last update\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_bootCount\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"ic\":\"mdi:counter\",\"val_tpl\":\"{{value_json['SAMPLES']['bootCount']}}\"}");
@@ -504,6 +528,10 @@ void mqttClientPublishHADiscovery_systemObjects2(String mqttTopicName, String de
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_resetPreventiveWebServerCount/config");
   memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device Boots: preventive  web server resets\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_resetPreventiveWebServerCount\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"ic\":\"mdi:counter\",\"val_tpl\":\"{{value_json['SAMPLES']['resetPreventiveWebServerCount']}}\"}");
+  if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
+  else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
+  memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_resetPreventiveJSONCount/config");
+  memset(bufferPayload,'\0',sizeof(bufferPayload));sprintf(bufferPayload,"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s","{\"name\":\"Device Boots: preventive  JSON resets\",\"stat_t\":\"",bufferMqttTopicName,"/SENSOR\",\"avty_t\":\"",bufferMqttTopicName,"/LWT\",\"pl_avail\":\"Online\",\"pl_not_avail\":\"Offline\",\"uniq_id\":\"",bufferDeviceSufix,"_resetPreventiveJSONCount\",\"dev\":{\"ids\":[\"",bufferDeviceSufix,"\"],\"configuration_url\":\"http://",bufferIpAddress,"\",\"name\":\"",bufferDevice,"\",\"manufacturer\":\"The IoT Factory - www.the-iotfactory.com\",\"model\":\"",DEVICE_NAME_PREFIX,"\",\"sw_version\":\"",VERSION,"\"},\"frc_upd\":true,\"ic\":\"mdi:counter\",\"val_tpl\":\"{{value_json['SAMPLES']['resetPreventiveJSONCount']}}\"}");
   if (removeTopics) mqttClient.publish(bufferTopicHAName, 0, false); //Send topic with no payload
   else mqttClient.publish(bufferTopicHAName, 0, false, bufferPayload);
   memset(bufferTopicHAName,'\0',sizeof(bufferTopicHAName));sprintf(bufferTopicHAName,"%s%s",bufferMqttSensorTopicHAPrefixName,"_resetSWCount/config");

@@ -181,6 +181,7 @@
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Preventive resets:&nbsp; <span id="PREVENTIVERESETCOUNT_id"></span><br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because absolute min low heap size:&nbsp; <span id="PREVENTIVEABSOLUTERESETCOUNT_id"></span><br>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because web server min low heap size:&nbsp; <span id="PREVENTIVEWEBSERVERRESETCOUNT_id"></span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Because MQTT payload JSON parsing errors:&nbsp; <span id="PREVENTIVEJSONRESETCOUNT_id"></span><br>
                 &nbsp;&nbsp;&nbsp;&nbsp;- Boots due to uncontrolled resets (crash):&nbsp; <span id="UNCONTROLLEDRESETCOUNT_id"></span>
               </p>
               <p>Setup Error:&nbsp; <span id="SETUPERRORS_id"></span></p>
@@ -190,7 +191,8 @@
                 <span id="SAMPLEUPDTERRORS_id"></span><span id="SAMPLEUPDTERRORS_TIP_id">Errors for uploading samples to cloud (http)</span><br>
                 <span id="MQTTERRORS_id"></span><span id="MQTTERRORS_TIP_id">Errors for plublishing MQTT messages</span><br>
                 <span id="NTPERRORS_id"></span><span id="NTPERRORS_TIP_id">Errors for NTP syncroziations</span><br>
-                <span id="WEBSERVERERRORS_id"></span><span id="WEBSERVERERRORS_TIP_id">Errors for serving http requests</span>
+                <span id="WEBSERVERERRORS_id"></span><span id="WEBSERVERERRORS_TIP_id">Errors for serving http requests</span><br>
+                <span id="JSONERRORS_id"></span><span id="JSONERRORS_TIP_id">MQTT payload JSON parsing errors</span>
               </p>
               <p>SPIFFS Errors:&nbsp; <span id="SPIFFSERRORS_id"></span></p>
               <p>

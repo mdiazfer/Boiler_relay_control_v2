@@ -76,6 +76,8 @@
 //Address 609-60C: minMaxHeapBlockSizeSinceUpgrade uint32_t  4 B
 //Address 60D-64C: sysLogServer char []* (63 B+null=64 B)
 //Address 64D-64E: sysLogServerUDPPort, 2 B
+//Address 64F: errorsJSONCnt -  Counter for JSON errors
+//Address 650: resetPreventiveJSONCount - resets done due to JSON errors limit exceeded
 
 uint16_t checkSum(byte *addr, uint32_t count) {
   /******************************************************
@@ -430,6 +432,10 @@ void factoryConfReset() {
   EEPROM.write(0x53A,errorsConnectivityCnt); //Counter for Connectivity errors (being WiFi connected)
   errorsWebServerCnt=0;
   EEPROM.write(0x53B,errorsWebServerCnt); //Counter for Web Server errors (being WiFi connected but not serving web pages)
+  errorsJSONCnt=0;
+  EEPROM.write(0x64F,errorsJSONCnt); //Counter for JSON errors
+  resetPreventiveJSONCount=0;
+  EEPROM.write(0x650,resetPreventiveJSONCount); //resets done due to JSON errors limit exceeded
 
   //Set Power Threshold 
   powerOnFlameThreshold=BOILER_FLAME_ON_POWER_THRESHOLD;

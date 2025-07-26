@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "1.1.3"
+#define VERSION "1.1.4"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -245,6 +245,8 @@
   #define MQTT_POWER_TOPIC "tele/tasmota_2EDC69/SENSOR"
 #endif
 #define BUFFER_PAYLOAD_SIZE 900
+#define JSON_ERRORS_GAP_THERSHOLD  360000 //milliseconds - Gap time to reset the JSON error ratio
+#define JSON_ERRORS_LIMIT_THERSHOLD 5 //MQTT payload JSON parsing errors limit in JSON_ERRORS_GAP_THERSHOLD ms to preventive restart
 
 //SYSLOG stuff - user_setup.h config has more precedence
 #define SYSLOG_ENABLED true

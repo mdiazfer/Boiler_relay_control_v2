@@ -516,6 +516,7 @@ void gas_sample(bool debugModeOn, uint8_t reason) {
   samples["errorsHTTPUptsCnt"] = errorsHTTPUptsCnt;
   samples["errorsMQTTCnt"] = errorsMQTTCnt;
   samples["errorsWebServerCnt"] = errorsWebServerCnt;
+  samples["errorsJSONCnt"] = errorsJSONCnt;
   samples["bootCount"] = bootCount; //Total since last update
   samples["resetNormalCount"] = bootCount-resetSWCount-resetCount; //Normal resets - resetSWCount includes preventive Counts
   samples["resetSWCount"] = resetSWCount; //Reset due to Restart HA Button, web reset, preventive reset, etc (all ESP.restart cases)
@@ -523,6 +524,7 @@ void gas_sample(bool debugModeOn, uint8_t reason) {
   samples["resetSWMqttCount"] = resetSWMqttCount; //resets done from the HA (mqqtt) page
   samples["resetSWUpgradeCount"] = resetSWUpgradeCount; //resets done due to firmware upgrade from maintenance web page
   samples["resetWebServerCnt"] = resetWebServerCnt; //resets due to web server not serving web pages
+  samples["resetPreventiveJSONCount"] = resetPreventiveJSONCount; //resets due to JSON errors limit exceeded
   samples["resetPreventiveCount"] = resetPreventiveCount; //Preventive resets (low heap situation) different than web server low heap
   samples["resetPreventiveWebServerCount"] = resetPreventiveWebServerCount; //Preventive web server resets (low heap situation)
   samples["resetCount"] = resetCount; //uncontrolled resets
@@ -924,7 +926,7 @@ void one_second_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool ntpS
   lastTimeSecondCheck=nowTimeGlobal;
 } // -- one_second_check_period --
 
-void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal) {
+void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTimeGlobal, bool forceUpdateTimers) {
   /******************************************************
    Function time_counters_eeprom_update_check_period
    Target: Regular actions every TIME_COUNTERS_EEPROM_UPDATE_PERIOD seconds.
@@ -935,7 +937,7 @@ void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTime
    Returns: Nothing
    *****************************************************/
 
-  if (timersEepromUpdate) {
+  if (timersEepromUpdate || forceUpdateTimers) {
     //Update EEPROM only if there are new time counter values
     EEPROM.put(0x421,heaterTimeOnYear); EEPROM.put(0x465,heaterTimeOnPreviousYear);
     EEPROM.put(0x4A9,boilerTimeOnYear); EEPROM.put(0x4ED,boilerTimeOnPreviousYear);
@@ -947,7 +949,7 @@ void time_counters_eeprom_update_check_period(bool debugModeOn, uint64_t nowTime
     if (debugModeOn) printLogln(String(nowTimeGlobal)+" - [loop - eeprom_update_check] - No need to update EEPROM with variables and counters. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));
   }
 
-  lastTimeTimerEepromUpdateCheck=nowTimeGlobal;
+  if (!forceUpdateTimers) lastTimeTimerEepromUpdateCheck=nowTimeGlobal;
 }
 
 uint32_t checkURL(boolean debugModeOn,boolean fromSetup,uint32_t error_setup,IPAddress server,uint16_t port,String httpRequest) {
