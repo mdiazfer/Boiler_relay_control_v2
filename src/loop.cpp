@@ -626,7 +626,8 @@ void gas_sample(bool debugModeOn, uint8_t reason) {
 
   //Additonal objectes needed in cloud.html
   samples["httpCloudEnabled"]=httpCloudEnabled;
-  samples["powerMqttTopic"]=powerMqttTopic;
+  if (powerMqttTopic!=null) samples["powerMqttTopic"]=powerMqttTopic;
+  else printLogln(String(millis())+" - [loop - gas_sample] - Variable powerMqttTopic is null. Strange. Investigate why. samples[\"powerMqttTopic\"] isn't save"); //----->
   samples["powerOnFlameThreshold"]=powerOnFlameThreshold;
   samples["mqttUserName"]=mqttUserName;
 
@@ -638,6 +639,9 @@ void gas_sample(bool debugModeOn, uint8_t reason) {
   samples["webLogsOn"]=webLogsOn?"WEB_LOGS_ON":"WEB_LOGS_OFF";samples["sysLogsOn"]=sysLogsOn?"SYS_LOGS_ON":"SYS_LOGS_OFF";
   samples["sysLogServer"]=sysLogServer;samples["sysLogServerUDPPort"]=sysLogServerUDPPort;
 
+
+  if (samples["boilerOn"]==null) printLogln(String(millis())+" - [loop - gas_sample] - Variable samples[\"boilerOn\"] is null. Strange. Investigate why."); //----->
+  if (samples["powerMqttTopic"]==null) printLogln(String(millis())+" - [loop - gas_sample] - Variable samples[\"powerMqttTopic\"] is null. Strange. Investigate why."); //----->
   printLogln(String(millis())+" - [loop - gas_sample] - Exit now. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size())); //----->
 } // -- gas_sample -- 
 

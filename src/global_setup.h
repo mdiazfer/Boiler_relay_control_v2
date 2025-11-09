@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "1.1.4"
+#define VERSION "1.1.5"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff

@@ -1,5 +1,8 @@
 Change Log
 ----------
+v1.1.5  - Added more reasons to fail when JSON parsing MQTT messages (mqttClient.cpp)
+        - Troubleshooting
+          * ISS020 - minMaxHeapBlockSizeSinceUpgrade is not updated after the firmware upgrade
 v1.1.4  - Preventive reset in case of MQTT payload JSON parsing errors exceeds JSON_ERRORS_LIMIT_THERSHOLD limit in JSON_ERRORS_GAP_THERSHOLD milliseconds
           + maintenance.html, maintenance_script.js and styles.css modifyed accordingly
         - Boiler and Heater timers are saved in EEPROM before every ESP.restart();
@@ -185,6 +188,8 @@ Done
     * v1.1.2 - Actions in the main loop are ignored if webserver is serving content (webServerResponding flag) to avoid risking heap leakage
     * v1.1.2 - avoid serving web pages if other heavy processes are ongoing (mqtt publishing, send http updates) (new blockWebServer variable)
       + Increase Task Watchdog Timeout to ESP_TASK_WDT_TIMEOUT - esp_task_wdt_init(ESP_TASK_WDT_TIMEOUT, true);
+  + ISS020 - minMaxHeapBlockSizeSinceUpgrade is not updated after the firmware upgrade
+    * v1.1.5 - Fixed in main.cpp
 - Remove year from the MQTT topic for both previous and current years - v0.9.9
 - Time counters for boiler, similar to the heater ones - v0.9.9
 - Show Current Power (and Energy ?) in the index page - v0.9.9

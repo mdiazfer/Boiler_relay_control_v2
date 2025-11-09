@@ -59,7 +59,7 @@ void onMqttPublish(uint16_t packetId) {
 void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
   char aux[len+1];strcpy(aux,payload); aux[len]='\0';
 
-  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttMessage] - MQTT published message received on topic='"+String(topic)+"', mesage: '"+String(aux)+"', index: "+String(index)+", heapSize="+String(esp_get_free_heap_size())+"B, heapBlock="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+" B");
+  if (debugModeOn) printLogln("\n"+String(millis())+" - [onMqttMessage] - MQTT published message received on topic='"+String(topic)+"', mesage: '"+String(aux)+"', index: "+String(index)+", heapSize="+String(esp_get_free_heap_size())+" B, heapBlock="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+" B");
   
   if (String(topic) == String(MQTT_TOPIC_SUBSCRIPTION)) {
     //Pubish device name
@@ -231,14 +231,15 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     {"Time":"2025-06-08T10:16:25","ENERGY":{"TotalStartTime":"2024-07-25T11:21:51","Total":0.484,"Yesterday":0.241,"Today":0.088,"Power": 8,"ApparentPower":23,"ReactivePower":22,"Factor":0.36,"Voltage":328,"Current":0.071}}
     */
     JSONVar auxEnergyJson=JSON.parse(aux);
-    if (JSON.typeof(auxEnergyJson) == "undefined") {
+    String auxType=JSON.typeof(auxEnergyJson);
+    if (auxType == "undefined" || auxType == "unknown" || auxType == "null") { //v1.1.5 - Added more reasons to fail
       
       uint64_t now=millis();
       if ((now-lastTimeErrorsJSON) > JSON_ERRORS_GAP_THERSHOLD) {lastErrorsJSONCnt=errorsJSONCnt; lastTimeErrorsJSON=now;}
       errorsJSONCnt++;
       samples["errorsJSONCnt"] = errorsJSONCnt;
 
-      printLogln(String(millis())+" - [onMqttMessage] - Parsing input failed!, payload='"+String(aux)+"', errorsJSONCnt="+String(errorsJSONCnt));
+      printLogln(String(millis())+" - [onMqttMessage] - Parsing input failed!, reason='"+auxType+"', payload='"+String(aux)+"', errorsJSONCnt="+String(errorsJSONCnt));
 
       if (errorsJSONCnt-lastErrorsJSONCnt >= JSON_ERRORS_LIMIT_THERSHOLD)
       {
@@ -326,10 +327,10 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       samples["EnergyToday"]=energyToday;
       samples["EnergyYesterday"]=energyYesterday;
       samples["EnergyTotal"]=energyTotal;
-      samples["Thermostate_status"] = thermostateStatus==true?"ON":"OFF";
-      samples["Thermostate_on"] = thermostateOn==true?"ON":"OFF";
-      samples["boilerStatus"] = boilerStatus==true?"ON":"OFF";
-      samples["boilerOn"] = boilerOn==true?"ON":"OFF";
+      samples["Thermostate_status"] = thermostateStatus?"ON":"OFF";
+      samples["Thermostate_on"] = thermostateOn?"ON":"OFF";
+      samples["boilerStatus"] = boilerStatus?"ON":"OFF";
+      samples["boilerOn"] = boilerOn?"ON":"OFF";
       samples["powerMeasureEnabled"]=powerMeasureEnabled;
       samples["powerMeasureSubscribed"]=powerMeasureSubscribed;
       struct tm nowTimeInfo; //36 B

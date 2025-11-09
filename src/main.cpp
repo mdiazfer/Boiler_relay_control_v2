@@ -209,6 +209,7 @@ void loop() {
   }
   if(heapBlockSize<minMaxHeapBlockSizeSinceUpgrade) {
     blockWebServer=true; //Avoid serving web pages till this task if finish to avoid heap leaksminMaxHeapBlockSizeSinceUpgrade=heapBlockSize;
+    minMaxHeapBlockSizeSinceUpgrade=heapBlockSize; //Fixing ISS020 - v1.1.5
     EEPROM.writeInt(0x609,minMaxHeapBlockSizeSinceUpgrade); //Write in EEPROM
     blockWebServer=false;eepromUpdate=true; //EEPROM to be updated at the end of the cycle.
   }

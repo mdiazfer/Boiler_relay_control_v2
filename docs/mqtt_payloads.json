@@ -912,3 +912,74 @@ Publish Message [the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY]
     "frc_upd":true,
     "val_tpl":"{{value_json['SAMPLES']['SIGNAL']}}"
   }
+
+  //homeassistant/button/boiler-relay-controlv2-2254C4/2254C4_reboot/config
+  {
+    "name":"Device  : Reboot",
+    "stat_t":"the-iot-factory/boiler-relay-controlv2-2254C4/SENSOR",
+    "avty_t":"the-iot-factory/boiler-relay-controlv2-2254C4/LWT",
+    "pl_avail":"Online",
+    "pl_not_avail":"Offline",
+    "cmd_t":"the-iot-factory/boiler-relay-controlv2-2254C4/cmnd/RELAY",
+    "payload_press":"REBOOT",
+    "uniq_id":"2254C4_reboot",
+    "dev":
+    {
+      "ids":["2254C4"],
+      "configuration_url":"http://192.168.100.100",
+      "name":"boiler-relay-controlv2-2254C4",
+      "manufacturer":"The IoT Factory - www.the-iotfactory.com",
+      "model":"boiler-relay-controlv2",
+      "sw_version":"0.8.8"
+    },
+      "dev_cla":"restart",
+      "frc_upd":true,
+      "val_tpl":"{{value_json['SAMPLES']['reboot']}}"
+  }
+
+
+  {
+    "Time":"2025-04-24T18:23:12",
+    "SAMPLES":
+    {
+      "resetReason":"3",
+      "dateUpdate":"24/04/2025 - 18:23:12",
+      "startTime":"24/04/2025 - 18:23:52",
+      "upTime":"0000-00-00T00:00:20",
+      "upTimeSeconds":20,
+      "device_name":"boiler-relay-controlv2-2254C4",
+      "version":"0.8.8",
+      "H2":"0.00",
+      "LPG":"0.00",
+      "CH4":"0.00",
+      "CO":"0.00",
+      "ALCOHOL":"0.00",
+      "Clean_air":"OFF",
+      "GAS_interrupt":"OFF",
+      "Thermostate_interrupt":"OFF",
+      "Thermostate_status":"OFF",
+      "SSID":"madnetot",
+      "SIGNAL":"-70",
+      "RSSI":"75",
+      "BSSID":"DC:08:56:00:0A:91",
+      "ENCRYPTION":"WPA2",
+      "CHANNEL":"2",
+      "MODE":"STATION",
+      "NTP":"ON",
+      "HTTP_CLOUD":"ON",
+      "Relay1":"R1_ON",
+      "Relay2":"R2_OFF",
+      "errorsWiFiCnt":"0",
+      "errorsNTPCnt":"0",
+      "errorsHTTPUptsCnt":"0",
+      "errorsMQTTCnt":"0",
+      "bootCount":"32",
+      "resetCount":"0",
+      "minHeapSeen":"151672",
+      "lastHeap":"177600",
+      "reboot":"online",
+      "tempSensor":"28.35",
+      "temperature":"27.39",
+      "humidity":"29.67"
+    }
+  }
