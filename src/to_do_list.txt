@@ -1,5 +1,6 @@
 Change Log
 ----------
+v1.2.0  - Modifications on the algorithm to set boiler & heater icons (mqttClient.cpp and index_script.js)
 v1.1.5  - Added more reasons to fail when JSON parsing MQTT messages (mqttClient.cpp)
         - Troubleshooting
           * ISS020 - minMaxHeapBlockSizeSinceUpgrade is not updated after the firmware upgrade

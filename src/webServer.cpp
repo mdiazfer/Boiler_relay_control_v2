@@ -596,6 +596,19 @@ uint32_t initWebServer() {
     if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
   });
 
+  webServer.on("/boiler-blue-flame.png", HTTP_GET, [](AsyncWebServerRequest *request){
+    //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
+    if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 
+    webServerResponding=true;  //This prevents sending iBeacons to prevent heap overflow
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+    while (blockWebServer) {esp_task_wdt_reset(); /*Reset the watchdog*/ vTaskDelay(pdMS_TO_TICKS(300)); /* Delay for 300 milliseconds */}
+    //if (isBeaconAdvertising || BLEtoBeLoaded) {delay(WEBSERVER_SEND_DELAY);} //Wait for iBeacon to stop to prevent heap overflow
+    request->send(SPIFFS, "/boiler-blue-flame.png", "image/png");
+    webServerResponding=false;   //WebServer ends, heap is going to be realeased, so BLE iBeacons are allowed agin
+    lastTimeWebPageServed=millis();  //ISS019 - v1.1.3 - lastTimeWebPageServed
+    if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+" exit. heapSize="+String(esp_get_free_heap_size())+", heapBlockSize="+String(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT))+", minHeapSeen="+String(esp_get_minimum_free_heap_size()));}
+  });
+  
   webServer.on("/boiler-orange-flame.png", HTTP_GET, [](AsyncWebServerRequest *request){
     //lastTimeBLECheck=loopStartTime+millis()+BLE_PERIOD_EXTENSION; //Avoid BLE Advertising during BLE_PERIOD_EXTENSION from now
     if (esp_get_free_heap_size()<WEBSERVER_MIN_HEAP_SIZE) {if (debugModeOn) {printLogln(String(millis())+" - [webServer.on] - "+request->url()+", heapSize ("+String(esp_get_free_heap_size())+") < WEBSERVER_MIN_HEAP_SIZE ("+String(WEBSERVER_MIN_HEAP_SIZE)+"). Can't serve the web page. Return.");} return;} /*Return if heap is lower than threshold*/ 

@@ -719,16 +719,36 @@ function updateSite(myObj) {
         previousBoilerStatus!=boilerStatus || previousThermostatOn!=thermostatOn ||
         previousBoilerOn!=boilerOn || previousThermostatOn!=thermostatOn ||
         previousRelay1!=Relay1 || previousRelay2!=Relay2) {
-      //Update the boiler icon
-      if (!boilerStatus) document.getElementById("boilerStatusIcon").src="boiler-blue.png";
-      else if (boilerOn || thermostatOn) document.getElementById("boilerStatusIcon").src="boiler-orange-flame.png";
-      else document.getElementById("boilerStatusIcon").src="boiler-orange.png";
-      
-      //Update the radiator icon - smartplug dependent
-      if (!Relay1 && !Relay2) {document.getElementById("heaterStatusIcon").src="radiator-disabled-off.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";}
-      else if (!thermostatStatus) {document.getElementById("heaterStatusIcon").src="radiator-blue.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
-      else if (!thermostatOn) {document.getElementById("heaterStatusIcon").src="radiator-orange.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
-      else {document.getElementById("heaterStatusIcon").src="radiator-orange-on.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+      //Update the boiler and radiator icons
+      if ((!boilerStatus && !boilerOn && !thermostatOn) || (boilerStatus && !boilerOn && thermostatStatus && !thermostatOn)) {
+        //Update the boiler icon
+        document.getElementById("boilerStatusIcon").src="boiler-blue.png";
+        //Update the radiator icon
+        if (!Relay1 && !Relay2) {document.getElementById("heaterStatusIcon").src="radiator-disabled-off.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";}
+        else if (!thermostatStatus) {document.getElementById("heaterStatusIcon").src="radiator-blue.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+        else if (!thermostatOn) {document.getElementById("heaterStatusIcon").src="radiator-orange-on.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";}
+        else {document.getElementById("heaterStatusIcon").src="radiator-orange.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+      }
+      else if (boilerStatus && boilerOn && !thermostatStatus && !thermostatOn) {
+        //Update the boiler icon
+        document.getElementById("boilerStatusIcon").src="boiler-orange-flame.png";
+        //Update the radiator icon
+        if (!Relay1 && !Relay2) {document.getElementById("heaterStatusIcon").src="radiator-disabled-off.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";}
+        else {document.getElementById("heaterStatusIcon").src="radiator-blue.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+      }
+      else if (!boilerStatus && !boilerOn && thermostatStatus && thermostatOn) {
+        //Update the boiler icon
+        document.getElementById("boilerStatusIcon").src="boiler-blue-flame.png";
+        //Update the radiator icon
+        document.getElementById("heaterStatusIcon").src="radiator-orange-on.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";
+      }
+      else {
+        //Update the boiler icon
+        document.getElementById("boilerStatusIcon").src="boiler-orange.png";
+        //Update the radiator icon
+        if (!Relay1 && !Relay2) {document.getElementById("heaterStatusIcon").src="radiator-disabled-off.png";document.getElementById("heaterStatusIcon").style="margin-top: -10%; float: none; width: 50px; height: 50px;";}
+        else {document.getElementById("heaterStatusIcon").src="radiator-blue.png";document.getElementById("heaterStatusIcon").style="margin-top: -35%; float: none; width: 50px; height: 50px;";}
+      }
     }
 
     if (myObj.Voltage!=0 && myObj.Current!=0) { //powerMQTT already received
