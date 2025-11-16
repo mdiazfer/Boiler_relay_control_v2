@@ -338,13 +338,13 @@ void gas_sample(bool debugModeOn, uint8_t reason) {
   
   //calculate_R0(); //This is to calculate R0 when the MQ5 sensor is replaced. Don't use it for regular working
   gasRatioSample=get_resistence_ratio(debugModeOn); //This is the current ratio RS/R0 - 6.5 for clean air
+  gasClear=true; //Let's unset this flag only if valid gas readings are detected, otherwise let's consider clean air. ISS021 - v1.2.1
   if (gasRatioSample>4.5) {
-    gasClear=true;
+    //gasClear=true;  //ISS021 - v1.2.1
     if (debugModeOn) printLogln("\n         [loop - gas_sample] - Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
     else printLogln("Clean air detected. Digital sensor input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
   }
   else {
-    gasClear=false;
     // 0 0 0 0  0 0 0 0 => gasTypes
     //     | |  | | | +----> H2   (0x01)
     //     | |  | | +------> LPG  (0x02)
@@ -362,6 +362,7 @@ void gas_sample(bool debugModeOn, uint8_t reason) {
 
     printLogln(""); //Just print new line
     if (gasTypes > 0 && gasTypes != 0x20) {
+      gasClear=false; //ISS021 - v1.2.1
       printLogln("         [loop - gas_sample] - GAS detected. Digital input: "+String(digitalRead(PIN_GAS_SENSOR_D0))+" (1=NO GAS, 0=GAS)");
       if ((gasTypes & 0x1) > 0) printLogln("         [loop - gas_sample] -    H2="+String(h2_ppm)+" ppm");
       if ((gasTypes & 0x2) > 0) printLogln("         [loop - gas_sample] -    LPG="+String(lpg_ppm)+" ppm");

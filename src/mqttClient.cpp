@@ -269,7 +269,6 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
         // and so it's active (boilerStatus=true)
         /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Flame detected: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+") >= powerOnFlameThreshold ("+String(powerOnFlameThreshold));*/  //----->
         if (!boilerOn || !boilerStatus) updateMQTT=true; //coming from no flame or inactive boiler
-        boilerStatus=true;
 
         //Always assume is burning gas because warming water at this power level
         //Start counting seconds
@@ -277,12 +276,19 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
           lastBoilerOnTime=millis();
           /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Start Boiler Time On Counter. lastBoilerOnTime="+String(lastBoilerOnTime));*/  //----->
         }
-        thermostateOn=false; boilerOn=true;
+        boilerStatus=true; thermostateOn=false; boilerOn=true;
       }
-      else if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= (powerOnFlameThreshold-BOILER_FLAME_ON_DIFF_POWER)) {
+      else if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= powerOnFlameThreshold-BOILER_FLAME_OFF_WATER_DIFF_POWER) {
+        //Boiler is active (water flowing due to either heater or hot water) but it isn't burning gas
+        if ((boilerStatus && !boilerOn && !thermostateOn)==false) updateMQTT=true; //coming from a different status, so update
+        
+        boilerStatus=true; boilerOn=false; thermostateOn=false;  //No flame and thermostateStatus is updated in thermostate_interrupt_triggered()
+        /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler is active with no flame: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+") >= BOILER_STATUS_ON_POWER_THRESHOLD ("+String(BOILER_STATUS_ON_POWER_THRESHOLD));*/  //----->
+      }
+      else if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= (powerOnFlameThreshold-BOILER_FLAME_ON_HEATER_DIFF_POWER)) {
         //Boiler is burning gas (flame) due to heater (thermostateOn=true) but not the hot water (boilerOn=true)
         // and so it's active (boilerStatus=false)
-        /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Flame detected: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+") >= powerOnFlameThreshold-BOILER_FLAME_ON_DIFF_POWER ("+String(powerOnFlameThreshold-BOILER_FLAME_ON_DIFF_POWER)+")");*/ //----->
+        /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Flame detected: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+") >= powerOnFlameThreshold-BOILER_FLAME_ON_HEATER_DIFF_POWER ("+String(powerOnFlameThreshold-BOILER_FLAME_ON_HEATER_DIFF_POWER)+")");*/ //----->
         
         //thermostateStatus is updated in thermostate_interrupt_triggered()
         if ((!boilerStatus && !boilerOn && thermostateOn)==false) updateMQTT=true; //coming from a different status, so update
@@ -292,7 +298,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
           //Start counting seconds
           if (!thermostateOn) {
             lastThermostatOnTime=millis();
-            if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Start Heater Time On Counter. lastThermostatOnTime="+String(lastThermostatOnTime));  //----->
+            /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Start Heater Time On Counter. lastThermostatOnTime="+String(lastThermostatOnTime));*/  //----->
           }
           boilerStatus=false; boilerOn=false; thermostateOn=true;
         }
@@ -302,7 +308,14 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
           if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Strange. This case shouldn't appear as this power level should be only for flame on due to heater. Investigate reasons");
         }
       }
-      else if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= BOILER_STATUS_ON_POWER_THRESHOLD) {
+      else if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= powerOnFlameThreshold-BOILER_WATER_FLOW_DIFF_POWER) {
+        //Boiler is active (water flowing due to either heater or hot water) but it isn't burning gas
+        if ((boilerStatus && !boilerOn && !thermostateOn)==false) updateMQTT=true; //coming from a different status, so update
+        
+        boilerStatus=true; boilerOn=false; thermostateOn=false;  //No flame and thermostateStatus is updated in thermostate_interrupt_triggered()
+        /*if (debugModeOn) printLogln(String(millis())+" - [onMqttMessage] - Boiler is active with no flame: Power ("+JSON.stringify(auxEnergyJson["ENERGY"]["Power"])+") >= BOILER_STATUS_ON_POWER_THRESHOLD ("+String(BOILER_STATUS_ON_POWER_THRESHOLD));*/  //----->
+      }
+      else if (JSON.stringify(auxEnergyJson["ENERGY"]["Power"]).toInt() >= powerOnFlameThreshold-BOILER_HEATER_FLOW_DIFF_POWER) {
         //Boiler is active (water flowing due to either heater or hot water) but it isn't burning gas
         if ((boilerStatus && !boilerOn && !thermostateOn)==false) updateMQTT=true; //coming from a different status, so update
         

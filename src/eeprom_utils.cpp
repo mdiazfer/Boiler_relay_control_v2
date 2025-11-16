@@ -438,6 +438,6 @@ void factoryConfReset() {
   EEPROM.write(0x650,resetPreventiveJSONCount); //resets done due to JSON errors limit exceeded
 
   //Set Power Threshold 
-  powerOnFlameThreshold=BOILER_FLAME_ON_POWER_THRESHOLD;
+  powerOnFlameThreshold=BOILER_FLAME_ON_WATER_POWER_THRESHOLD;
   EEPROM.writeUShort(0x607,powerOnFlameThreshold); //Power Threshold to decide whether the boiler is burning gas or not (flame)
 } //factoryConfReset

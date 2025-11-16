@@ -8,7 +8,7 @@
 //Generic definitions
 #define BUILD_TYPE_PRODUCTION   0
 #define BUILD_TYPE_DEVELOPMENT  1
-#define VERSION "1.2.0"
+#define VERSION "1.2.1"
 #define VERSION_CHAR_LENGTH 5
 
 //Global board stuff
@@ -263,11 +263,15 @@
 //~130 w => if heater on, water is flowing in the heater circuit
 //          if heater off, water is moving inside the boiler
 //0-50 w => No activity
-#define BOILER_FLAME_ON_POWER_THRESHOLD 235  //Watts - Power threshold to decide whether the boiler is burning gas or not due to either hot water or heater - Based on readings
-#define BOILER_FLAME_ON_DIFF_POWER 55  //Watts - Power diff between flame on when heater on vs. heater off
-#define BOILER_FLAME_ON_WITH_HEATER_POWER_THRESHOLD BOILER_FLAME_ON_POWER_THRESHOLD - BOILER_FLAME_ON_DIFF_POWER  //Watts - Power threshold to decide whether the boiler is burning gas or not when heater is on - Based on readings
-#define BOILER_WATER_FLOWING_POWER_THRESHOLD BOILER_FLAME_ON_POWER_THRESHOLD-105  //Watts - Power threshold to decide whether the water is flowing (heater circuit if heater on or inside boiler if heater is off) - Based on readings
-#define BOILER_STATUS_ON_POWER_THRESHOLD 50  //Watts - Power threshold to decide whether the boiler is active (not necessarily burning gas)
+#define BOILER_FLAME_ON_WATER_POWER_THRESHOLD 235  //Watts - Power threshold to decide whether the boiler is burning gas or not due to warmed water - Based on readings
+#define BOILER_FLAME_OFF_WATER_DIFF_POWER 15  //Watts - Power diff between flame on and flame off (no heater)
+#define BOILER_FLAME_OFF_WATER_POWER_THRESHOLD BOILER_FLAME_ON_WATER_POWER_THRESHOLD - BOILER_FLAME_OFF_WATER_DIFF_POWER  //Watts - Power threshold to decide whether the boiler is burning gas or not when heater is on - 180 w Based on readings
+#define BOILER_FLAME_ON_HEATER_DIFF_POWER 55  //Watts - Power diff between flame on when heater on vs. heater off
+#define BOILER_FLAME_ON_HEATER_POWER_THRESHOLD BOILER_FLAME_ON_WATER_POWER_THRESHOLD - BOILER_FLAME_ON_HEATER_DIFF_POWER  //Watts - Power threshold to decide whether the boiler is burning gas or not when heater is on - 180 w Based on readings
+#define BOILER_WATER_FLOW_DIFF_POWER 85  //Watts - Power diff between flame on vs flame off and water is flowing inside the boiler
+#define BOILER_FLAME_OFF_WATER_ACTIVIY_POWER_THRESHOLD BOILER_FLAME_ON_WATER_POWER_THRESHOLD - BOILER_WATER_FLOW_DIFF_POWER  //Watts - Power threshold to decide whether the boiler is active due to water flow inside the boiler (no heater) - 150 w Based on readings
+#define BOILER_HEATER_FLOW_DIFF_POWER 135  //Watts - Power diff between flame on due to warmed wated vs flame off and water is flowing due to the heater - 100 w Based on readings
+#define BOILER_FLAME_OFF_HEATER_POWER_THRESHOLD BOILER_FLAME_ON_WATER_POWER_THRESHOLD - BOILER_HEATER_FLOW_DIFF_POWER  //Watts - Power threshold to decide whether the boiler is active due to water flow beacuse the heater - 100 w Based on readings
 
 //BLE stuff
 #define BLE_ENABLED  false
